@@ -2,13 +2,13 @@
 
 **Project Version:** 0.1.0  
 **Last Updated:** April 13, 2026  
-**Status:** Phase 1 Complete, Phase 2/3 Core Milestone Complete
+**Status:** Phase 1 Complete, Phase 2/3 Complete, Phase 4/5/6 In Progress
 
 ---
 
 ## Executive Summary
 
-LLMTrap is an open-source, multi-protocol AI honeypot platform for security research. Phase 1 established the monorepo and deployment baseline. The current milestone has now landed the Phase 2 dashboard control-plane foundation and the Phase 3 node-core runtime slice: authenticated operator flows, node registration/config/capture APIs, a React dashboard shell, and a multi-listener honeypot node with Ollama, OpenAI-compatible, and Anthropic-compatible emulation backed by Redis spooling.
+LLMTrap is an open-source, multi-protocol AI honeypot platform for security research. Phase 1 established the monorepo and deployment baseline. Phase 2 and Phase 3 are complete, and the current milestone has started landing Phase 4/5/6 slices across the node runtime, dashboard API, worker, and dashboard UI: broader protocol emulation, operator analytics/persona/actor views, background classification/enrichment/alert processing, and threat-intel/export/live-feed surfaces.
 
 ---
 
@@ -82,43 +82,61 @@ LLMTrap is an open-source, multi-protocol AI honeypot platform for security rese
 
 ---
 
-### Phase 4: Full Protocol Coverage (Planned)
+### Phase 4: Full Protocol Coverage 🚧 In Progress
 
 **Objective:** Add all target protocol emulators.  
 **Est. Timeline:** Following Phase 3  
-**Status:** Pending
+**Status:** Partially landed
 
-#### Scope
+#### Landed Deliverables
+- LM Studio, llama.cpp, vLLM, text-generation-webui, LangServe, and AutoGPT listeners added to the node runtime
+- MCP JSON-RPC and well-known endpoints added on the node control-plane port
+- High-value IDE/config honeypot file paths added for Claude, Cursor, Continue, Aider, Copilot, Roo, Windsurf, Streamlit, Terraform, and common secret/config bait
+- Node Docker image and compose file expanded to expose the new listener surfaces
+
+#### Remaining Scope
 - SSH, FTP, SMTP, DNS, SMB trap services
-- MCP server emulation
-- AI IDE config listening (Cursor, Windsurf, etc.)
-- RAG database simulation
+- RAG database simulation and broader homelab service bait
+- Broader traditional protocol smoke coverage
 
 ---
 
-### Phase 5: Intelligence Engine (Planned)
+### Phase 5: Intelligence Engine 🚧 In Progress
 
 **Objective:** Response strategies, proxy routing, and deeper classification.
-**Status:** Pending
+**Status:** Partially landed
 
-#### Scope
-- Response strategy selection (Fixed-N, Budget, Smart)
+#### Landed Deliverables
+- Dashboard API modules for personas, response config, analytics, sessions, and actors
+- Dashboard routes for sessions, personas, actors, and node response-config visibility
+- Worker processors for session classification, actor correlation, IP enrichment, and alert-log materialization
+- Actor merge/split APIs with audit logging and operator-facing actor inventory views
+
+#### Remaining Scope
+- Response strategy execution beyond stored config
 - Generic OpenAI-compatible proxy routing
-- Backfeed loops and deeper capture classification
-- Persona and fingerprinting enrichment
+- Backfeed/template review queue and runtime template distribution
+- Configurable classification rules and richer persona consistency workflows
 
 ---
 
-### Phase 6: Threat Intel & Alerts (Planned)
+### Phase 6: Threat Intel & Alerts 🚧 In Progress
 
 **Objective:** Threat intel, alerts, reporting, and storage automation.
-**Status:** Pending
+**Status:** Partially landed
 
-#### Scope
-- Third-party feed integrations
-- Webhook + email alerts
-- Dashboard real-time updates
-- Reporting, cold storage, and operator-facing alert workflows
+#### Landed Deliverables
+- Threat-intel API for blocklist preview, IOC feed, MITRE summary, and STIX bundle generation
+- Alerts API plus worker-side rule evaluation and alert-log materialization
+- Export/report API for markdown, HTML, JSON, and CSV outputs
+- Dashboard routes for alerts, threat intel, export preview, and polling-based live feed
+- Worker health endpoint now reports degraded state when background processors fail
+
+#### Remaining Scope
+- External alert channel delivery (Telegram, Discord, email, webhook)
+- Cold-storage archival and retrieval
+- WebSocket-based live feed beyond the current polling implementation
+- CI/CD and open-source release preparation
 
 ---
 
@@ -137,6 +155,14 @@ LLMTrap is an open-source, multi-protocol AI honeypot platform for security rese
 - Docker smoke confirms dashboard health, seeded-admin login, live node provisioning/approval, and protocol-shaped Ollama/OpenAI-compatible/Anthropic-compatible responses
 - Latest runtime smoke persisted `3` captured requests across `3` grouped sessions and drained the node buffer back to `0`
 
+### Phase 4/5/6 (Current In-Progress Slice)
+- `pnpm typecheck` passes across all workspace packages after protocol, worker, API, and web additions
+- `pnpm test` passes with `@llmtrap/node` at 20 tests, `@llmtrap/api` at 19 tests, and `@llmtrap/worker` at 8 tests
+- `pnpm build` passes across the monorepo after the new worker/API/web slices
+- `docker compose -f docker/docker-compose.dashboard.yml config` passes with required env provided
+- `docker compose -f docker/docker-compose.node.yml config` passes with required env provided
+- No repository-level e2e or smoke scripts exist yet; `tests/e2e` and `tests/smoke` are currently empty
+
 ---
 
 ## Known Constraints & Notes
@@ -145,7 +171,7 @@ LLMTrap is an open-source, multi-protocol AI honeypot platform for security rese
 1. Prisma config migration from `package.json` → `prisma.config.ts` (cosmetic deprecation warning)
 2. Docker resource limits not yet enforced (CPU, memory)
 3. Broader container-runtime hardening remains follow-up work beyond the current non-root images
-4. Dashboard analytics, invite flows, and broader protocol coverage remain follow-up work after Phase 2/3 completion
+4. Dashboard analytics deepening, broader protocol coverage, and runtime template/proxy distribution remain follow-up work after the current Phase 4/5/6 slice
 
 ### Architecture Decisions
 - **NestJS for all backend:** Unified framework for API, node, and worker services

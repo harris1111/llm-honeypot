@@ -1,8 +1,15 @@
 import { Link } from '@tanstack/react-router';
 
 const navigation = [
-  { description: 'Session and node snapshot', label: 'Overview', to: '/' },
+  { description: 'Live node, session, and capture snapshot', label: 'Overview', to: '/' },
   { description: 'Approve and configure nodes', label: 'Nodes', to: '/nodes' },
+  { description: 'Recent captured interaction timelines', label: 'Sessions', to: '/sessions' },
+  { description: 'Correlated operators, scanners, and repeat visitors', label: 'Actors', to: '/actors' },
+  { description: 'Persona presets and custom node identities', label: 'Personas', to: '/personas' },
+  { description: 'Rule definitions and alert delivery history', label: 'Alerts', to: '/alerts' },
+  { description: 'IOC exports, blocklists, and MITRE mapping', label: 'Threat Intel', to: '/threat-intel' },
+  { description: 'Recent request stream with optional auto-refresh', label: 'Live Feed', to: '/live-feed' },
+  { description: 'Generate markdown, HTML, JSON, and CSV exports', label: 'Export', to: '/export' },
   { description: 'Global controls and env', label: 'Settings', to: '/settings' },
 ];
 

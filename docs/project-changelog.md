@@ -5,6 +5,44 @@
 
 ---
 
+## Phase 4/5/6 Expansion — April 13, 2026
+
+### Protocol And Node Surface Expansion
+- Added new node listeners for LM Studio, llama.cpp, vLLM, text-generation-webui, LangServe, and AutoGPT
+- Added MCP well-known and JSON-RPC honeypot routes plus a broad IDE/config bait surface for Claude, Cursor, Continue, Aider, Copilot, Roo, Windsurf, Streamlit, Terraform, and common secret files
+- Expanded the node Docker image and compose stack to expose the additional listener ports
+
+### Dashboard API And Worker Intelligence
+- Added API modules for personas, response-config, analytics, sessions, actors, alerts, threat-intel, export/report, and live-feed
+- Added worker processors for session classification, actor correlation, IP enrichment, and alert-log materialization, plus worker health/status reporting
+- Added actor merge/split workflows, export/report generation, and polling live-feed APIs with audit logging on operator actions
+
+### Dashboard UI Expansion
+- Replaced placeholder control-plane gaps with routes for sessions, personas, actors, alerts, threat intel, export preview, and live feed
+- Extended the dashboard client/hooks layer to consume the new API modules and surface operator-facing summaries for response config, actors, alerts, threat intel, export outputs, and recent request events
+
+### Validation Results
+```
+✅ pnpm --filter @llmtrap/worker test
+✅ pnpm --filter @llmtrap/worker build
+✅ pnpm --filter @llmtrap/api test
+✅ pnpm --filter @llmtrap/api build
+✅ pnpm --filter @llmtrap/web build
+✅ pnpm typecheck
+✅ pnpm test
+✅ pnpm build
+✅ docker compose -f docker/docker-compose.dashboard.yml config
+✅ docker compose -f docker/docker-compose.node.yml config
+```
+
+### Remaining Gaps
+- Traditional protocol emulators (SSH, FTP, SMTP, DNS, SMB) and RAG/homelab bait remain unimplemented
+- Runtime proxy routing, backfeed/template review, and cross-container template distribution remain open
+- External alert channels, cold storage, and WebSocket live-feed transport remain open
+- Repository-level e2e and smoke automation are still absent (`tests/e2e` and `tests/smoke` are empty)
+
+---
+
 ## Automated Test Hardening — April 13, 2026
 
 ### Dashboard API And Node Coverage

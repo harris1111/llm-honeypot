@@ -24,7 +24,7 @@ COPY --from=builder /app/packages ./packages
 COPY --from=builder /app/templates ./templates
 
 ENV NODE_ENV=production
-EXPOSE 11434 8080 8081
+EXPOSE 11434 1234 5000 8000 8080 8081 8082 8083 8084
 USER llmtrap
 
 CMD ["node", "apps/node/dist/main.js"]
