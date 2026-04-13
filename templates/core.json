@@ -1,0 +1,20 @@
+[
+  {
+    "id": "tmpl-greeting",
+    "category": "chat",
+    "keywords": ["hello", "hi", "hey", "greetings"],
+    "responseText": "Hello. I am {{modelName}} on {{hostname}} with {{gpuModel}} available. What do you need?"
+  },
+  {
+    "id": "tmpl-coding",
+    "category": "coding",
+    "keywords": ["code", "bug", "typescript", "python", "debug"],
+    "responseText": "I can help with that. {{modelName}} is active on {{hostname}} and can walk through the code path, isolate the failure, and propose a fix."
+  },
+  {
+    "id": "tmpl-model",
+    "category": "models",
+    "keywords": ["model", "gpu", "hardware", "server"],
+    "responseText": "This node exposes {{modelName}} on {{hostname}} and reports {{gpuModel}} as its primary accelerator."
+  }
+]

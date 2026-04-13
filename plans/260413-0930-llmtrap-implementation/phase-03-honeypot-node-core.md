@@ -2,12 +2,19 @@
 
 ## Overview
 - **Priority:** P1
-- **Status:** Pending
+- **Status:** In Progress
 - **Effort:** 24h
-- **Branch:** `feat/node/honeypot-core`
+- **Branch:** `feat/fullstack/dashboard-node-core`
 - **Depends On:** Phase 1
 
 Build the core honeypot node: Ollama, OpenAI, and Anthropic protocol emulators, template response engine with streaming simulation, full request capture pipeline, and node-to-dashboard registration/sync.
+
+## Current Implementation Snapshot
+
+- Landed: multi-listener Nest runtime with Ollama (`11434`), OpenAI-compatible (`8080`), and Anthropic-compatible (`8081`) ports
+- Landed: dashboard registration, config refresh, REST heartbeat, capture batch upload, and runtime health reporting
+- Landed: Redis-backed local capture spool and starter template routing in `@llmtrap/response-engine`
+- Remaining: broader protocol coverage, stronger fingerprinting/session enrichment, and deeper automated testing
 
 ## Key Insights (from Research)
 
@@ -29,7 +36,7 @@ Build the core honeypot node: Ollama, OpenAI, and Anthropic protocol emulators, 
 - **Template engine:** Load templates from JSON files, keyword matching, variable substitution, streaming token simulation
 - **Request capture:** Every field from PRD section 6.1 (timestamp, IP, port, protocol, service, method, path, headers, headerHash, UA, body, response, TLS fingerprint, session)
 - **Session grouping:** Same IP + same service + within 5min gap = same session
-- **Dashboard sync:** POST captured requests to dashboard API; buffer locally in SQLite when disconnected
+- **Dashboard sync:** POST captured requests to dashboard API; buffer locally in Redis when disconnected
 - **Node registration:** On boot, register with dashboard, pull persona config, apply persona to all emulators
 - **Health endpoint:** Internal `/internal/health` for Docker orchestration
 
@@ -49,57 +56,44 @@ Build the core honeypot node: Ollama, OpenAI, and Anthropic protocol emulators, 
 apps/node/src/
 ├── main.ts                           # Bootstrap: start all listeners
 ├── config/
-│   └── node-config.ts                # Load env + fetch persona from dashboard
+│   └── node-runtime-config.ts        # Load env + runtime listener settings
 ├── capture/
-│   ├── capture-middleware.ts          # Universal request capture middleware
-│   ├── capture-service.ts            # Store captured request, assign session
-│   ├── session-tracker.ts            # Session grouping logic (IP+service+5min)
-│   ├── fingerprint-extractor.ts      # Headers hash, UA, TLS (best-effort)
-│   └── local-buffer.ts              # SQLite buffer for offline mode
+│   ├── capture-buffer.service.ts     # Redis spool for offline mode
+│   ├── capture-sync.service.ts       # Flush queued captures to dashboard
+│   └── http-capture.service.ts       # Request normalization + queueing
+├── runtime/
+│   └── runtime-state.service.ts      # Shared process state across listeners
 ├── sync/
-│   ├── dashboard-sync-service.ts     # POST requests to dashboard API
-│   ├── heartbeat-client.ts           # WebSocket heartbeat to dashboard
-│   └── config-pull-service.ts        # Periodic config refresh from dashboard
+│   ├── dashboard-api.service.ts      # Register/config/heartbeat/capture client
+│   └── node-lifecycle.service.ts     # Registration + timers
 ├── protocols/
 │   ├── ollama/
-│   │   ├── ollama-server.ts          # Express app on port 11434
-│   │   ├── ollama-routes.ts          # Route handlers
-│   │   └── ollama-response-builder.ts # Ollama-specific response formatting
+│   │   ├── ollama.controller.ts
+│   │   └── ollama.service.ts
 │   ├── openai/
-│   │   ├── openai-server.ts          # Express app on port 8080
-│   │   ├── openai-routes.ts          # Route handlers
-│   │   └── openai-response-builder.ts
+│   │   ├── openai.controller.ts
+│   │   ├── openai.module.ts
+│   │   └── openai.service.ts
 │   └── anthropic/
-│       ├── anthropic-server.ts       # Express app on port 8081
-│       ├── anthropic-routes.ts
-│       └── anthropic-response-builder.ts
-├── response-engine/
-│   ├── template-matcher.ts           # Keyword overlap matching
-│   ├── template-store.ts             # Load/index templates from JSON
-│   ├── streaming-simulator.ts        # Token-by-token streaming with jitter
-│   ├── variable-substitutor.ts       # Replace placeholders in templates
-│   └── response-router.ts           # Route to template engine (proxy added Phase 5)
-└── persona/
-    ├── persona-loader.ts             # Load persona from config/dashboard
-    └── persona-context.ts            # Expose persona values to all emulators
+│       ├── anthropic.controller.ts
+│       ├── anthropic.module.ts
+│       └── anthropic.service.ts
+└── node-shared.module.ts             # Shared providers for all listeners
 ```
 
 ### Data Flow: Incoming Request
 
 ```
 Attacker -> port 11434 (Ollama)
-  -> Express app
-  -> captureMiddleware (extract IP, headers, UA, TLS, timestamp)
-  -> ollamaRoutes handler
-  -> responseRouter.getResponse(prompt, protocol)
-    -> templateMatcher.findBestMatch(prompt)
-    -> variableSubstitutor.apply(template, persona)
-    -> if streaming: streamingSimulator.stream(tokens, ollamaFormat)
-    -> if non-streaming: return complete response with latency delay
-  -> captureService.record(fullRequest, fullResponse)
-    -> sessionTracker.getOrCreateSession(ip, service)
-    -> if dashboard reachable: dashboardSyncService.send(record)
-    -> else: localBuffer.store(record)
+  -> NestJS controller
+  -> httpCaptureService normalizes headers + source data
+  -> protocol service routes prompt through @llmtrap/response-engine
+    -> load templates from templates/*.json
+    -> keyword overlap match + variable substitution
+    -> if streaming: protocol controller emits NDJSON or SSE chunks
+    -> if non-streaming: controller returns protocol-shaped JSON payload
+  -> captureSyncService queues capture into Redis spool
+    -> lifecycle service flushes queued records to dashboard batch API
   -> return response to attacker
 ```
 
@@ -107,21 +101,20 @@ Attacker -> port 11434 (Ollama)
 
 ```
 Node boots
-  -> configPullService.register(nodeKey, hostname, ip)
+  -> dashboardApiService.registerNode(nodeKey, hostname, ip)
   -> dashboard returns: personaConfig, serviceToggles, responseConfig
-  -> personaLoader.apply(config)
-  -> heartbeatClient.connect(dashboardWsUrl, nodeKey)
-  -> every 30s: heartbeatClient.ping({nodeId, requestCount, bufferSize})
+  -> runtimeState.apply(config)
+  -> every 30s: POST heartbeat {nodeId, requestCount, bufferSize}
 
 Background (every 60s):
-  -> localBuffer.getUnsynced(batchSize=500)
-  -> dashboardSyncService.postBatch(records)
-  -> on success: localBuffer.markSynced(ids)
+  -> captureBuffer.peek(batchSize)
+  -> dashboardApiService.postBatch(records)
+  -> on success: captureBuffer.acknowledge(count)
   -> on failure: retry next cycle
 
 Config refresh (every 5min):
-  -> configPullService.fetchConfig(nodeKey)
-  -> if changed: personaLoader.apply(newConfig), restart affected servers
+  -> dashboardApiService.fetchConfig(nodeId)
+  -> if changed: runtimeState.apply(newConfig)
 ```
 
 ## Protocol Emulation Details
@@ -294,10 +287,10 @@ async function* simulateStreaming(
 | `apps/node/src/capture/capture-service.ts` | Store + assign session |
 | `apps/node/src/capture/session-tracker.ts` | IP+service+5min grouping |
 | `apps/node/src/capture/fingerprint-extractor.ts` | Header hash, UA, TLS |
-| `apps/node/src/capture/local-buffer.ts` | SQLite offline buffer |
+| `apps/node/src/capture/capture-buffer.service.ts` | Redis offline spool |
 | `apps/node/src/sync/dashboard-sync-service.ts` | POST batch to dashboard |
-| `apps/node/src/sync/heartbeat-client.ts` | WebSocket heartbeat |
-| `apps/node/src/sync/config-pull-service.ts` | Fetch config from dashboard |
+| `apps/node/src/sync/node-lifecycle.service.ts` | Registration, REST heartbeat, config refresh, flush timers |
+| `apps/node/src/sync/dashboard-api.service.ts` | Fetch config + send heartbeats/captures |
 | `apps/node/src/protocols/ollama/ollama-server.ts` | Ollama Express listener |
 | `apps/node/src/protocols/ollama/ollama-routes.ts` | Ollama route handlers |
 | `apps/node/src/protocols/ollama/ollama-response-builder.ts` | Ollama format |
@@ -336,7 +329,7 @@ async function* simulateStreaming(
 | POST | `/api/v1/nodes/register` | Register on first boot |
 | GET | `/api/v1/nodes/:id/config` | Pull persona + service config |
 | POST | `/api/v1/capture/batch` | Submit captured request batch |
-| WS | `/ws/nodes` | Heartbeat connection |
+| POST | `/api/v1/nodes/:id/heartbeat` | REST heartbeat |
 
 ### Dashboard API Endpoints to Add (for capture ingestion)
 
@@ -360,10 +353,9 @@ async function* simulateStreaming(
    - Create `capture-service.ts`: assemble full CapturedRequest record, pass to sync or buffer
 
 3. **Local buffer + dashboard sync**
-   - Create `local-buffer.ts`: SQLite (better-sqlite3) table `buffered_requests` with JSON column + synced boolean
+  - Create `capture-buffer.service.ts`: Redis-backed pending queue with max buffer size and oldest-first eviction
    - Create `dashboard-sync-service.ts`: POST `/api/v1/capture/batch` with array of records, mark synced on 200
-   - Create `heartbeat-client.ts`: Socket.IO client connecting to dashboard `/ws/nodes`
-   - Create `config-pull-service.ts`: setInterval every 5min to fetch latest config
+  - Create lifecycle timer service for registration polling, REST heartbeat, config refresh, and batch flush
 
 4. **Template engine (packages/response-engine + apps/node)**
    - Create `packages/response-engine/src/types.ts` with Template, MatchResult, StreamChunk interfaces
@@ -424,9 +416,9 @@ async function* simulateStreaming(
 - [ ] Create fingerprint extractor (header hash, TLS best-effort)
 - [ ] Create session tracker (IP+service+5min grouping)
 - [ ] Create capture service (assemble full record)
-- [ ] Create local SQLite buffer (offline storage)
+- [ ] Create local Redis spool (offline storage)
 - [ ] Create dashboard sync service (batch POST)
-- [ ] Create heartbeat client (WebSocket)
+- [ ] Create lifecycle heartbeat/config timers
 - [ ] Create config pull service (periodic refresh)
 - [ ] Create template store (load + index JSON files)
 - [ ] Create template matcher (keyword overlap, 30% threshold)
@@ -449,7 +441,7 @@ async function* simulateStreaming(
 - Streaming responses deliver tokens with 50-90ms intervals (not instant)
 - All requests captured with full metadata (IP, headers, headerHash, UA, body, response)
 - Sessions correctly grouped by IP + service + 5min gap
-- When dashboard unreachable, requests buffer in SQLite; on reconnect, batch syncs
+- When dashboard unreachable, requests buffer in Redis; on reconnect, batch syncs
 - Heartbeat maintains node ONLINE status in dashboard
 - Template matching returns reasonable responses for common prompts
 - Persona values (model name, GPU) appear correctly in all protocol responses
@@ -461,15 +453,15 @@ async function* simulateStreaming(
 |------|-----------|--------|------------|
 | Streaming format mismatch detected by SDK clients | Medium | High | Test with official SDKs; fix format bugs from smoke tests |
 | Template responses too generic / detectable | Medium | Medium | Ship 300+ diverse templates; add response variance |
-| SQLite buffer grows unbounded if dashboard offline | Low | Medium | Max buffer size (100K records), oldest-first eviction |
+| Redis spool grows unbounded if dashboard offline | Low | Medium | Max buffer size (100K records), oldest-first eviction |
 | Multi-port binding conflicts in Docker | Low | Low | Map host:container ports explicitly, no overlaps |
 | Memory pressure from template index | Low | Low | 500 templates ~= 2MB in memory; negligible |
 
 ## Security Considerations
 
 - Capture middleware MUST NOT log the dashboard API key
-- Local SQLite buffer encrypted at rest if contains sensitive captured data (optional: not in v1, captured data is attacker data)
-- Node never exposes internal health endpoint externally (bind to 127.0.0.1)
+- Local Redis spool is local-only and should stay isolated on the internal Docker network
+- If the control-plane listener stays publicly exposed, keep the health payload minimal and avoid leaking persona/config state
 - API key for dashboard sync transmitted over HTTPS only
 - No real shell, filesystem, or network access from honeypot protocol handlers
 - Request body size limit: 1MB per request (prevent DoS)

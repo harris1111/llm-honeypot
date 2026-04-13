@@ -5,6 +5,47 @@
 
 ---
 
+## Phase 2/3 Core Milestone — April 13, 2026
+
+### Dashboard Control Plane
+- Added shared API envelopes plus auth, node, persona, and capture contracts in `@llmtrap/shared`
+- Implemented NestJS modules for auth, users, nodes, capture, audit, and health
+- Added first-user bootstrap, JWT refresh sessions, hashed refresh-token storage, rate-limited login, and TOTP setup/enable/verify flows
+- Added admin-facing user CRUD and node provisioning/approval/configuration APIs
+- Added capture batch ingestion with session grouping on the dashboard side
+
+### Dashboard UI
+- Replaced the Phase 1 placeholder page with a routed React control plane using TanStack Router, TanStack Query, and Zustand
+- Added login/bootstrap flow, overview metrics shell, node list/detail views, and settings page
+- Wired TOTP verification during login and authenticator setup in settings
+- Fixed the web package dependency graph so shared contracts resolve cleanly from the frontend
+
+### Honeypot Node Core
+- Replaced the node stub with a control-plane runtime that registers with the dashboard, refreshes config, sends REST heartbeats, and flushes captures
+- Added Redis-backed local spooling for pending captures
+- Expanded `@llmtrap/response-engine` into a basic template loader/router with keyword matching and variable substitution
+- Added starter templates in `templates/core.json`
+- Implemented Ollama-compatible, OpenAI-compatible, and Anthropic-compatible listeners with protocol-specific streaming formats
+
+### Validation Results
+```
+✅ pnpm --filter @llmtrap/shared build
+✅ pnpm --filter @llmtrap/api typecheck
+✅ pnpm --filter @llmtrap/web typecheck
+✅ pnpm --filter @llmtrap/node build
+✅ pnpm --filter @llmtrap/node typecheck
+✅ pnpm --filter @llmtrap/response-engine build
+✅ Runtime smoke: Ollama /api/tags + /api/generate
+✅ Runtime smoke: OpenAI /v1/models + /v1/chat/completions (SSE)
+✅ Runtime smoke: Anthropic /v1/messages + /anthropic/v1/messages (typed SSE)
+```
+
+### Follow-up Gaps
+- Invite workflow and richer dashboard analytics remain open
+- Full protocol coverage and stronger node hardening remain Phase 3/4 follow-up work
+
+---
+
 ## Phase 1 Completion — April 13, 2026
 
 ### Infrastructure Setup

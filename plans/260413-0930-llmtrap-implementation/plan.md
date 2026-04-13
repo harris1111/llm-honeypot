@@ -22,8 +22,8 @@ Two Docker Compose stacks: **Dashboard** (NestJS API + React + PostgreSQL + Redi
 | # | Phase | Effort | Status | Depends On | Key Deliverables |
 |---|-------|--------|--------|------------|------------------|
 | 1 | [Monorepo Setup](phase-01-monorepo-setup.md) | 12h | Complete | -- | Turborepo, pnpm workspaces, Prisma schema, Docker scaffolds, CI base |
-| 2 | [Dashboard Foundation](phase-02-dashboard-foundation.md) | 24h | Pending | Phase 1 | Auth, user/node mgmt API, React shell, DB migrations |
-| 3 | [Honeypot Node Core](phase-03-honeypot-node-core.md) | 24h | Pending | Phase 1 | Ollama/OpenAI/Anthropic emulators, template engine, capture pipeline |
+| 2 | [Dashboard Foundation](phase-02-dashboard-foundation.md) | 24h | In Progress | Phase 1 | Auth, user/node mgmt API, React shell, TOTP settings, capture/control routes |
+| 3 | [Honeypot Node Core](phase-03-honeypot-node-core.md) | 24h | In Progress | Phase 1 | Ollama/OpenAI/Anthropic emulators, Redis spool, dashboard sync, template engine |
 | 4 | [Full Protocol Coverage](phase-04-full-protocol-coverage.md) | 24h | Pending | Phase 3 | All LLM/MCP/IDE/RAG/homelab/traditional protocols + full SSH FS |
 | 5 | [Intelligence Engine](phase-05-intelligence-engine.md) | 24h | Pending | Phase 2, 3 | Response strategies, proxy, backfeed, classification, fingerprinting, personas |
 | 6 | [Threat Intel & Alerts](phase-06-threat-intel-alerts.md) | 16h | Pending | Phase 5 | Blocklists, IOC, MITRE, STIX, alerts, reports, cold storage, CI/CD, release |
@@ -91,6 +91,23 @@ Phase 1 (Monorepo Setup)
 - Templates: AI-batch generation — 300+ prompt-response pairs via LLM
 - SSH depth: Full filesystem simulation — Cowrie-inspired fake FS
 - Proxy config: Generic OpenAI-compatible — base_url, api_key, model fields
+
+### Session 2 — 2026-04-13
+**Trigger:** Phase 2/3 core milestone implementation
+
+#### Landed work
+- Dashboard API foundation: auth/users/nodes/capture/audit/health modules, shared contracts, hashed secrets, TOTP setup/verify/enable
+- Dashboard web shell: routed login, overview, nodes, settings, auth store, node CRUD UI
+- Node core runtime: registration/config refresh/REST heartbeat/capture flush scheduler, Redis-backed local spool, runtime health
+- Protocol slice: Ollama, OpenAI-compatible, and Anthropic-compatible listeners with streaming support
+
+#### Validation
+- `pnpm --filter @llmtrap/shared build`
+- `pnpm --filter @llmtrap/api typecheck`
+- `pnpm --filter @llmtrap/web typecheck`
+- `pnpm --filter @llmtrap/node build`
+- `pnpm --filter @llmtrap/node typecheck`
+- Runtime smoke requests against Ollama, OpenAI-compatible, and Anthropic-compatible listeners
 
 #### Impact on Phases
 - Phase 1: Update `apps/node` scaffold from Express to NestJS app

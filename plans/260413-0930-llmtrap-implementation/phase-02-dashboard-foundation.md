@@ -2,26 +2,33 @@
 
 ## Overview
 - **Priority:** P1
-- **Status:** Pending
+- **Status:** In Progress
 - **Effort:** 24h
-- **Branch:** `feat/api/dashboard-foundation`
+- **Branch:** `feat/fullstack/dashboard-node-core`
 - **Depends On:** Phase 1
 
 Build the NestJS API backend (auth, user management, node management) and React dashboard shell (login, overview, settings pages). Establish the core CRUD patterns all later phases reuse.
+
+## Current Implementation Snapshot
+
+- Landed: auth, users, nodes, capture, audit, and health modules in `apps/api`
+- Landed: first-user bootstrap, JWT refresh sessions, TOTP challenge/setup/enable, node registration/approval/config/control APIs
+- Landed: React login, overview, nodes, node detail, and settings routes with Zustand/TanStack Query wiring
+- Remaining: explicit invite workflow, richer analytics surfaces, and optional operator-facing real-time updates
 
 ## Key Insights (from Research)
 
 - First user becomes admin; subsequent users via invite only
 - JWT + refresh token pattern; TOTP 2FA via `otplib`
 - Node registration: node sends key -> dashboard approves -> node pulls persona config
-- WebSocket heartbeat for node health (Socket.IO)
+- REST heartbeat landed first for node health; dashboard socket work remains deferred
 - Repository/service pattern per NestJS module; Zod DTOs via `@anatine/zod-nestjs`
 
 ## Requirements
 
 ### Functional
 - **Auth module:** Register (first user = admin), login (email + bcrypt password), JWT access/refresh tokens, TOTP 2FA setup/verify, logout
-- **User module:** CRUD users (admin only), role assignment (Admin/Analyst/Viewer), invite flow
+- **User module:** CRUD users (admin only), role assignment (Admin/Analyst/Viewer), invite flow follow-up
 - **Node module:** CRUD nodes, node registration endpoint (API key auth), heartbeat receiver, persona assignment, config push
 - **Audit module:** Log all auth events + config changes
 - **React shell:** Login page, overview dashboard (placeholder stats), node list, settings page, layout with sidebar navigation
@@ -54,15 +61,15 @@ Node boots -> reads LLMTRAP_DASHBOARD_URL + LLMTRAP_NODE_KEY from env
   -> NodeService.register() -> verify key exists in Node table with status=PENDING
   -> If auto-approve enabled -> set status=ONLINE, return persona config
   -> Else -> set status=PENDING, admin approves via dashboard
-  -> Node starts WebSocket heartbeat (every 30s)
-  -> Dashboard updates lastHeartbeat on each ping
+   -> Node polls registration until approved, then starts REST heartbeat (every 30s)
+   -> Dashboard updates lastHeartbeat on each POST heartbeat
   -> If heartbeat missed >5min -> status=OFFLINE, trigger alert
 ```
 
 ### NestJS Module Structure
 ```
 apps/api/src/
-├── main.ts                          # Bootstrap, CORS, Swagger, global pipes
+├── main.ts                          # Bootstrap, CORS, global filters/interceptors
 ├── app.module.ts                    # Root module imports
 ├── common/
 │   ├── decorators/
@@ -74,7 +81,6 @@ apps/api/src/
 │   │   ├── jwt-auth.guard.ts
 │   │   └── roles.guard.ts
 │   ├── interceptors/
-│   │   ├── logging.interceptor.ts
 │   │   └── transform.interceptor.ts  # Wraps responses in {data, meta}
 │   └── pipes/
 │       └── zod-validation.pipe.ts
@@ -100,7 +106,6 @@ apps/api/src/
 │   │   ├── nodes.module.ts
 │   │   ├── nodes.controller.ts
 │   │   ├── nodes.service.ts
-│   │   ├── nodes.gateway.ts          # WebSocket heartbeat (Socket.IO)
 │   │   └── dto/
 │   │       ├── register-node.dto.ts
 │   │       ├── update-node.dto.ts
@@ -164,7 +169,7 @@ apps/web/src/
 | POST | `/api/v1/auth/verify-totp` | Temp token | Verify 2FA code |
 | POST | `/api/v1/auth/refresh` | Refresh token | Get new access token |
 | POST | `/api/v1/auth/logout` | JWT | Invalidate refresh token |
-| POST | `/api/v1/auth/setup-totp` | JWT | Generate TOTP secret + QR |
+| POST | `/api/v1/auth/setup-totp` | JWT | Generate TOTP secret + otpauth URL |
 | POST | `/api/v1/auth/enable-totp` | JWT | Confirm TOTP with code |
 
 ### Users (Admin only)
@@ -186,7 +191,7 @@ apps/web/src/
 | POST | `/api/v1/nodes/register` | API Key | Node self-registration |
 | POST | `/api/v1/nodes/:id/approve` | JWT (Admin) | Approve pending node |
 | GET | `/api/v1/nodes/:id/config` | API Key | Node pulls its config |
-| WS | `/ws/nodes` | API Key | Heartbeat + real-time events |
+| POST | `/api/v1/nodes/:id/heartbeat` | API Key | Heartbeat receiver |
 
 ### Health
 | Method | Path | Auth | Description |
@@ -199,7 +204,7 @@ apps/web/src/
 
 | Path | Purpose |
 |------|---------|
-| `apps/api/src/main.ts` | NestJS bootstrap with CORS, Swagger, global pipes/filters |
+| `apps/api/src/main.ts` | NestJS bootstrap with CORS, global filters/interceptors |
 | `apps/api/src/app.module.ts` | Root module importing all feature modules |
 | `apps/api/src/config/env-config.ts` | Zod env validation |
 | `apps/api/src/common/decorators/current-user.decorator.ts` | Extract user from JWT |
@@ -207,7 +212,6 @@ apps/web/src/
 | `apps/api/src/common/filters/http-exception.filter.ts` | Consistent error envelope |
 | `apps/api/src/common/guards/jwt-auth.guard.ts` | JWT validation guard |
 | `apps/api/src/common/guards/roles.guard.ts` | Role-based access guard |
-| `apps/api/src/common/interceptors/logging.interceptor.ts` | Request/response Pino logging |
 | `apps/api/src/common/interceptors/transform.interceptor.ts` | Wrap in `{data, meta}` |
 | `apps/api/src/common/pipes/zod-validation.pipe.ts` | Zod DTO validation pipe |
 | `apps/api/src/modules/auth/auth.module.ts` | Auth module |
@@ -225,7 +229,6 @@ apps/web/src/
 | `apps/api/src/modules/nodes/nodes.module.ts` | Nodes module |
 | `apps/api/src/modules/nodes/nodes.controller.ts` | Nodes CRUD + registration |
 | `apps/api/src/modules/nodes/nodes.service.ts` | Nodes service |
-| `apps/api/src/modules/nodes/nodes.gateway.ts` | WebSocket heartbeat |
 | `apps/api/src/modules/nodes/dto/register-node.dto.ts` | Node registration schema |
 | `apps/api/src/modules/nodes/dto/update-node.dto.ts` | Node update schema |
 | `apps/api/src/modules/nodes/dto/node-heartbeat.dto.ts` | Heartbeat payload schema |
@@ -263,9 +266,8 @@ apps/web/src/
    - Create `env-config.ts` with Zod validation for DATABASE_URL, REDIS_URL, JWT_SECRET, etc.
    - Create global exception filter (consistent `{data, meta, error}` envelope)
    - Create transform interceptor to wrap all responses
-   - Create Pino logging interceptor
    - Create Zod validation pipe
-   - Set up Swagger/OpenAPI docs at `/api/docs`
+   - Defer Swagger/OpenAPI until the operator surface stabilizes
 
 2. **Auth module**
    - Implement register endpoint (check if first user -> auto-admin, else reject)
@@ -292,8 +294,7 @@ apps/web/src/
    - Registration endpoint (API key auth): node sends key + metadata -> validate -> update status
    - Config pull endpoint: node requests its persona + service config
    - Approve endpoint (admin): set node PENDING -> ONLINE
-   - WebSocket gateway for heartbeat (Socket.IO namespace `/ws/nodes`)
-   - Heartbeat handler: update `lastHeartbeat` timestamp
+   - REST heartbeat endpoint: update `lastHeartbeat` timestamp for approved nodes
    - Background job check: if `lastHeartbeat > 5min ago` -> set OFFLINE
 
 5. **Audit module**
@@ -330,11 +331,11 @@ apps/web/src/
 - [ ] Add login rate limiting
 - [ ] Implement users module (CRUD, roles, invite)
 - [ ] Implement nodes module (CRUD, registration, config pull)
-- [ ] Implement WebSocket heartbeat gateway
+- [ ] Harden REST heartbeat polling and offline detection
 - [ ] Implement node offline detection (scheduled job)
 - [ ] Implement audit module (service + interceptor)
 - [ ] Implement health check endpoint
-- [ ] Set up Swagger/OpenAPI at /api/docs
+- [ ] Add Swagger/OpenAPI once the control-plane surface settles
 - [ ] Create React app with TanStack Router
 - [ ] Build sidebar layout + topbar
 - [ ] Build login page + TOTP dialog
@@ -354,7 +355,7 @@ apps/web/src/
 - TOTP setup generates scannable QR; login enforces code when enabled
 - Rate limiter blocks after 5 failed login attempts
 - Node registration with valid key returns persona config
-- WebSocket heartbeat updates `lastHeartbeat`; missed heartbeat triggers OFFLINE status
+- REST heartbeat updates `lastHeartbeat`; missed heartbeat handling remains follow-up work
 - React app renders login -> dashboard -> nodes -> settings
 - All API responses wrapped in `{data, meta, error}` envelope
 - Integration tests pass for auth, node registration, role enforcement
@@ -365,7 +366,7 @@ apps/web/src/
 | Risk | Likelihood | Impact | Mitigation |
 |------|-----------|--------|------------|
 | JWT token leakage | Low | High | Short access token TTL (15min), httpOnly cookies option |
-| WebSocket connection instability | Medium | Medium | Auto-reconnect in Socket.IO client, fallback to polling heartbeat |
+| Heartbeat polling drift or missed retries | Medium | Medium | Re-register until approval, keep REST heartbeat retryable, add offline scheduler |
 | First-user race condition | Low | Medium | DB unique constraint on user count check + atomic transaction |
 | TOTP secret exposure | Low | High | Encrypt at rest, never return secret after initial setup |
 

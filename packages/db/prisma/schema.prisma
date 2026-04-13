@@ -36,10 +36,12 @@ model User {
 model UserSession {
   id           String   @id @default(cuid())
   userId       String
-  refreshToken String   @unique
+  refreshTokenHash String   @unique
   expiresAt    DateTime
   createdAt    DateTime @default(now())
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
 }
 
 model Persona {
@@ -63,7 +65,8 @@ model Node {
   name          String
   hostname      String?
   publicIp      String?
-  nodeKey       String            @unique
+  nodeKeyHash   String            @unique
+  nodeKeyPrefix String            @unique
   status        NodeStatus        @default(PENDING)
   lastHeartbeat DateTime?
   personaId     String?
@@ -74,6 +77,8 @@ model Node {
   budgets       BudgetEntry[]
   requests      CapturedRequest[]
   sessions      HoneypotSession[]
+
+  @@index([status, lastHeartbeat])
 }
 
 model Actor {
@@ -136,6 +141,7 @@ model CapturedRequest {
 
   @@index([classification])
   @@index([nodeId, timestamp])
+  @@index([nodeId, service, timestamp])
   @@index([service])
   @@index([sessionId])
   @@index([sourceIp])

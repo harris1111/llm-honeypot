@@ -2,7 +2,7 @@
 
 **Version:** 0.1.0  
 **Last Updated:** April 13, 2026  
-**Status:** Phase 1 Complete (Scaffolding)
+**Status:** Phase 1 Complete, Phase 2/3 Foundations Active
 
 ---
 
@@ -13,7 +13,7 @@ LLMTrap is a distributed honeypot platform consisting of two independent deploym
 1. **Dashboard Stack** — Central management, analysis, threat intelligence
 2. **Node Stack** — Distributed honeypot instances emulating LLM/AI services
 
-Both stacks communicate via REST API + WebSocket heartbeat for enrollment, heartbeat, and data sync.
+Both stacks currently communicate via authenticated REST APIs for enrollment, configuration, heartbeat, and capture sync. Operator-facing real-time updates remain a later addition.
 
 ---
 
@@ -23,6 +23,8 @@ Both stacks communicate via REST API + WebSocket heartbeat for enrollment, heart
 
 Central command center running on a secure server.
 
+Remote browsers and remote nodes do not connect directly to the API container. A public HTTPS ingress or reverse proxy fronts the dashboard host, serves the web app, and forwards operator and node REST traffic to the internal API service.
+
 ```
 ┌─────────────────────────────────────────────┐
 │         Dashboard Stack (5 Services)         │
@@ -31,7 +33,7 @@ Central command center running on a secure server.
 │  │  Frontend (React + Vite)             │   │
 │  │  Port: 3000 (browser)                │   │
 │  └──────────────────────────────────────┘   │
-│            ↓ (API calls + WS)                │
+│             ↓ (API calls only)               │
 │  ┌──────────────────────────────────────┐   │
 │  │  API (NestJS)                        │   │
 │  │  Port: 4000 (internal)               │   │
@@ -61,7 +63,7 @@ Central command center running on a secure server.
 
 **Services:**
 - **api** (NestJS): Core business logic, REST endpoints
-- **web** (React): Dashboard UI, real-time updates
+- **web** (React): Dashboard UI for operator workflows
 - **worker** (BullMQ): Async jobs (enrichment, archival, alerts)
 - **postgres**: Primary relational DB
 - **redis**: Cache layer + message broker
@@ -69,6 +71,7 @@ Central command center running on a secure server.
 **Networks:**
 - `backend`: Isolated network for API ↔ DB ↔ Redis ↔ Worker
 - `frontend`: Bridge network for Web ↔ API
+- External HTTPS ingress: Terminates TLS and forwards public dashboard and node-control traffic to the internal API container
 
 ---
 
@@ -82,23 +85,23 @@ Individual honeypot instances deployed at remote locations.
 │                                         │
 │  ┌──────────────────────────────────┐  │
 │  │  trap-core (NestJS)              │  │
-│  │  Port: 11434 (external Ollama)  │  │
-│  │  - HTTP/LLM server emulation     │  │
+│  │  Ports: 11434 / 8080 / 8081      │  │
+│  │  - Ollama, OpenAI, Anthropic     │  │
 │  │  - Request capture + logging     │  │
-│  │  - Persona consistency           │  │
+│  │  - Dashboard sync scheduler      │  │
 │  │  Health: /internal/health        │  │
 │  └──────────────────────────────────┘  │
-│            ↓ (mTLS API)                 │
+│            ↓ (REST API)                 │
 │  Dashboard (Remote via LLMTRAP_...)     │
-│            ↓ (data sync)                │
+│            ↓ (batch sync)               │
 │  ┌──────────────────────────────────┐  │
 │  │  Local Redis (Autonomous)        │  │
-│  │  - Request buffering             │  │
+│  │  - Request spool queue           │  │
 │  │  - Offline operation             │  │
 │  └──────────────────────────────────┘  │
 │                                         │
 │  Networks:                              │
-│  - honeypot: External traffic (11434)  │
+│  - honeypot: External traffic           │
 │  - internal: trap-core ↔ Redis         │
 └────────────────────────────────────────┘
 ```
@@ -108,13 +111,15 @@ Individual honeypot instances deployed at remote locations.
 - **redis** (local): Autonomous operation when dashboard unreachable
 
 **Networks:**
-- `honeypot`: External-facing network (exposes port 11434)
+- `honeypot`: External-facing network (exposes Ollama/OpenAI/Anthropic listeners)
 - `internal`: Node-to-Redis communication only
 
 **Environment Variables:**
 - `LLMTRAP_DASHBOARD_URL`: Dashboard enrollment URL
-- `LLMTRAP_NODE_KEY`: Unique node credentials (mTLS cert fingerprint)
-- `NODE_HTTP_PORT`: Service port (default: 11434)
+- `LLMTRAP_NODE_KEY`: Unique node shared secret used in the `x-node-key` header
+- `NODE_HTTP_PORT`: Ollama/control-plane listener (default: 11434)
+- `OPENAI_HTTP_PORT`: OpenAI-compatible listener (default: 8080)
+- `ANTHROPIC_HTTP_PORT`: Anthropic-compatible listener (default: 8081)
 
 ---
 
@@ -162,15 +167,16 @@ llm-honeypot/
 
 ### apps/api (NestJS Backend)
 
-**Modules (Planned):**
-- `auth`: JWT, OAuth, session management
-- `nodes`: Node registration, heartbeat, lifecycle
-- `sessions`: Captured attack session metadata
-- `analytics`: Dashboards, charts, KPIs
-- `alerts`: Threshold-based alerting
-- `export`: CSV/JSON/API data export
-- `response-config`: Response template management
-- `threat-intel`: External feed integration
+**Modules (Current foundation):**
+- `auth`: JWT sessions, refresh, TOTP, bootstrap registration
+- `users`: Admin-managed user CRUD
+- `nodes`: Node provisioning, registration, approval, config, heartbeat
+- `capture`: Batch ingest and session grouping
+- `audit`: Auth and control-plane audit events
+- `health`: Liveness/readiness endpoints
+
+**Modules (Planned next):**
+- `analytics`, `alerts`, `export`, `response-config`, `threat-intel`
 
 **Design Pattern:**
 ```
@@ -193,6 +199,12 @@ Controller → Service → Repository → Prisma
 - shadcn/ui (Radix UI + Tailwind)
 - Recharts (visualizations)
 
+**Current routes:**
+- `/login` — bootstrap/login/TOTP verification
+- `/` — overview shell
+- `/nodes` and `/nodes/:nodeId` — provisioning and config edits
+- `/settings` — TOTP setup and operator settings foundation
+
 **Port:** 3000  
 **Bundle:** ~73 KB gzipped (target: <100 KB)
 
@@ -212,20 +224,21 @@ Controller → Service → Repository → Prisma
 
 ### apps/node (NestJS Honeypot)
 
-**Module Structure:**
+**Current runtime structure:**
 ```
-trap-core/
-  ├── llm-module/      # Ollama/OpenAI/Claude emulation
-  ├── mcp-module/      # MCP server emulation (Phase 3)
-  ├── ssh-module/      # SSH trap (Phase 3)
-  ├── ftp-module/      # FTP trap (Phase 3)
-  ├── dns-module/      # DNS trap (Phase 3)
-  ├── request-logger/  # Capture all requests
-  ├── persona/         # Load persona-engine
-  └── response/        # Load response-engine
+apps/node/src/
+   ├── app.module.ts            # Control-plane + Ollama listener
+   ├── node-shared.module.ts    # Shared runtime providers
+   ├── capture/                 # HTTP capture + Redis spool
+   ├── runtime/                 # Shared process state
+   ├── sync/                    # Registration/config/heartbeat/flush
+   └── protocols/
+         ├── ollama/
+         ├── openai/
+         └── anthropic/
 ```
 
-**Port:** 11434 (Ollama-compatible)  
+**Ports:** 11434 (Ollama/control plane), 8080 (OpenAI-compatible), 8081 (Anthropic-compatible)  
 **Health:** `/internal/health`  
 **Local Redis:** Autonomous buffering when offline
 
@@ -348,7 +361,7 @@ model Actor { ... }             // Threat intel actors
 ### Node Stack Networks
 
 **`honeypot`** (External traffic)
-- Exposes port 11434 to the internet
+- Exposes the Ollama, OpenAI-compatible, and Anthropic-compatible listeners
 - Only `trap-core` service listens here
 
 **`internal`** (trap-core ↔ Redis)
@@ -357,15 +370,16 @@ model Actor { ... }             // Threat intel actors
 
 ---
 
-## Security Model (Phase 1 Foundation)
+## Security Model (Current Foundation)
 
-### Current State (Phase 1)
+### Current State
 - ✅ Network isolation via Docker networks
 - ✅ Type-safe validation (Zod) at boundaries
-- 🔄 JWT authentication scaffolding (Phase 2)
-- 🔄 mTLS for node-to-dashboard enrollment (Phase 2)
+- ✅ JWT-based operator authentication
+- ✅ `x-node-key` shared-secret auth for node-to-dashboard sync
+- 🔄 mTLS for node-to-dashboard enrollment (future hardening)
 - 🔄 Encryption at rest (Phase 2+)
-- 🔄 Non-root containers (Phase 2)
+- ✅ Non-root runtime containers
 - 🔄 Resource limits (Phase 2)
 
 ### Threat Model
@@ -395,7 +409,7 @@ model Actor { ... }             // Threat intel actors
 
 1. **Multi-region**: Federated nodes with distributed PostgreSQL
 2. **Kubernetes**: Move from Compose to K8s for scaling
-3. **Streaming**: Real-time session updates via WebSocket
+3. **Streaming**: Optional operator-facing session updates via WebSocket or SSE
 4. **Cold storage**: S3 integration for archived sessions
 5. **API rate limiting**: Protect dashboard API from brute force
 6. **Observability**: Prometheus metrics + ELK stack

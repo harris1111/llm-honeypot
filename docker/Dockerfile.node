@@ -6,6 +6,7 @@ WORKDIR /app
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml turbo.json tsconfig.base.json ./
 COPY apps ./apps
 COPY packages ./packages
+COPY templates ./templates
 
 RUN pnpm install --frozen-lockfile
 RUN pnpm --filter @llmtrap/node build
@@ -19,9 +20,10 @@ COPY --from=builder /app/apps/node/dist ./apps/node/dist
 COPY --from=builder /app/apps/node/package.json ./apps/node/package.json
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/packages ./packages
+COPY --from=builder /app/templates ./templates
 
 ENV NODE_ENV=production
-EXPOSE 11434
+EXPOSE 11434 8080 8081
 USER llmtrap
 
 CMD ["node", "apps/node/dist/main.js"]

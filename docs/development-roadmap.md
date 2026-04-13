@@ -2,13 +2,13 @@
 
 **Project Version:** 0.1.0  
 **Last Updated:** April 13, 2026  
-**Status:** Phase 1 Complete ✅
+**Status:** Phase 1 Complete, Phase 2/3 Core Milestone In Progress
 
 ---
 
 ## Executive Summary
 
-LLMTrap is an open-source, multi-protocol AI honeypot platform for security research. Phase 1 establishes the foundational monorepo infrastructure with pnpm workspaces, Turborepo orchestration, Docker scaffolding, and baseline CI/CD. All core packages and applications are now buildable, typesafe, and ready for protocol emulation implementation.
+LLMTrap is an open-source, multi-protocol AI honeypot platform for security research. Phase 1 established the monorepo and deployment baseline. The current milestone has now landed the Phase 2 dashboard control-plane foundation and the Phase 3 node-core runtime slice: authenticated operator flows, node registration/config/capture APIs, a React dashboard shell, and a multi-listener honeypot node with Ollama, OpenAI-compatible, and Anthropic-compatible emulation backed by Redis spooling.
 
 ---
 
@@ -42,33 +42,43 @@ LLMTrap is an open-source, multi-protocol AI honeypot platform for security rese
 
 ---
 
-### Phase 2: Dashboard Foundation (Planned)
+### Phase 2: Dashboard Foundation (In Progress)
 
 **Objective:** Implement dashboard API + basic UI shell.  
-**Est. Timeline:** Next phase  
-**Status:** Blocked (awaiting Phase 1 closure)
+**Timeline:** In progress (April 13, 2026)  
+**Status:** Core foundation landed
 
-#### Scope
-- NestJS module structure (auth, nodes, sessions, analytics, alerts, export, response-config, threat-intel)
-- PostgreSQL schema refinement + migrations
-- React dashboard skeleton with routing
-- TanStack Query + Zustand integration
-- Authentication scaffolding (JWT basics)
+#### Landed Deliverables
+- Auth flows: first-user bootstrap, login, refresh/logout, TOTP challenge/setup/enable
+- API modules: auth, users, nodes, capture, audit, health
+- Node lifecycle endpoints: register, approve, config pull, REST heartbeat, capture batch ingest
+- React shell: login, overview, nodes list/detail, settings, auth state, node CRUD workflows
+- Shared envelopes/contracts exported through `@llmtrap/shared`
+
+#### Remaining Closure Work
+- Admin invite workflow and richer user lifecycle UX
+- Broader API test coverage and dashboard analytics surfaces
+- Optional WebSocket operator updates beyond the current REST heartbeat/control-plane baseline
 
 ---
 
-### Phase 3: Honeypot Node Core (Planned)
+### Phase 3: Honeypot Node Core (In Progress)
 
 **Objective:** Implement multi-protocol honeypot node.  
-**Est. Timeline:** Following Phase 2  
-**Status:** Blocked
+**Timeline:** In progress (April 13, 2026)  
+**Status:** Core runtime landed
 
-#### Scope
-- NestJS protocol modules (HTTP/REST for LLM endpoints)
-- Persona consistency engine integration
-- Response engine template matching
-- Local Redis buffering + dashboard sync
-- Request capture + logging infrastructure
+#### Landed Deliverables
+- Shared runtime state and control-plane scheduler for registration, config refresh, heartbeat, and capture flush
+- Redis-backed local capture queue with dashboard batch sync
+- Template loader/router in `@llmtrap/response-engine` plus starter templates
+- Multi-listener Nest runtime exposing Ollama on `11434`, OpenAI-compatible on `8080`, and Anthropic-compatible on `8081`
+- Runtime health/status reporting and protocol request capture plumbing
+
+#### Remaining Closure Work
+- Broader protocol coverage beyond the initial Ollama/OpenAI/Anthropic slice
+- Stronger fingerprint extraction, session analytics, and load/perf hardening
+- More exhaustive node integration and smoke automation
 
 ---
 
@@ -120,20 +130,21 @@ LLMTrap is an open-source, multi-protocol AI honeypot platform for security rese
 - ✅ Web bundle: ~73 KB gzipped
 - ✅ Docker validation: both compose configs valid
 
-### Phase 2+ (Planned)
-- API responds to all defined routes (auth, nodes, analytics)
-- UI renders without JS errors
-- PostgreSQL migrations run cleanly
-- E2E tests pass (if added)
+### Phase 2/3 (Current Milestone)
+- Auth, node CRUD, and capture-control routes compile and typecheck cleanly
+- Dashboard UI renders login, node management, and settings flows without type errors
+- Node runtime boots three listeners and returns protocol-shaped responses for Ollama, OpenAI-compatible, and Anthropic-compatible probes
+- Redis-backed buffering and dashboard sync codepaths compile cleanly
 
 ---
 
 ## Known Constraints & Notes
 
-### Phase 1 Hardening (Non-blocking)
+### Current Hardening (Non-blocking)
 1. Prisma config migration from `package.json` → `prisma.config.ts` (cosmetic deprecation warning)
 2. Docker resource limits not yet enforced (CPU, memory)
-3. Non-root user enforcement pending (Phase 2+)
+3. Non-root user enforcement pending for broader runtime hardening
+4. Dashboard analytics, invite flows, and broader protocol coverage remain open before Phase 2/3 can be marked complete
 
 ### Architecture Decisions
 - **NestJS for all backend:** Unified framework for API, node, and worker services

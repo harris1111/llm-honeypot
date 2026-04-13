@@ -1,21 +1,26 @@
 import { Controller, Get } from '@nestjs/common';
 
+import { CaptureSyncService } from './capture/capture-sync.service';
+import { RuntimeStateService } from './runtime/runtime-state.service';
+
 @Controller()
 export class AppController {
+  constructor(
+    private readonly captureSyncService: CaptureSyncService,
+    private readonly runtimeStateService: RuntimeStateService,
+  ) {}
+
   @Get('internal/health')
-  getHealth(): { service: string; status: string; timestamp: string } {
-    return {
-      service: 'node',
-      status: 'ok',
-      timestamp: new Date().toISOString(),
-    };
+  async getHealth() {
+    return this.runtimeStateService.getHealth(await this.captureSyncService.size());
   }
 
   @Get()
-  getOverview(): { message: string; phase: string } {
+  getOverview(): { message: string; service: string; status: string } {
     return {
-      message: 'LLMTrap honeypot node scaffold is online.',
-      phase: 'phase-01-monorepo-setup',
+      message: 'LLMTrap honeypot node is online.',
+      service: 'node',
+      status: this.runtimeStateService.getStatus(),
     };
   }
 }

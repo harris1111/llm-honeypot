@@ -32,5 +32,11 @@ module.exports = {
         '@typescript-eslint/no-explicit-any': 'error',
       },
     },
+    {
+      files: ['apps/api/src/**/*.ts', 'apps/node/src/**/*.ts', 'apps/worker/src/**/*.ts'],
+      rules: {
+        '@typescript-eslint/consistent-type-imports': 'off',
+      },
+    },
   ],
 };

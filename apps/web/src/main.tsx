@@ -1,11 +1,13 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 
 import { App } from './app';
+import { useAuthStore } from './lib/auth-store';
+import { queryClient } from './lib/query-client';
 import './styles.css';
 
-const queryClient = new QueryClient();
+useAuthStore.getState().hydrate();
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
