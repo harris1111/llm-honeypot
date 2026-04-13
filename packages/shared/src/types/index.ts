@@ -11,27 +11,53 @@ export type AttackClassification =
   | 'validator'
   | 'unknown';
 
+export type RagProtocolService = 'chromadb' | 'milvus' | 'neo4j' | 'qdrant' | 'weaviate';
+
+export type HomelabProtocolService =
+  | 'gitea'
+  | 'grafana'
+  | 'home-assistant'
+  | 'plex'
+  | 'portainer'
+  | 'prometheus'
+  | 'prowlarr'
+  | 'radarr'
+  | 'sonarr'
+  | 'uptime-kuma';
+
+export type TraditionalProtocolService = 'dns' | 'ftp' | 'smb' | 'smtp' | 'smtp-submission' | 'ssh' | 'telnet';
+
 export type ProtocolService =
   | 'api'
   | 'openai'
   | 'autogpt'
+  | 'chromadb'
+  | 'gitea'
+  | 'grafana'
+  | 'home-assistant'
   | 'ide-configs'
   | 'langserve'
   | 'lm-studio'
   | 'llamacpp'
   | 'mcp'
+  | 'milvus'
+  | 'neo4j'
   | 'ollama'
   | 'anthropic'
+  | 'plex'
+  | 'portainer'
+  | 'prometheus'
+  | 'prowlarr'
+  | 'qdrant'
+  | 'radarr'
+  | 'sonarr'
   | 'text-generation-webui'
+  | 'uptime-kuma'
   | 'vllm'
+  | 'weaviate'
   | 'node'
   | 'worker'
-  | 'ssh'
-  | 'ftp'
-  | 'smtp'
-  | 'dns'
-  | 'smb'
-  | 'telnet';
+  | TraditionalProtocolService;
 
 export interface ModelDescriptor {
   name: string;

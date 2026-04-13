@@ -2,13 +2,13 @@
 
 **Project Version:** 0.1.0  
 **Last Updated:** April 13, 2026  
-**Status:** Phase 1 Complete, Phase 2/3 Complete, Phase 4/5/6 In Progress
+**Status:** Phase 1 Complete, Phase 2/3 Complete, Phase 4 Complete, Phase 5/6 In Progress
 
 ---
 
 ## Executive Summary
 
-LLMTrap is an open-source, multi-protocol AI honeypot platform for security research. Phase 1 established the monorepo and deployment baseline. Phase 2 and Phase 3 are complete, and the current milestone has started landing Phase 4/5/6 slices across the node runtime, dashboard API, worker, and dashboard UI: broader protocol emulation, operator analytics/persona/actor views, background classification/enrichment/alert processing, and threat-intel/export/live-feed surfaces.
+LLMTrap is an open-source, multi-protocol AI honeypot platform for security research. Phase 1 established the monorepo and deployment baseline. Phase 2 and Phase 3 are complete, Phase 4 is now complete, and the current milestone is carrying Phase 5/6 slices across the dashboard API, worker, and dashboard UI: operator analytics/persona/actor views, background classification/enrichment/alert processing, and threat-intel/export/live-feed surfaces.
 
 ---
 
@@ -82,22 +82,25 @@ LLMTrap is an open-source, multi-protocol AI honeypot platform for security rese
 
 ---
 
-### Phase 4: Full Protocol Coverage 🚧 In Progress
+### Phase 4: Full Protocol Coverage ✅ Complete
 
 **Objective:** Add all target protocol emulators.  
-**Est. Timeline:** Following Phase 3  
-**Status:** Partially landed
+**Timeline:** Complete (April 13, 2026)  
+**Status:** Full protocol matrix validated
 
 #### Landed Deliverables
 - LM Studio, llama.cpp, vLLM, text-generation-webui, LangServe, and AutoGPT listeners added to the node runtime
 - MCP JSON-RPC and well-known endpoints added on the node control-plane port
 - High-value IDE/config honeypot file paths added for Claude, Cursor, Continue, Aider, Copilot, Roo, Windsurf, Streamlit, Terraform, and common secret/config bait
-- Node Docker image and compose file expanded to expose the new listener surfaces
+- RAG bait endpoints added for Qdrant, ChromaDB, Neo4j, Weaviate, and Milvus
+- Homelab bait services added for Plex, Sonarr, Radarr, Prowlarr, Portainer, Home Assistant, Gitea, Grafana, Prometheus, and Uptime Kuma
+- Traditional protocol listeners added for SSH, FTP, SMTP, DNS, SMB, and Telnet using raw capture plumbing plus persona-shaped shell/file responses
+- Node Docker image and compose file expanded to expose the new listener surfaces, including dedicated `HOST_*` remaps for traditional services during local Docker smoke on Windows
 
-#### Remaining Scope
-- SSH, FTP, SMTP, DNS, SMB trap services
-- RAG database simulation and broader homelab service bait
-- Broader traditional protocol smoke coverage
+#### Follow-up Hardening
+- Higher-fidelity native wire-protocol behavior for services that currently use lightweight bait responses
+- Broader automated socket-level smoke coverage and capture-label assertions
+- Additional container/runtime isolation tuning if specific traditional listeners are later split out of the current `trap-core` process
 
 ---
 
@@ -157,10 +160,11 @@ LLMTrap is an open-source, multi-protocol AI honeypot platform for security rese
 
 ### Phase 4/5/6 (Current In-Progress Slice)
 - `pnpm typecheck` passes across all workspace packages after protocol, worker, API, and web additions
-- `pnpm test` passes with `@llmtrap/node` at 20 tests, `@llmtrap/api` at 19 tests, and `@llmtrap/worker` at 8 tests
+- `pnpm test` passes with `@llmtrap/node` at 35 tests, `@llmtrap/api` at 19 tests, and `@llmtrap/worker` at 8 tests
 - `pnpm build` passes across the monorepo after the new worker/API/web slices
 - `docker compose -f docker/docker-compose.dashboard.yml config` passes with required env provided
 - `docker compose -f docker/docker-compose.node.yml config` passes with required env provided
+- Docker smoke validates the new Phase 4 listeners through representative probes for Qdrant, Grafana, Milvus bait, SSH, FTP, SMTP, SMTP submission, Telnet, SMB, and DNS on the published node ports
 - No repository-level e2e or smoke scripts exist yet; `tests/e2e` and `tests/smoke` are currently empty
 
 ---
@@ -171,7 +175,7 @@ LLMTrap is an open-source, multi-protocol AI honeypot platform for security rese
 1. Prisma config migration from `package.json` → `prisma.config.ts` (cosmetic deprecation warning)
 2. Docker resource limits not yet enforced (CPU, memory)
 3. Broader container-runtime hardening remains follow-up work beyond the current non-root images
-4. Dashboard analytics deepening, broader protocol coverage, and runtime template/proxy distribution remain follow-up work after the current Phase 4/5/6 slice
+4. Dashboard analytics deepening and runtime template/proxy distribution remain follow-up work after the current Phase 5/6 slice
 
 ### Architecture Decisions
 - **NestJS for all backend:** Unified framework for API, node, and worker services

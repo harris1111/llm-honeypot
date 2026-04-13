@@ -2,21 +2,23 @@
 
 LLMTrap is an open-source multi-protocol AI honeypot for security research. It is designed to emulate attractive AI infrastructure targets, capture malicious or opportunistic traffic, and give the operator a dashboard for reviewing sessions, nodes, and captured requests.
 
-The repository currently ships the Phase 1 to Phase 3 core slice:
+The repository currently ships the Phase 1 to Phase 4 slice:
 
 - a dashboard stack built with NestJS, React, PostgreSQL, Redis, and a worker process
 - a honeypot node that registers with the dashboard, syncs config, sends heartbeats, and uploads captures
-- Ollama-compatible, OpenAI-compatible, and Anthropic-compatible HTTP listeners
+- AI-facing listeners for Ollama, OpenAI-compatible, Anthropic-compatible, LM Studio, text-generation-webui, LangServe, llama.cpp, vLLM, and AutoGPT
+- MCP and IDE/config bait surfaces, RAG bait services, homelab bait services, and traditional listeners for SSH, FTP, SMTP, DNS, SMB, and Telnet
 - Prisma migrations, Docker Compose bootstrap, and focused Vitest coverage for key API and node services
 
-Broader protocol coverage, intelligence/backfeed, alerts, and richer operator analytics are planned for later phases.
+Phase 5 and Phase 6 work on response routing, threat intel, alert delivery, and broader operator automation is still in progress.
 
 ## Current status
 
 - Phase 1: complete
 - Phase 2: complete
 - Phase 3: complete
-- Phase 4 to 6: planned
+- Phase 4: complete
+- Phase 5 to 6: in progress
 
 What is implemented today:
 
@@ -24,13 +26,14 @@ What is implemented today:
 - dashboard UI for login, overview, nodes, and settings
 - node registration, config refresh, REST heartbeat, and capture batching
 - Redis-backed local capture spooling on the node
-- protocol-shaped responses for Ollama, OpenAI-compatible, and Anthropic-compatible surfaces
+- protocol-shaped responses for the AI HTTP surfaces plus MCP/IDE bait, RAG bait, homelab bait, and traditional protocol traps
 
 What is not implemented yet:
 
-- SSH, FTP, SMTP, DNS, SMB, MCP, IDE, and RAG full coverage
+- runtime proxy routing, backfeed/template distribution, and deeper response-strategy execution
 - richer dashboard analytics and invite workflows
-- full threat-intel, backfeed, alerting, and cold-storage automation
+- external alert delivery, cold-storage automation, and WebSocket live-feed transport
+- repository-owned e2e and smoke automation for the expanded listener matrix
 
 ## Architecture
 
@@ -83,8 +86,13 @@ Useful ports in the default setup:
 - `3000` dashboard web UI
 - `4000` dashboard API
 - `11434` Ollama-compatible node endpoint
+- `1234` LM Studio listener
 - `8080` OpenAI-compatible node endpoint
 - `8081` Anthropic-compatible node endpoint
+- `6333` Qdrant bait endpoint
+- `3002` Grafana bait endpoint
+- `19530` Milvus HTTP bait endpoint
+- `20021`, `20022`, `20023`, `20025`, `20053/udp`, `20445`, `20587` traditional Docker host remaps for FTP, SSH, Telnet, SMTP, DNS, SMB, and SMTP submission
 
 ## Quick start with Docker
 
@@ -147,6 +155,18 @@ After startup, verify:
 - Node health: `http://localhost:11434/internal/health`
 - Ollama-compatible version: `http://localhost:11434/api/version`
 - OpenAI-compatible models: `http://localhost:8080/v1/models`
+- Qdrant bait collections: `http://localhost:6333/collections`
+- Grafana bait health: `http://localhost:3002/api/health`
+
+For local Windows Docker validation, the traditional listeners publish through the `HOST_*` remaps from `docker/node-compose.env.example` by default:
+
+- SSH: `localhost:20022`
+- FTP: `localhost:20021`
+- SMTP: `localhost:20025`
+- SMTP submission: `localhost:20587`
+- Telnet: `localhost:20023`
+- SMB: `localhost:20445`
+- DNS: `localhost:20053/udp`
 
 For server or multi-host deployment, set `LLMTRAP_DASHBOARD_URL` to the reachable dashboard origin instead of `host.docker.internal`.
 
@@ -171,7 +191,7 @@ Repository-level scripts are orchestrated through Turborepo from the root `packa
 
 ## Testing and validation
 
-The current repo includes focused automated coverage for key API and node services using Vitest.
+The current repo includes focused automated coverage for key API and node services using Vitest, including the Phase 4 runtime config inventory plus representative shell, RAG, and homelab helper coverage in `apps/node`.
 
 Validated commands for the current shipped slice:
 
@@ -189,8 +209,16 @@ The current real automated coverage is concentrated in the API and node packages
 - node runtime state
 - node dashboard API client request/envelope handling
 - node lifecycle registration, config, heartbeat, and flush behavior
+- Phase 4 config inventory, shell bait rendering, and representative RAG/homelab payload shaping
 
-The web and worker packages still use placeholder test scripts.
+The worker package now has focused Vitest coverage; the web package is the only remaining placeholder test script in the workspace.
+
+Recent Docker smoke for the shipped Phase 4 slice validated:
+
+- Qdrant `/collections`
+- Grafana `/api/health`
+- Milvus bait `/v1/vector/collections`
+- SSH `20022`, FTP `20021`, SMTP `20025`, SMTP submission `20587`, Telnet `20023`, SMB `20445`, DNS `20053/udp`
 
 ## Shutdown and reset
 
@@ -221,5 +249,5 @@ For deeper project context:
 
 ## Roadmap
 
-The next planned milestone is Phase 4: full protocol coverage. That work is intentionally not folded into the current README claims, because the current repository only ships the core Phase 1 to Phase 3 slice.
+The next milestones are the remaining Phase 5 and Phase 6 slices: response routing and backfeed, richer classification/persona workflows, threat-intel and alert delivery hardening, cold-storage automation, and repository-owned e2e/smoke coverage for the expanded protocol matrix.
 

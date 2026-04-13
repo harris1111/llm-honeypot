@@ -5,6 +5,36 @@
 
 ---
 
+## Phase 4 Completion — April 13, 2026
+
+### Full Protocol Matrix Landed
+- Added raw-protocol capture plumbing and a protocol listener manager inside the node runtime so non-HTTP services flow through the existing capture pipeline
+- Added RAG bait services for Qdrant, ChromaDB, Neo4j, Weaviate, and Milvus plus homelab bait services for Plex, Sonarr, Radarr, Prowlarr, Portainer, Home Assistant, Gitea, Grafana, Prometheus, and Uptime Kuma
+- Added traditional listeners for SSH, FTP, SMTP, DNS, SMB, and Telnet with persona-shaped shell/file responses and decoy node-key bait instead of the real dashboard secret
+- Hardened the node Docker stack with writable runtime-directory SSH host-key caching and dedicated `HOST_*` traditional port remaps for Windows-safe local smoke validation
+
+### Validation Results
+```
+✅ pnpm --filter @llmtrap/node test
+✅ pnpm --filter @llmtrap/node build
+✅ pnpm --filter @llmtrap/node lint
+✅ pnpm typecheck
+✅ pnpm test
+✅ pnpm build
+✅ docker compose --env-file docker/node-compose.env.example -f docker/docker-compose.node.yml up -d --build
+✅ Docker smoke: Qdrant /collections
+✅ Docker smoke: Grafana /api/health
+✅ Docker smoke: Milvus bait /v1/vector/collections
+✅ Docker smoke: SSH 20022, FTP 20021, SMTP 20025, SMTP submission 20587, Telnet 20023, SMB 20445, DNS 20053/udp
+```
+
+### Remaining Gaps
+- Runtime proxy routing, backfeed/template review, and cross-container template distribution remain open
+- External alert channels, cold storage, and WebSocket live-feed transport remain open
+- Repository-level e2e and smoke automation are still absent (`tests/e2e` and `tests/smoke` are empty)
+
+---
+
 ## Phase 4/5/6 Expansion — April 13, 2026
 
 ### Protocol And Node Surface Expansion
@@ -36,7 +66,6 @@
 ```
 
 ### Remaining Gaps
-- Traditional protocol emulators (SSH, FTP, SMTP, DNS, SMB) and RAG/homelab bait remain unimplemented
 - Runtime proxy routing, backfeed/template review, and cross-container template distribution remain open
 - External alert channels, cold storage, and WebSocket live-feed transport remain open
 - Repository-level e2e and smoke automation are still absent (`tests/e2e` and `tests/smoke` are empty)
@@ -262,6 +291,6 @@
 
 ## Next Steps
 
-1. **Phase 4 (Full Protocol Coverage)**: Expand to SSH, FTP, SMTP, DNS, SMB, MCP, IDE, and RAG surfaces
-2. **Phase 5 (Intelligence Engine)**: Add smart response routing, proxy/backfeed, and deeper classification
-3. **Phase 6 (Threat Intel & Alerts)**: Add feeds, alerts, reporting, and cold-storage automation
+1. **Phase 5 (Intelligence Engine)**: Add smart response routing, proxy/backfeed, and deeper classification
+2. **Phase 6 (Threat Intel & Alerts)**: Add feeds, alerts, reporting, and cold-storage automation
+3. **Automation Hardening**: Add repository-owned e2e and smoke suites for the expanded protocol matrix

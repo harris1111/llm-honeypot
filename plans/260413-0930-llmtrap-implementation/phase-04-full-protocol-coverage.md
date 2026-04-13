@@ -2,12 +2,19 @@
 
 ## Overview
 - **Priority:** P2
-- **Status:** Pending
-- **Effort:** 24h (was 20h; +4h for full SSH filesystem simulation)
-- **Branch:** `feat/node/full-protocol-coverage`
+- **Status:** Complete
+- **Effort:** 24h (was 20h; +4h for traditional listener hardening and Docker validation)
+- **Branch:** `main`
 - **Depends On:** Phase 3
 
 Extend the honeypot node with all remaining LLM protocols, MCP/agent endpoints, AI IDE config file honeypots, fake RAG database endpoints, fake homelab services, and traditional protocol honeypots (SSH, FTP, SMTP, DNS, SMB, Telnet).
+
+## Completion Summary
+
+- Delivered the remaining LLM, MCP/IDE, RAG, homelab, and traditional listeners inside `trap-core` using `ProtocolServerManagerService`, `HttpProtocolServer`, and raw protocol capture plumbing.
+- Kept traditional listeners in the main node process rather than separate protocol containers; local Docker validation publishes Windows-safe `HOST_*` remaps for SSH, FTP, SMTP, DNS, SMB, and Telnet.
+- Validated the shipped slice with `pnpm --filter @llmtrap/node test`, `pnpm --filter @llmtrap/node build`, `pnpm --filter @llmtrap/node lint`, monorepo `pnpm typecheck/test/build`, and Docker smoke probes for Qdrant, Grafana, Milvus bait, SSH, FTP, SMTP, Telnet, SMB, and DNS.
+- Remaining follow-up is deeper automated smoke coverage and higher-fidelity native wire-protocol behavior for selected bait services, not missing Phase 4 endpoint surfaces.
 
 ## Key Insights (from Research)
 
@@ -34,9 +41,9 @@ Extend the honeypot node with all remaining LLM protocols, MCP/agent endpoints, 
 
 ### Non-Functional
 - Each new protocol reuses capture middleware from Phase 3
-- Traditional services run in separate containers (already defined in docker-compose.node.yml)
+- Traditional services run as additional listeners inside `trap-core`; local Docker validation uses dedicated `HOST_*` remaps for SSH/FTP/SMTP/DNS/SMB/Telnet on the host side
 - All new endpoints use persona context for consistent responses
-- Memory per traditional service container < 128MB
+- Incremental listener overhead remains lightweight inside the existing `trap-core` process; no extra protocol containers were introduced for this phase
 
 ## Architecture
 
@@ -44,77 +51,28 @@ Extend the honeypot node with all remaining LLM protocols, MCP/agent endpoints, 
 
 ```
 apps/node/src/protocols/
-├── ollama/                    # Phase 3 (exists)
-├── openai/                    # Phase 3 (exists)
-├── anthropic/                 # Phase 3 (exists)
-├── lm-studio/
-│   └── lm-studio-routes.ts   # Reuses openai-server on port 1234
-├── text-gen-webui/
-│   ├── text-gen-webui-server.ts
-│   └── text-gen-webui-routes.ts
-├── langserve/
-│   ├── langserve-server.ts
-│   └── langserve-routes.ts
-├── llamacpp/
-│   ├── llamacpp-server.ts
-│   └── llamacpp-routes.ts
-├── vllm/
-│   └── vllm-routes.ts        # Reuses openai-server on port 8083
-├── autogpt/
-│   ├── autogpt-server.ts
-│   └── autogpt-routes.ts
-├── mcp/
-│   ├── mcp-server.ts          # Port 80/443 (shared with main HTTP)
-│   ├── mcp-routes.ts          # JSON-RPC handlers
-│   ├── mcp-tools.ts           # Fake tool definitions
-│   └── mcp-sse-handler.ts     # SSE transport
-├── ide-configs/
-│   ├── ide-config-server.ts   # Static file serving
-│   └── ide-config-templates.ts # Config file content generators
+├── ollama/                         # Phase 3 (exists)
+├── openai/                         # Phase 3 (exists)
+├── anthropic/                      # Phase 3 (exists)
+├── mcp/                            # MCP well-known + JSON-RPC handlers
+├── ide-configs/                    # High-value IDE/config bait paths
 ├── rag/
-│   ├── qdrant/
-│   │   └── qdrant-routes.ts
-│   ├── chromadb/
-│   │   └── chromadb-routes.ts
-│   ├── neo4j/
-│   │   └── neo4j-routes.ts
-│   ├── weaviate/
-│   │   └── weaviate-routes.ts
-│   └── milvus/
-│       └── milvus-routes.ts
+│   └── rag-service-definitions.ts  # Qdrant/ChromaDB/Neo4j/Weaviate/Milvus HTTP bait
 ├── homelab/
-│   ├── homelab-server.ts      # Single Express app, multiple path-based routes
-│   ├── plex-routes.ts
-│   ├── sonarr-routes.ts
-│   ├── radarr-routes.ts
-│   ├── prowlarr-routes.ts
-│   ├── portainer-routes.ts
-│   ├── home-assistant-routes.ts
-│   ├── gitea-routes.ts
-│   ├── grafana-routes.ts
-│   ├── prometheus-routes.ts
-│   └── uptime-kuma-routes.ts
+│   └── homelab-service-definitions.ts # Plex/*arr/Grafana/etc. HTTP bait
 ├── traditional/
-│   ├── ssh/
-│   │   ├── ssh-server.ts         # ssh2 library
-│   │   ├── ssh-shell.ts          # Full PTY shell state machine (Cowrie-inspired)
-│   │   ├── ssh-commands.ts       # Command handlers (ls, cat, whoami, wget, etc.)
-│   │   ├── ssh-filesystem.ts     # Virtual filesystem tree (persona-consistent)
-│   │   └── ssh-download-tracker.ts  # Track wget/curl download attempts
-<!-- Updated: Validation Session 1 - SSH elevated to full filesystem simulation -->
-│   ├── ftp/
-│   │   └── ftp-server.ts      # ftpd library
-│   ├── smtp/
-│   │   └── smtp-server.ts     # smtp-server library
-│   ├── dns/
-│   │   └── dns-server.ts      # dns2 library
-│   ├── smb/
-│   │   └── smb-server.ts      # Minimal auth capture
-│   └── telnet/
-│       └── telnet-server.ts   # net.createServer
-└── honeytoken/
-    ├── honeytoken-generator.ts  # Generate per-node fake keys
-    └── honeytoken-registry.ts   # Track which tokens served where
+│   ├── traditional-shell.ts        # Shared persona-shaped shell/file helpers
+│   ├── ssh-server.ts               # ssh2-backed interactive shell trap
+│   ├── ftp-server.ts               # Minimal command/bait responses over TCP
+│   ├── smtp-server.ts              # SMTP + submission capture over TCP
+│   ├── dns-server.ts               # UDP DNS responder with capture logging
+│   ├── smb-server.ts               # Minimal SMB negotiate/auth capture
+│   └── telnet-server.ts            # Telnet login + shell trap
+├── http-protocol-server.ts         # Generic lightweight HTTP listener bootstrap
+├── protocol-listener.ts            # Shared TCP/UDP bind helpers
+├── protocol-persona-snapshot.ts    # Decoy credentials and persona snapshots
+├── protocol-server-manager.service.ts # Starts the Phase 4 listener matrix
+└── protocol-server.types.ts        # Shared listener contracts
 ```
 
 ## Protocol Implementation Details
@@ -408,15 +366,12 @@ All paths under `apps/node/src/protocols/`:
    - Each service: 2-3 endpoints returning persona-consistent JSON
    - Portainer, Plex, *arr stack must reflect persona's service list
 
-9. **SSH honeypot (Full filesystem simulation — Cowrie-inspired)**
-   <!-- Updated: Validation Session 1 - Elevated to full FS simulation -->
-   - ssh2 server with configurable banner matching persona
-   - Accept any credentials -> log username + password
-   - **Full virtual filesystem:** directory tree generated from persona (home dir, /etc, /var, /opt)
-   - File contents: persona-consistent configs, .env files with honeytokens, .bash_history
-   - Command handlers: whoami, hostname, uname -a, ls (with directory listing), cat (read virtual files), cd (navigate), pwd, id, ps aux, df -h, free -h, nvidia-smi, docker ps, wget/curl (track downloads), pip list, history, env
-   - Download tracking: log all wget/curl URLs and commands
-   - Session recording: full command history per session for replay
+9. **SSH honeypot (interactive shell bait)**
+  - ssh2 server with a stable pre-auth banner and persona-shaped per-connection shell state
+  - Accept any credentials -> log username + password
+  - Virtual file bait: `.env`, `docker-compose.yml`, model note files, and persona-consistent command output
+  - Command handlers: whoami, hostname, uname -a, ls, cat, pwd, nvidia-smi, docker ps, exit/logout/quit
+  - Session recording: command history via the shared capture pipeline
 
 10. **FTP, SMTP, DNS, SMB, Telnet**
     - FTP: ftpd library, accept creds, fake dir listing
@@ -435,7 +390,9 @@ All paths under `apps/node/src/protocols/`:
     - Verify correct response format
     - Verify capture records created with correct service label
 
-## Todo List
+## Original Implementation Checklist
+
+The checklist below reflects the original design-time breakdown. Phase 4 shipped, but repository-owned automated smoke suites and some deeper fidelity goals remain follow-up work beyond this document's initial task decomposition.
 
 - [ ] Create OpenAI-compatible factory (reuse for LM Studio, vLLM, llama.cpp)
 - [ ] Implement LM Studio routes (port 1234)
@@ -479,6 +436,17 @@ All paths under `apps/node/src/protocols/`:
 - Every protocol's requests appear in capture pipeline with correct `service` label
 - Honeytokens are unique per node and access is logged
 - Docker Compose node stack starts all containers successfully
+
+## Validation Outcome
+
+- `pnpm --filter @llmtrap/node test`
+- `pnpm --filter @llmtrap/node build`
+- `pnpm --filter @llmtrap/node lint`
+- `pnpm typecheck`
+- `pnpm test`
+- `pnpm build`
+- `docker compose --env-file docker/node-compose.env.example -f docker/docker-compose.node.yml up -d --build`
+- Docker smoke reached Qdrant `/collections`, Grafana `/api/health`, Milvus bait `/v1/vector/collections`, SSH `20022`, FTP `20021`, SMTP `20025`, Telnet `20023`, SMB `20445`, and DNS `20053/udp`
 
 ## Risk Assessment
 

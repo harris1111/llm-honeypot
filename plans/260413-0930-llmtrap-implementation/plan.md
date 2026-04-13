@@ -15,7 +15,7 @@ created: 2026-04-13
 
 ## Architecture Summary
 
-Two Docker Compose stacks: **Dashboard** (NestJS API + React + PostgreSQL + Redis + Worker + db-init bootstrap) and **Honeypot Node** (currently `trap-core` + local Redis, with broader protocol containers deferred to later phases). Nodes register with dashboard via API key, pull persona configs, buffer logs locally when disconnected. Session grouping currently happens during dashboard capture ingest, while Redis backs queueing and local spooling.
+Two Docker Compose stacks: **Dashboard** (NestJS API + React + PostgreSQL + Redis + Worker + db-init bootstrap) and **Honeypot Node** (`trap-core` + local Redis). `trap-core` now hosts the full Phase 4 listener matrix alongside the core control-plane/runtime logic: Ollama, OpenAI-compatible, Anthropic-compatible, LM Studio, text-generation-webui, LangServe, llama.cpp, vLLM, AutoGPT, MCP/IDE bait, RAG bait, homelab bait, and traditional listeners. Nodes register with the dashboard via API key, pull persona configs, buffer logs locally when disconnected, and feed both HTTP and raw-protocol captures through the same batch-sync path.
 
 ## Phase Overview
 
@@ -24,9 +24,9 @@ Two Docker Compose stacks: **Dashboard** (NestJS API + React + PostgreSQL + Redi
 | 1 | [Monorepo Setup](phase-01-monorepo-setup.md) | 12h | Complete | -- | Turborepo, pnpm workspaces, Prisma schema, Docker scaffolds, CI base |
 | 2 | [Dashboard Foundation](phase-02-dashboard-foundation.md) | 24h | Complete | Phase 1 | Auth, user/node mgmt API, React shell, TOTP settings, capture/control routes |
 | 3 | [Honeypot Node Core](phase-03-honeypot-node-core.md) | 24h | Complete | Phase 1 | Ollama/OpenAI/Anthropic emulators, Redis spool, dashboard sync, template engine |
-| 4 | [Full Protocol Coverage](phase-04-full-protocol-coverage.md) | 24h | Pending | Phase 3 | All LLM/MCP/IDE/RAG/homelab/traditional protocols + full SSH FS |
-| 5 | [Intelligence Engine](phase-05-intelligence-engine.md) | 24h | Pending | Phase 2, 3 | Response strategies, proxy, backfeed, classification, fingerprinting, personas |
-| 6 | [Threat Intel & Alerts](phase-06-threat-intel-alerts.md) | 16h | Pending | Phase 5 | Blocklists, IOC, MITRE, STIX, alerts, reports, cold storage, CI/CD, release |
+| 4 | [Full Protocol Coverage](phase-04-full-protocol-coverage.md) | 24h | Complete | Phase 3 | All LLM/MCP/IDE/RAG/homelab/traditional protocols + persona-shaped interactive shell bait |
+| 5 | [Intelligence Engine](phase-05-intelligence-engine.md) | 24h | In Progress | Phase 2, 3 | Response strategies, proxy, backfeed, classification, fingerprinting, personas |
+| 6 | [Threat Intel & Alerts](phase-06-threat-intel-alerts.md) | 16h | In Progress | Phase 5 | Blocklists, IOC, MITRE, STIX, alerts, reports, cold storage, CI/CD, release |
 
 ## Dependency Graph
 
@@ -77,8 +77,8 @@ Phase 1 (Monorepo Setup)
 
 3. **[Architecture]** SSH honeypot depth: minimal command map vs full filesystem?
    - Options: Minimal command map (Recommended) | Full filesystem simulation | Defer to Phase 4
-   - **Answer:** Full filesystem simulation
-   - **Rationale:** Cowrie-level realism catches advanced attackers. Fake directory tree, file contents, download tracking.
+   - **Answer:** Persona-shaped interactive shell bait
+   - **Rationale:** Good enough realism for the shipped slice without introducing a full Cowrie-style filesystem emulator into `trap-core`.
 
 4. **[Architecture]** Default real-model proxy provider for validation prompt routing?
    - Options: OpenRouter (Recommended) | OpenAI direct | Self-hosted Ollama
@@ -89,7 +89,7 @@ Phase 1 (Monorepo Setup)
 #### Confirmed Decisions
 - Node framework: NestJS — unified DI/decorator patterns across monorepo
 - Templates: AI-batch generation — 300+ prompt-response pairs via LLM
-- SSH depth: Full filesystem simulation — Cowrie-inspired fake FS
+- SSH depth: Persona-shaped interactive shell bait — lightweight command/file responses inside `trap-core`
 - Proxy config: Generic OpenAI-compatible — base_url, api_key, model fields
 
 ### Session 2 — 2026-04-13
@@ -114,8 +114,30 @@ Phase 1 (Monorepo Setup)
 - Phase 2 and Phase 3 are complete for the shipped core milestone slice in this repository.
 - Invite workflows, richer analytics, broader protocol coverage, and deeper automated integration coverage remain deferred to later phases.
 
+### Session 3 — 2026-04-13
+**Trigger:** Phase 4 completion and Docker runtime validation
+
+#### Landed work
+- Added raw protocol capture plumbing plus a protocol listener manager for the remaining Phase 4 services
+- Added RAG bait endpoints, homelab bait services, and traditional listeners for SSH, FTP, SMTP, DNS, SMB, and Telnet inside `apps/node`
+- Hardened decoy node-key handling, SSH host-key persistence for non-root containers, and Windows-safe `HOST_*` traditional port remaps in the node Docker stack
+
+#### Validation
+- `pnpm --filter @llmtrap/node test`
+- `pnpm --filter @llmtrap/node build`
+- `pnpm --filter @llmtrap/node lint`
+- `pnpm typecheck`
+- `pnpm test`
+- `pnpm build`
+- `docker compose --env-file docker/node-compose.env.example -f docker/docker-compose.node.yml up -d --build`
+- Docker smoke: Qdrant `/collections`, Grafana `/api/health`, Milvus bait `/v1/vector/collections`, SSH `20022`, FTP `20021`, SMTP `20025`, Telnet `20023`, SMB `20445`, DNS `20053/udp`
+
+#### Closure note
+- Phase 4 is complete for the current repository slice.
+- Phase 5 and Phase 6 retain landed partial work, but proxy routing, backfeed/template distribution, external alert delivery, cold storage, WebSocket live feed, and repository-owned e2e/smoke automation remain open.
+
 #### Impact on Phases
 - Phase 1: Update `apps/node` scaffold from Express to NestJS app
 - Phase 3: Change all Express references to NestJS controllers/modules; add template generation script step
-- Phase 4: Elevate SSH from "minimal" to "full filesystem simulation" (effort +4h)
+- Phase 4: Harden interactive traditional listeners and Docker validation (effort +4h)
 - Phase 5: Change proxy config from provider dropdown to generic OpenAI-compatible fields (base_url, api_key, model)

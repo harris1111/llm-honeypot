@@ -2,7 +2,7 @@
 
 **Version:** 0.1.0  
 **Last Updated:** April 13, 2026  
-**Status:** Phase 1 Complete, Phase 2/3 Complete
+**Status:** Phase 1 Complete, Phase 2/3 Complete, Phase 4 Complete, Phase 5/6 In Progress
 
 ---
 
@@ -13,7 +13,7 @@ LLMTrap is a distributed honeypot platform consisting of two independent deploym
 1. **Dashboard Stack** — Central management, analysis, threat intelligence
 2. **Node Stack** — Distributed honeypot instances emulating LLM/AI services
 
-Both stacks currently communicate via authenticated REST APIs for enrollment, configuration, heartbeat, and capture sync. This topology has been validated end-to-end in Docker with dashboard login, live node registration/approval, protocol responses, and capture persistence. Operator-facing real-time updates remain a later addition.
+Both stacks currently communicate via authenticated REST APIs for enrollment, configuration, heartbeat, and capture sync. This topology has been validated end-to-end in Docker with dashboard login, live node registration/approval, AI protocol responses, RAG and homelab bait responses, traditional listener reachability, and capture persistence. Operator-facing real-time updates remain a later addition.
 
 ---
 
@@ -86,8 +86,16 @@ Individual honeypot instances deployed at remote locations.
 │                                         │
 │  ┌──────────────────────────────────┐  │
 │  │  trap-core (NestJS)              │  │
-│  │  Ports: 11434 / 8080 / 8081      │  │
-│  │  - Ollama, OpenAI, Anthropic     │  │
+│  │  Ports: AI + RAG + homelab +     │  │
+│  │         traditional listeners    │  │
+│  │  - Ollama/OpenAI/Anthropic       │  │
+│  │  - LM Studio, vLLM, llama.cpp    │  │
+│  │  - text-gen-webui, LangServe,    │  │
+│  │    AutoGPT, MCP, IDE bait        │  │
+│  │  - Qdrant/ChromaDB/Neo4j/        │  │
+│  │    Weaviate/Milvus bait          │  │
+│  │  - Plex/*arr/Grafana/etc. bait   │  │
+│  │  - SSH/FTP/SMTP/DNS/SMB/Telnet   │  │
 │  │  - Request capture + logging     │  │
 │  │  - Dashboard sync scheduler      │  │
 │  │  Health: /internal/health        │  │
@@ -112,7 +120,7 @@ Individual honeypot instances deployed at remote locations.
 - **redis** (local): Autonomous operation when dashboard unreachable
 
 **Networks:**
-- `honeypot`: External-facing network (exposes Ollama/OpenAI/Anthropic listeners)
+- `honeypot`: External-facing network (exposes AI, RAG, homelab, and traditional listeners)
 - `internal`: Node-to-Redis communication only
 
 **Environment Variables:**
@@ -121,6 +129,8 @@ Individual honeypot instances deployed at remote locations.
 - `NODE_HTTP_PORT`: Ollama/control-plane listener (default: 11434)
 - `OPENAI_HTTP_PORT`: OpenAI-compatible listener (default: 8080)
 - `ANTHROPIC_HTTP_PORT`: Anthropic-compatible listener (default: 8081)
+- Additional per-service envs publish the remaining Phase 4 listeners: LM Studio, text-generation-webui, LangServe, llama.cpp, vLLM, AutoGPT, RAG services, homelab bait services, and traditional listeners
+- Local Docker validation uses `HOST_SSH_PORT`, `HOST_FTP_PORT`, `HOST_SMTP_PORT`, `HOST_SMTP_SUBMISSION_PORT`, `HOST_DNS_PORT`, `HOST_SMB_PORT`, and `HOST_TELNET_PORT` to keep the traditional listeners reachable on Windows without colliding with reserved host ports
 
 ---
 
@@ -230,16 +240,29 @@ Controller → Service → Repository → Prisma
 apps/node/src/
    ├── app.module.ts            # Control-plane + Ollama listener
    ├── node-shared.module.ts    # Shared runtime providers
-   ├── capture/                 # HTTP capture + Redis spool
+   ├── capture/                 # HTTP/raw capture + Redis spool
    ├── runtime/                 # Shared process state
    ├── sync/                    # Registration/config/heartbeat/flush
    └── protocols/
          ├── ollama/
          ├── openai/
-         └── anthropic/
+      ├── anthropic/
+      ├── lm-studio/
+      ├── text-gen-webui/
+      ├── langserve/
+      ├── llamacpp/
+      ├── vllm/
+      ├── autogpt/
+      ├── mcp/
+      ├── ide-configs/
+      ├── rag/
+      ├── homelab/
+      ├── traditional/
+      ├── http-protocol-server.ts
+      └── protocol-server-manager.service.ts
 ```
 
-**Ports:** 11434 (Ollama/control plane), 8080 (OpenAI-compatible), 8081 (Anthropic-compatible)  
+**Ports:** Control-plane plus per-service AI, RAG, homelab, and traditional listener ports sourced from env-configured runtime settings  
 **Health:** `/internal/health`  
 **Local Redis:** Autonomous buffering when offline
 

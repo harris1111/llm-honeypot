@@ -8,11 +8,12 @@ import { McpController } from './protocols/mcp/mcp.controller';
 import { McpService } from './protocols/mcp/mcp.service';
 import { OllamaController } from './protocols/ollama/ollama.controller';
 import { OllamaService } from './protocols/ollama/ollama.service';
+import { ProtocolServerManagerService } from './protocols/protocol-server-manager.service';
 import { NodeLifecycleService } from './sync/node-lifecycle.service';
 
 @Module({
   controllers: [AppController, OllamaController, McpController, IdeConfigsController],
   imports: [NodeSharedModule],
-  providers: [NodeLifecycleService, OllamaService, McpService, IdeConfigsService],
+  providers: [NodeLifecycleService, OllamaService, McpService, IdeConfigsService, ProtocolServerManagerService],
 })
 export class AppModule {}
