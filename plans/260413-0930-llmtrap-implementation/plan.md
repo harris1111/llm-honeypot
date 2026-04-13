@@ -1,0 +1,99 @@
+---
+title: "LLMTrap Implementation Plan"
+description: "Multi-protocol AI honeypot platform for security research"
+status: in_progress
+priority: P1
+effort: 124h
+branch: main
+tags: [feature, backend, frontend, security, infra]
+blockedBy: []
+blocks: []
+created: 2026-04-13
+---
+
+# LLMTrap Implementation Plan
+
+## Architecture Summary
+
+Two Docker Compose stacks: **Dashboard** (NestJS API + React + PostgreSQL + Redis + Worker) and **Honeypot Node** (HTTP trap-core + SSH/FTP/SMTP/DNS/SMB/Telnet containers). Nodes register with dashboard via API key, pull persona configs, buffer logs locally when disconnected. Redis pub/sub correlates cross-protocol sessions.
+
+## Phase Overview
+
+| # | Phase | Effort | Status | Depends On | Key Deliverables |
+|---|-------|--------|--------|------------|------------------|
+| 1 | [Monorepo Setup](phase-01-monorepo-setup.md) | 12h | Complete | -- | Turborepo, pnpm workspaces, Prisma schema, Docker scaffolds, CI base |
+| 2 | [Dashboard Foundation](phase-02-dashboard-foundation.md) | 24h | Pending | Phase 1 | Auth, user/node mgmt API, React shell, DB migrations |
+| 3 | [Honeypot Node Core](phase-03-honeypot-node-core.md) | 24h | Pending | Phase 1 | Ollama/OpenAI/Anthropic emulators, template engine, capture pipeline |
+| 4 | [Full Protocol Coverage](phase-04-full-protocol-coverage.md) | 24h | Pending | Phase 3 | All LLM/MCP/IDE/RAG/homelab/traditional protocols + full SSH FS |
+| 5 | [Intelligence Engine](phase-05-intelligence-engine.md) | 24h | Pending | Phase 2, 3 | Response strategies, proxy, backfeed, classification, fingerprinting, personas |
+| 6 | [Threat Intel & Alerts](phase-06-threat-intel-alerts.md) | 16h | Pending | Phase 5 | Blocklists, IOC, MITRE, STIX, alerts, reports, cold storage, CI/CD, release |
+
+## Dependency Graph
+
+```
+Phase 1 (Monorepo Setup)
+  |--- Phase 2 (Dashboard Foundation)
+  |       |
+  |--- Phase 3 (Honeypot Node Core)
+  |       |
+  |       |--- Phase 4 (Full Protocol Coverage)
+  |       |
+  +-------+--- Phase 5 (Intelligence Engine)
+                  |
+                  |--- Phase 6 (Threat Intel & Alerts)
+```
+
+## Critical Risks
+
+| Risk | Likelihood | Impact | Mitigation |
+|------|-----------|--------|------------|
+| JA3/JA4 capture unreliable in Node.js | High | Medium | Fallback to HTTP header fingerprinting; add tls-trace as optional |
+| Honeypot container escape | Low | Critical | Dedicated VMs in prod, non-root containers, seccomp profiles |
+| Real model API costs exceed budget | Medium | Medium | Budget caps per node + global, auto-fallback to templates |
+| Template detection by validators | Medium | High | Latency jitter, response variance, validation prompt routing to real model |
+
+## Research Reports
+
+- [Honeypot Ecosystem & Architecture](research/researcher-01-honeypot-ecosystem.md)
+- [LLM Protocols & Response Engine](research/researcher-02-llm-protocols-response-engine.md)
+
+## Validation Log
+
+### Session 1 — 2026-04-13
+**Trigger:** Post-plan validation (hard mode, scope expansion)
+**Questions asked:** 4
+
+#### Questions & Answers
+
+1. **[Architecture]** Node framework: Express vs NestJS vs Fastify for honeypot node?
+   - Options: Express (Recommended) | NestJS everywhere | Fastify
+   - **Answer:** NestJS everywhere
+   - **Rationale:** Monorepo consistency — shared decorators, guards, pipes, interceptors, DI patterns. Contributors learn one framework.
+
+2. **[Scope]** Template sourcing: how to generate 300+ starter templates?
+   - Options: AI-generate batch (Recommended) | Manual curation | Minimal set (50) + backfeed
+   - **Answer:** AI-generate batch
+   - **Rationale:** Fast, diverse, cheap. Use Claude/GPT to generate prompt-response pairs across categories.
+
+3. **[Architecture]** SSH honeypot depth: minimal command map vs full filesystem?
+   - Options: Minimal command map (Recommended) | Full filesystem simulation | Defer to Phase 4
+   - **Answer:** Full filesystem simulation
+   - **Rationale:** Cowrie-level realism catches advanced attackers. Fake directory tree, file contents, download tracking.
+
+4. **[Architecture]** Default real-model proxy provider for validation prompt routing?
+   - Options: OpenRouter (Recommended) | OpenAI direct | Self-hosted Ollama
+   - **Answer:** Generic OpenAI-compatible endpoint
+   - **Custom input:** "give me base url, api key and model. openai-compatible is a must."
+   - **Rationale:** User wants configurable base_url + api_key + model. Works with any OpenAI-compatible provider (OpenRouter, OpenAI, vLLM, LM Studio, etc.)
+
+#### Confirmed Decisions
+- Node framework: NestJS — unified DI/decorator patterns across monorepo
+- Templates: AI-batch generation — 300+ prompt-response pairs via LLM
+- SSH depth: Full filesystem simulation — Cowrie-inspired fake FS
+- Proxy config: Generic OpenAI-compatible — base_url, api_key, model fields
+
+#### Impact on Phases
+- Phase 1: Update `apps/node` scaffold from Express to NestJS app
+- Phase 3: Change all Express references to NestJS controllers/modules; add template generation script step
+- Phase 4: Elevate SSH from "minimal" to "full filesystem simulation" (effort +4h)
+- Phase 5: Change proxy config from provider dropdown to generic OpenAI-compatible fields (base_url, api_key, model)

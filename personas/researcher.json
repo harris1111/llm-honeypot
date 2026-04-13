@@ -1,0 +1,54 @@
+{
+  "name": "University Researcher",
+  "preset": "researcher",
+  "identity": {
+    "hostname": "lab-a6000-02",
+    "kernel": "5.14.0-427.el9.x86_64",
+    "os": "Rocky Linux 9",
+    "sshBanner": "OpenSSH_8.7p1 Rocky-9",
+    "username": "research"
+  },
+  "hardware": {
+    "cpu": "Intel Xeon Gold 6448Y",
+    "diskGb": 6000,
+    "gpu": "NVIDIA A6000",
+    "ramGb": 192,
+    "vramGb": 48
+  },
+  "models": [
+    {
+      "family": "deepseek",
+      "name": "deepseek-r1-32b",
+      "parameterSize": "32B",
+      "sizeGb": 21
+    },
+    {
+      "family": "qwen",
+      "name": "qwen2.5-72b",
+      "parameterSize": "72B",
+      "sizeGb": 48
+    }
+  ],
+  "services": {
+    "gitea": true,
+    "minio": true,
+    "ollama": true,
+    "rag": true,
+    "websocket": true
+  },
+  "configFiles": {
+    "claude": true,
+    "codex": true,
+    "huggingface": true,
+    "streamlit": true
+  },
+  "timing": {
+    "gpuUtilizationPct": [12, 51],
+    "loadAverage": [0.8, 1.1, 1.3],
+    "uptimeDays": [60, 365]
+  },
+  "credentials": {
+    "huggingface": "hf_fake_research_token",
+    "wandb": "fake-wandb-api-key"
+  }
+}

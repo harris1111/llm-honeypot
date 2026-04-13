@@ -1,0 +1,54 @@
+{
+  "name": "Scrappy AI Startup",
+  "preset": "startup",
+  "identity": {
+    "hostname": "startup-gpu-01",
+    "kernel": "6.5.0-1027-aws",
+    "os": "Ubuntu 22.04",
+    "sshBanner": "OpenSSH_9.3p1 Ubuntu-1ubuntu3.6",
+    "username": "deploy"
+  },
+  "hardware": {
+    "cpu": "AMD EPYC 9454P",
+    "diskGb": 2000,
+    "gpu": "2x NVIDIA A100",
+    "ramGb": 256,
+    "vramGb": 160
+  },
+  "models": [
+    {
+      "family": "llama",
+      "name": "llama-3.3-70b",
+      "parameterSize": "70B",
+      "sizeGb": 46
+    },
+    {
+      "family": "mistral",
+      "name": "mistral-large-2411",
+      "parameterSize": "123B",
+      "sizeGb": 78
+    }
+  ],
+  "services": {
+    "grafana": true,
+    "openai": true,
+    "portainer": true,
+    "prometheus": true,
+    "webhook": true
+  },
+  "configFiles": {
+    "claude": true,
+    "continue": true,
+    "copilot": true,
+    "terraform": true
+  },
+  "timing": {
+    "gpuUtilizationPct": [18, 72],
+    "loadAverage": [1.2, 1.4, 1.6],
+    "uptimeDays": [7, 30]
+  },
+  "credentials": {
+    "sendgrid": "SG.fake-startup-token",
+    "stripe": "sk_live_fake_startup_token"
+  }
+}

@@ -1,0 +1,13 @@
+node_modules
+.git
+.gitnexus
+.turbo
+coverage
+dist
+build
+playwright-report
+test-results
+.env
+.env.local
+plans
+*.log

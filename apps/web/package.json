@@ -1,0 +1,27 @@
+{
+  "name": "@llmtrap/web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "vite build",
+    "clean": "node -e \"require('node:fs').rmSync('dist',{ recursive: true, force: true })\"",
+    "dev": "vite",
+    "lint": "eslint \"src/**/*.{ts,tsx}\" vite.config.ts",
+    "preview": "vite preview",
+    "test": "node -e \"console.log('No tests defined for @llmtrap/web')\"",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "^5.76.2",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.1.4",
+    "@types/react": "^19.1.2",
+    "@types/react-dom": "^19.1.2",
+    "@vitejs/plugin-react-swc": "^3.8.1",
+    "tailwindcss": "^4.1.4",
+    "vite": "^6.3.4"
+  }
+}

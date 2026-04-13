@@ -1,0 +1,48 @@
+{
+  "name": "Reckless Homelabber",
+  "preset": "homelabber",
+  "identity": {
+    "hostname": "homelab-5090",
+    "kernel": "6.8.0-31-generic",
+    "os": "Ubuntu 24.04",
+    "sshBanner": "OpenSSH_9.6p1 Ubuntu-3ubuntu13",
+    "username": "minh"
+  },
+  "hardware": {
+    "cpu": "AMD Ryzen 9 9950X",
+    "diskGb": 4000,
+    "gpu": "NVIDIA RTX 5090",
+    "ramGb": 128,
+    "vramGb": 24
+  },
+  "models": [
+    {
+      "family": "qwen",
+      "name": "qwen3-coder-30b-heretic",
+      "parameterSize": "30B",
+      "sizeGb": 18
+    }
+  ],
+  "services": {
+    "gitea": true,
+    "homeAssistant": true,
+    "ollama": true,
+    "plex": true,
+    "portainer": true
+  },
+  "configFiles": {
+    "aider": true,
+    "claude": true,
+    "cursor": true,
+    "huggingface": true
+  },
+  "timing": {
+    "gpuUtilizationPct": [8, 34],
+    "loadAverage": [0.6, 0.9, 1.1],
+    "uptimeDays": [30, 180]
+  },
+  "credentials": {
+    "anthropic": "sk-ant-fake-homelab-token",
+    "openai": "sk-proj-fake-homelab-token"
+  }
+}

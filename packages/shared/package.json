@@ -1,0 +1,17 @@
+{
+  "name": "@llmtrap/shared",
+  "version": "0.1.0",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "clean": "node -e \"require('node:fs').rmSync('dist',{ recursive: true, force: true })\"",
+    "lint": "eslint \"src/**/*.{ts,tsx}\"",
+    "test": "node -e \"console.log('No tests defined for @llmtrap/shared')\"",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "zod": "^3.24.4"
+  }
+}
