@@ -26,7 +26,7 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/packages ./packages
 COPY docker/db-init.sh /usr/local/bin/db-init.sh
 
-RUN chmod +x /usr/local/bin/db-init.sh
+RUN sed -i 's/\r$//' /usr/local/bin/db-init.sh && chmod +x /usr/local/bin/db-init.sh
 
 ENV NODE_ENV=production
 EXPOSE 4000
