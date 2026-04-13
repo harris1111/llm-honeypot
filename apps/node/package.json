@@ -10,8 +10,8 @@
     "dev": "tsx watch src/main.ts",
     "lint": "eslint \"src/**/*.ts\"",
     "start": "node dist/main.js",
-    "test": "node -e \"console.log('No tests defined for @llmtrap/node')\"",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.vitest.json"
   },
   "dependencies": {
     "@llmtrap/persona-engine": "workspace:*",

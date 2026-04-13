@@ -1,19 +1,40 @@
+name: llmtrap-dashboard
+
+x-api-build: &api-build
+  context: ..
+  dockerfile: docker/Dockerfile.api
+
+x-app-env: &app-env
+  DATABASE_URL: postgresql://${POSTGRES_USER:-llmtrap}:${POSTGRES_PASSWORD:-llmtrap}@postgres:5432/${POSTGRES_DB:-llmtrap}
+  POSTGRES_DB: ${POSTGRES_DB:-llmtrap}
+  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-llmtrap}
+  POSTGRES_USER: ${POSTGRES_USER:-llmtrap}
+  REDIS_URL: redis://redis:6379
+
 services:
-  api:
-    build:
-      context: ..
-      dockerfile: docker/Dockerfile.api
-    environment:
-      API_PORT: 4000
-      DATABASE_URL: postgresql://${POSTGRES_USER:-llmtrap}:${POSTGRES_PASSWORD:-llmtrap}@postgres:5432/${POSTGRES_DB:-llmtrap}
-      JWT_SECRET: ${JWT_SECRET:-replace-me-with-a-32-char-secret}
-      POSTGRES_DB: ${POSTGRES_DB:-llmtrap}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-llmtrap}
-      POSTGRES_USER: ${POSTGRES_USER:-llmtrap}
-      REDIS_URL: redis://redis:6379
+  db-init:
+    build: *api-build
+    command: ['/usr/local/bin/db-init.sh']
     depends_on:
       postgres:
         condition: service_healthy
+    environment:
+      <<: *app-env
+      SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL:-}
+      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-}
+    networks:
+      - backend
+    restart: 'no'
+
+  api:
+    build: *api-build
+    environment:
+      API_PORT: 4000
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET to a random 32+ character secret}
+      <<: *app-env
+    depends_on:
+      db-init:
+        condition: service_completed_successfully
       redis:
         condition: service_healthy
     healthcheck:
@@ -31,9 +52,16 @@ services:
     build:
       context: ..
       dockerfile: docker/Dockerfile.web
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-/api/v1}
     depends_on:
       api:
-        condition: service_started
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -qO- http://127.0.0.1:8080/healthz >/dev/null']
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - frontend
       - backend
@@ -46,13 +74,12 @@ services:
       context: ..
       dockerfile: docker/Dockerfile.worker
     environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER:-llmtrap}:${POSTGRES_PASSWORD:-llmtrap}@postgres:5432/${POSTGRES_DB:-llmtrap}
-      REDIS_URL: redis://redis:6379
       WORKER_CONCURRENCY: 4
       WORKER_PORT: 4100
+      <<: *app-env
     depends_on:
-      postgres:
-        condition: service_healthy
+      db-init:
+        condition: service_completed_successfully
       redis:
         condition: service_healthy
     healthcheck:

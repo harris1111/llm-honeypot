@@ -1,11 +1,13 @@
+name: llmtrap-node
+
 services:
   trap-core:
     build:
       context: ..
       dockerfile: docker/Dockerfile.node
     environment:
-      LLMTRAP_DASHBOARD_URL: ${LLMTRAP_DASHBOARD_URL:-https://dashboard.example.com}
-      LLMTRAP_NODE_KEY: ${LLMTRAP_NODE_KEY:-replace-me}
+      LLMTRAP_DASHBOARD_URL: ${LLMTRAP_DASHBOARD_URL:?Set LLMTRAP_DASHBOARD_URL to the dashboard origin, e.g. https://dashboard.example.com}
+      LLMTRAP_NODE_KEY: ${LLMTRAP_NODE_KEY:?Set LLMTRAP_NODE_KEY to the key issued by the dashboard}
       NODE_HTTP_PORT: ${NODE_HTTP_PORT:-11434}
       OPENAI_HTTP_PORT: ${OPENAI_HTTP_PORT:-8080}
       ANTHROPIC_HTTP_PORT: ${ANTHROPIC_HTTP_PORT:-8081}

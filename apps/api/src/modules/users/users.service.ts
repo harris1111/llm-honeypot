@@ -1,7 +1,7 @@
 import { Prisma, prisma } from '@llmtrap/db';
 import { userRoleSchema } from '@llmtrap/shared';
 import { hash } from 'bcryptjs';
-import { ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, ForbiddenException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { z } from 'zod';
 
 import { AuditService } from '../audit/audit.service';
@@ -18,7 +18,11 @@ export const updateUserSchema = z.object({
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly auditService: AuditService) {}
+  private readonly auditService: AuditService;
+
+  constructor(@Inject(AuditService) auditService: AuditService) {
+    this.auditService = auditService;
+  }
 
   async create(currentUserId: string, input: z.infer<typeof createUserSchema>, ipAddress?: string) {
     const passwordHash = await hash(input.password, 12);

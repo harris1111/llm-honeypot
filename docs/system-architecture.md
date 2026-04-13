@@ -2,7 +2,7 @@
 
 **Version:** 0.1.0  
 **Last Updated:** April 13, 2026  
-**Status:** Phase 1 Complete, Phase 2/3 Foundations Active
+**Status:** Phase 1 Complete, Phase 2/3 Complete
 
 ---
 
@@ -13,7 +13,7 @@ LLMTrap is a distributed honeypot platform consisting of two independent deploym
 1. **Dashboard Stack** — Central management, analysis, threat intelligence
 2. **Node Stack** — Distributed honeypot instances emulating LLM/AI services
 
-Both stacks currently communicate via authenticated REST APIs for enrollment, configuration, heartbeat, and capture sync. Operator-facing real-time updates remain a later addition.
+Both stacks currently communicate via authenticated REST APIs for enrollment, configuration, heartbeat, and capture sync. This topology has been validated end-to-end in Docker with dashboard login, live node registration/approval, protocol responses, and capture persistence. Operator-facing real-time updates remain a later addition.
 
 ---
 
@@ -27,7 +27,7 @@ Remote browsers and remote nodes do not connect directly to the API container. A
 
 ```
 ┌─────────────────────────────────────────────┐
-│         Dashboard Stack (5 Services)         │
+│     Dashboard Stack (6 Services incl. init)  │
 │                                              │
 │  ┌──────────────────────────────────────┐   │
 │  │  Frontend (React + Vite)             │   │
@@ -38,7 +38,7 @@ Remote browsers and remote nodes do not connect directly to the API container. A
 │  │  API (NestJS)                        │   │
 │  │  Port: 4000 (internal)               │   │
 │  │  Routes: /api/v1/*                   │   │
-│  │  Health: /internal/health            │   │
+│  │  Health: /api/v1/health              │   │
 │  └──────────────────────────────────────┘   │
 │       ↓ (SQL + Cache)            ↓ (Jobs)  │
 │  ┌────────────────┐         ┌──────────┐   │
@@ -62,6 +62,7 @@ Remote browsers and remote nodes do not connect directly to the API container. A
 ```
 
 **Services:**
+- **db-init** (one-shot bootstrap): Runs migrations and optional seed/bootstrap steps
 - **api** (NestJS): Core business logic, REST endpoints
 - **web** (React): Dashboard UI for operator workflows
 - **worker** (BullMQ): Async jobs (enrichment, archival, alerts)
@@ -153,8 +154,8 @@ llm-honeypot/
 │   ├── researcher.json        # Research codegen model
 │   └── homelabber.json        # Hobbyist developer model
 │
-├── templates/                 # Response templates (500+)
-│   └── (organized by protocol)
+├── templates/                 # Starter response templates
+│   └── core.json
 │
 ├── turbo.json                 # Turborepo pipeline config
 ├── pnpm-workspace.yaml        # Workspace definition
@@ -193,7 +194,7 @@ Controller → Service → Repository → Prisma
 **Stack:**
 - React 18 (functional components)
 - Vite (HMR, instant builds)
-- TanStack Router (file-based routing)
+- TanStack Router (manually declared route tree)
 - TanStack Query (server state)
 - Zustand (client state)
 - shadcn/ui (Radix UI + Tailwind)
@@ -300,7 +301,7 @@ model Actor { ... }             // Threat intel actors
 **Purpose:** Manage AI personality state (model name, uptime, system prompt variations).
 
 **Integration Points:**
-- Loaded by `apps/node` during honeypot startup
+- Currently a lightweight helper package; deeper startup integration remains future work
 - Ensures all responses match the assigned persona
 - Provides dynamic values (session IDs, uptime, computed fields)
 
@@ -313,7 +314,7 @@ model Actor { ... }             // Threat intel actors
 ```
 1. External attacker connects to Node (port 11434)
    ↓
-2. Honeypot captures request (headers, body, IP, TLS fingerprint)
+2. Honeypot captures request (headers, body, path, IP, user agent)
    ↓
 3. Request logged to local Redis (if offline)
    ↓
@@ -321,27 +322,23 @@ model Actor { ... }             // Threat intel actors
    ↓
 5. Response streamed back to attacker
    ↓
-6. On dashboard reconnect, local buffer synced to PostgreSQL
+6. When the dashboard is reachable, the local buffer is synced to PostgreSQL
    ↓
-7. Worker enriches session with threat intelligence
-   ↓
-8. Alert triggered if threshold exceeded
-   ↓
-9. Dashboard visualizes attack session
+7. Dashboard groups captured requests into honeypot sessions during ingest
 ```
 
-### Dashboard Query Flow
+### Current Dashboard Control-Plane Flow
 
 ```
 1. User logs into dashboard (Web)
    ↓
-2. TanStack Query fetches `/api/v1/sessions` (JWT from auth module)
+2. TanStack Query fetches control-plane routes such as `/api/v1/nodes` using the JWT issued by the auth module
    ↓
-3. API queries PostgreSQL + Redis cache
+3. API queries PostgreSQL and returns envelope-shaped responses
    ↓
-4. API returns paginated sessions with metadata
+4. Dashboard renders login, overview, node management, and settings surfaces
    ↓
-5. Dashboard renders charts (Recharts) + session details
+5. Rich session analytics and charts remain later-phase work
 ```
 
 ---
@@ -378,14 +375,13 @@ model Actor { ... }             // Threat intel actors
 - ✅ JWT-based operator authentication
 - ✅ `x-node-key` shared-secret auth for node-to-dashboard sync
 - 🔄 mTLS for node-to-dashboard enrollment (future hardening)
-- 🔄 Encryption at rest (Phase 2+)
+- 🔄 Encryption at rest for additional sensitive secrets remains future hardening
 - ✅ Non-root runtime containers
-- 🔄 Resource limits (Phase 2)
+- 🔄 Resource limits remain future hardening
 
 ### Threat Model
 - **Honeypot compromise**: Services are sandboxed (no real shell, no real FS)
 - **API compromise**: Isolated backend network prevents direct DB access
-- **BoltQR**: Messages expire quickly, no persistent message store
 - **Persona leakage**: Response consistency validated locally before sync
 
 ---

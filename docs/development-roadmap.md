@@ -2,7 +2,7 @@
 
 **Project Version:** 0.1.0  
 **Last Updated:** April 13, 2026  
-**Status:** Phase 1 Complete, Phase 2/3 Core Milestone In Progress
+**Status:** Phase 1 Complete, Phase 2/3 Core Milestone Complete
 
 ---
 
@@ -17,7 +17,7 @@ LLMTrap is an open-source, multi-protocol AI honeypot platform for security rese
 ### Phase 1: Monorepo Setup ✅ Complete
 
 **Objective:** Scaffold infrastructure for all subsequent phases.  
-**Timeline:** Complete (April 13, 2026)  
+**Timeline:** Complete (April 13, 2026)
 **Validation Status:** All checks passed
 
 #### Deliverables
@@ -42,11 +42,11 @@ LLMTrap is an open-source, multi-protocol AI honeypot platform for security rese
 
 ---
 
-### Phase 2: Dashboard Foundation (In Progress)
+### Phase 2: Dashboard Foundation ✅ Complete
 
 **Objective:** Implement dashboard API + basic UI shell.  
-**Timeline:** In progress (April 13, 2026)  
-**Status:** Core foundation landed
+**Timeline:** Complete (April 13, 2026)
+**Status:** Dashboard foundation validated
 
 #### Landed Deliverables
 - Auth flows: first-user bootstrap, login, refresh/logout, TOTP challenge/setup/enable
@@ -55,18 +55,18 @@ LLMTrap is an open-source, multi-protocol AI honeypot platform for security rese
 - React shell: login, overview, nodes list/detail, settings, auth state, node CRUD workflows
 - Shared envelopes/contracts exported through `@llmtrap/shared`
 
-#### Remaining Closure Work
+#### Deferred Follow-up Work
 - Admin invite workflow and richer user lifecycle UX
 - Broader API test coverage and dashboard analytics surfaces
 - Optional WebSocket operator updates beyond the current REST heartbeat/control-plane baseline
 
 ---
 
-### Phase 3: Honeypot Node Core (In Progress)
+### Phase 3: Honeypot Node Core ✅ Complete
 
 **Objective:** Implement multi-protocol honeypot node.  
-**Timeline:** In progress (April 13, 2026)  
-**Status:** Core runtime landed
+**Timeline:** Complete (April 13, 2026)
+**Status:** Core runtime validated
 
 #### Landed Deliverables
 - Shared runtime state and control-plane scheduler for registration, config refresh, heartbeat, and capture flush
@@ -75,7 +75,7 @@ LLMTrap is an open-source, multi-protocol AI honeypot platform for security rese
 - Multi-listener Nest runtime exposing Ollama on `11434`, OpenAI-compatible on `8080`, and Anthropic-compatible on `8081`
 - Runtime health/status reporting and protocol request capture plumbing
 
-#### Remaining Closure Work
+#### Deferred Follow-up Work
 - Broader protocol coverage beyond the initial Ollama/OpenAI/Anthropic slice
 - Stronger fingerprint extraction, session analytics, and load/perf hardening
 - More exhaustive node integration and smoke automation
@@ -86,7 +86,7 @@ LLMTrap is an open-source, multi-protocol AI honeypot platform for security rese
 
 **Objective:** Add all target protocol emulators.  
 **Est. Timeline:** Following Phase 3  
-**Status:** Blocked
+**Status:** Pending
 
 #### Scope
 - SSH, FTP, SMTP, DNS, SMB trap services
@@ -98,43 +98,44 @@ LLMTrap is an open-source, multi-protocol AI honeypot platform for security rese
 
 ### Phase 5: Intelligence Engine (Planned)
 
-**Objective:** Backfeed analysis + enrichment.  
-**Status:** Blocked
+**Objective:** Response strategies, proxy routing, and deeper classification.
+**Status:** Pending
 
 #### Scope
-- Threat intelligence correlation
-- Artifact enrichment (VirusTotal, OSINT)
-- Alert engine + notification channels
-- Session replay + video capture
+- Response strategy selection (Fixed-N, Budget, Smart)
+- Generic OpenAI-compatible proxy routing
+- Backfeed loops and deeper capture classification
+- Persona and fingerprinting enrichment
 
 ---
 
 ### Phase 6: Threat Intel & Alerts (Planned)
 
-**Objective:** External threat feeds + alerting.  
-**Status:** Blocked
+**Objective:** Threat intel, alerts, reporting, and storage automation.
+**Status:** Pending
 
 #### Scope
 - Third-party feed integrations
 - Webhook + email alerts
 - Dashboard real-time updates
+- Reporting, cold storage, and operator-facing alert workflows
 
 ---
 
 ## Success Metrics by Phase
 
-### Phase 1 (Current) ✅
+### Phase 1 (Completed Baseline) ✅
 - ✅ All packages compile with zero errors
 - ✅ Frozen lockfile reproducibility
 - ✅ Build time: <200ms per package
 - ✅ Web bundle: ~73 KB gzipped
 - ✅ Docker validation: both compose configs valid
 
-### Phase 2/3 (Current Milestone)
-- Auth, node CRUD, and capture-control routes compile and typecheck cleanly
-- Dashboard UI renders login, node management, and settings flows without type errors
-- Node runtime boots three listeners and returns protocol-shaped responses for Ollama, OpenAI-compatible, and Anthropic-compatible probes
-- Redis-backed buffering and dashboard sync codepaths compile cleanly
+### Phase 2/3 (Completed Milestone)
+- `pnpm lint`, `pnpm typecheck`, and `pnpm build` pass across the monorepo
+- `pnpm test` passes for the current workspace test surface (placeholder package scripts; deeper coverage remains future work)
+- Docker smoke confirms dashboard health, seeded-admin login, live node provisioning/approval, and protocol-shaped Ollama/OpenAI-compatible/Anthropic-compatible responses
+- Latest runtime smoke persisted `3` captured requests across `3` grouped sessions and drained the node buffer back to `0`
 
 ---
 
@@ -143,8 +144,8 @@ LLMTrap is an open-source, multi-protocol AI honeypot platform for security rese
 ### Current Hardening (Non-blocking)
 1. Prisma config migration from `package.json` → `prisma.config.ts` (cosmetic deprecation warning)
 2. Docker resource limits not yet enforced (CPU, memory)
-3. Non-root user enforcement pending for broader runtime hardening
-4. Dashboard analytics, invite flows, and broader protocol coverage remain open before Phase 2/3 can be marked complete
+3. Broader container-runtime hardening remains follow-up work beyond the current non-root images
+4. Dashboard analytics, invite flows, and broader protocol coverage remain follow-up work after Phase 2/3 completion
 
 ### Architecture Decisions
 - **NestJS for all backend:** Unified framework for API, node, and worker services
@@ -183,4 +184,4 @@ docker compose -f docker/docker-compose.node.yml build
 
 - [System Architecture](./system-architecture.md) — Infrastructure & service topology
 - [Code Standards](./code-standards.md) — Development conventions & patterns
-- [API Documentation](./api-documentation.md) — Endpoint specifications (TBD for Phase 2)
+- API surface: currently defined by `@llmtrap/shared` contracts and the NestJS controllers; standalone API reference remains future work

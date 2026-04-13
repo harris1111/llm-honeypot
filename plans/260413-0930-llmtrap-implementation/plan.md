@@ -15,15 +15,15 @@ created: 2026-04-13
 
 ## Architecture Summary
 
-Two Docker Compose stacks: **Dashboard** (NestJS API + React + PostgreSQL + Redis + Worker) and **Honeypot Node** (HTTP trap-core + SSH/FTP/SMTP/DNS/SMB/Telnet containers). Nodes register with dashboard via API key, pull persona configs, buffer logs locally when disconnected. Redis pub/sub correlates cross-protocol sessions.
+Two Docker Compose stacks: **Dashboard** (NestJS API + React + PostgreSQL + Redis + Worker + db-init bootstrap) and **Honeypot Node** (currently `trap-core` + local Redis, with broader protocol containers deferred to later phases). Nodes register with dashboard via API key, pull persona configs, buffer logs locally when disconnected. Session grouping currently happens during dashboard capture ingest, while Redis backs queueing and local spooling.
 
 ## Phase Overview
 
 | # | Phase | Effort | Status | Depends On | Key Deliverables |
 |---|-------|--------|--------|------------|------------------|
 | 1 | [Monorepo Setup](phase-01-monorepo-setup.md) | 12h | Complete | -- | Turborepo, pnpm workspaces, Prisma schema, Docker scaffolds, CI base |
-| 2 | [Dashboard Foundation](phase-02-dashboard-foundation.md) | 24h | In Progress | Phase 1 | Auth, user/node mgmt API, React shell, TOTP settings, capture/control routes |
-| 3 | [Honeypot Node Core](phase-03-honeypot-node-core.md) | 24h | In Progress | Phase 1 | Ollama/OpenAI/Anthropic emulators, Redis spool, dashboard sync, template engine |
+| 2 | [Dashboard Foundation](phase-02-dashboard-foundation.md) | 24h | Complete | Phase 1 | Auth, user/node mgmt API, React shell, TOTP settings, capture/control routes |
+| 3 | [Honeypot Node Core](phase-03-honeypot-node-core.md) | 24h | Complete | Phase 1 | Ollama/OpenAI/Anthropic emulators, Redis spool, dashboard sync, template engine |
 | 4 | [Full Protocol Coverage](phase-04-full-protocol-coverage.md) | 24h | Pending | Phase 3 | All LLM/MCP/IDE/RAG/homelab/traditional protocols + full SSH FS |
 | 5 | [Intelligence Engine](phase-05-intelligence-engine.md) | 24h | Pending | Phase 2, 3 | Response strategies, proxy, backfeed, classification, fingerprinting, personas |
 | 6 | [Threat Intel & Alerts](phase-06-threat-intel-alerts.md) | 16h | Pending | Phase 5 | Blocklists, IOC, MITRE, STIX, alerts, reports, cold storage, CI/CD, release |
@@ -102,12 +102,17 @@ Phase 1 (Monorepo Setup)
 - Protocol slice: Ollama, OpenAI-compatible, and Anthropic-compatible listeners with streaming support
 
 #### Validation
-- `pnpm --filter @llmtrap/shared build`
-- `pnpm --filter @llmtrap/api typecheck`
-- `pnpm --filter @llmtrap/web typecheck`
-- `pnpm --filter @llmtrap/node build`
-- `pnpm --filter @llmtrap/node typecheck`
-- Runtime smoke requests against Ollama, OpenAI-compatible, and Anthropic-compatible listeners
+- `pnpm lint`
+- `pnpm typecheck`
+- `pnpm build`
+- `pnpm test` (current workspace scripts are placeholder smoke commands)
+- Docker dashboard smoke: API health + seeded admin login
+- Docker node smoke: node provisioning/approval + Ollama, OpenAI-compatible, and Anthropic-compatible requests
+- Dashboard persistence smoke: `3` captured requests + `3` grouped sessions for the live node, with node buffer drained back to `0`
+
+#### Closure note
+- Phase 2 and Phase 3 are complete for the shipped core milestone slice in this repository.
+- Invite workflows, richer analytics, broader protocol coverage, and deeper automated integration coverage remain deferred to later phases.
 
 #### Impact on Phases
 - Phase 1: Update `apps/node` scaffold from Express to NestJS app

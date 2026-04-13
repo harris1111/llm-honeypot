@@ -1,5 +1,5 @@
 import type { AuthenticatedUser } from '@llmtrap/shared';
-import { Body, Controller, Delete, Get, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Inject, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';
 
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -16,7 +16,11 @@ type RequestWithIp = {
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('ADMIN')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  private readonly usersService: UsersService;
+
+  constructor(@Inject(UsersService) usersService: UsersService) {
+    this.usersService = usersService;
+  }
 
   @Post()
   create(

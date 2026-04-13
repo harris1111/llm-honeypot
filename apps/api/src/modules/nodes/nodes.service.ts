@@ -9,6 +9,7 @@ import { createHash, randomBytes } from 'node:crypto';
 import {
   ConflictException,
   ForbiddenException,
+  Inject,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -24,7 +25,11 @@ type NodeEntity = Prisma.NodeGetPayload<{
 
 @Injectable()
 export class NodesService {
-  constructor(private readonly auditService: AuditService) {}
+  private readonly auditService: AuditService;
+
+  constructor(@Inject(AuditService) auditService: AuditService) {
+    this.auditService = auditService;
+  }
 
   async approve(currentUserId: string, nodeId: string, ipAddress?: string) {
     const approved = await prisma.node.updateMany({

@@ -1,12 +1,16 @@
 import { captureBatchRequestSchema } from '@llmtrap/shared';
-import { Body, Controller, ForbiddenException, Headers, Post } from '@nestjs/common';
+import { Body, Controller, ForbiddenException, Headers, Inject, Post } from '@nestjs/common';
 
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
 import { CaptureService } from './capture.service';
 
 @Controller('capture')
 export class CaptureController {
-  constructor(private readonly captureService: CaptureService) {}
+  private readonly captureService: CaptureService;
+
+  constructor(@Inject(CaptureService) captureService: CaptureService) {
+    this.captureService = captureService;
+  }
 
   @Post('batch')
   ingestBatch(

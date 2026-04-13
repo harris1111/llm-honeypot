@@ -68,13 +68,17 @@ async function main(): Promise<void> {
   const seedAdminPassword = process.env.SEED_ADMIN_PASSWORD?.trim();
 
   if (seedAdminEmail && seedAdminPassword) {
-    const passwordHash = await hash(seedAdminPassword, 12);
-
-    await prisma.user.upsert({
+    const existingAdmin = await prisma.user.findUnique({
       where: { email: seedAdminEmail },
-      update: { passwordHash, role: UserRole.ADMIN },
-      create: { email: seedAdminEmail, passwordHash, role: UserRole.ADMIN },
     });
+
+    if (!existingAdmin) {
+      const passwordHash = await hash(seedAdminPassword, 12);
+
+      await prisma.user.create({
+        data: { email: seedAdminEmail, passwordHash, role: UserRole.ADMIN },
+      });
+    }
   }
 
   for (const persona of personas) {

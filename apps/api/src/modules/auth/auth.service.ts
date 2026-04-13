@@ -15,6 +15,7 @@ import {
   ForbiddenException,
   HttpException,
   HttpStatus,
+  Inject,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -39,11 +40,16 @@ interface SessionTokens {
 @Injectable()
 export class AuthService {
   private readonly loginAttempts = new Map<string, number[]>();
+  private readonly auditService: AuditService;
+  private readonly jwtService: JwtService;
 
   constructor(
-    private readonly auditService: AuditService,
-    private readonly jwtService: JwtService,
-  ) {}
+    @Inject(AuditService) auditService: AuditService,
+    @Inject(JwtService) jwtService: JwtService,
+  ) {
+    this.auditService = auditService;
+    this.jwtService = jwtService;
+  }
 
   async registerFirstUser(input: RegisterRequest, ipAddress?: string): Promise<LoginResponse> {
     const user = await this.createInitialAdmin(input);

@@ -1,5 +1,5 @@
 import type { AuthenticatedUser, UserRole } from '@llmtrap/shared';
-import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
+import { CanActivate, ExecutionContext, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 
 interface AccessTokenPayload {
@@ -18,7 +18,11 @@ type RequestWithUser = {
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
-  constructor(private readonly jwtService: JwtService) {}
+  private readonly jwtService: JwtService;
+
+  constructor(@Inject(JwtService) jwtService: JwtService) {
+    this.jwtService = jwtService;
+  }
 
   canActivate(context: ExecutionContext): boolean {
     const request = context.switchToHttp().getRequest<RequestWithUser>();

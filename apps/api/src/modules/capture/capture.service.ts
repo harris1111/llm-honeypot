@@ -1,13 +1,17 @@
 import { Prisma, prisma } from '@llmtrap/db';
 import type { CaptureBatchRequest, CaptureRecord } from '@llmtrap/shared';
 import { createHash } from 'node:crypto';
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import { ForbiddenException, Inject, Injectable } from '@nestjs/common';
 
 import { AuditService } from '../audit/audit.service';
 
 @Injectable()
 export class CaptureService {
-  constructor(private readonly auditService: AuditService) {}
+  private readonly auditService: AuditService;
+
+  constructor(@Inject(AuditService) auditService: AuditService) {
+    this.auditService = auditService;
+  }
 
   async ingestBatch(rawNodeKey: string, input: CaptureBatchRequest) {
     const ingestedIds = await prisma.$transaction(async (transaction) => {

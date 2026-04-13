@@ -6,7 +6,7 @@ import {
   registerRequestSchema,
   verifyTotpRequestSchema,
 } from '@llmtrap/shared';
-import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Inject, Post, Req, UseGuards } from '@nestjs/common';
 
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -19,7 +19,11 @@ type RequestWithIp = {
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  private readonly authService: AuthService;
+
+  constructor(@Inject(AuthService) authService: AuthService) {
+    this.authService = authService;
+  }
 
   @Post('login')
   login(

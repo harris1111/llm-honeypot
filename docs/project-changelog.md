@@ -5,7 +5,28 @@
 
 ---
 
-## Phase 2/3 Core Milestone — April 13, 2026
+## Automated Test Hardening — April 13, 2026
+
+### Dashboard API And Node Coverage
+- Replaced placeholder `test` scripts in `apps/api` and `apps/node` with real Vitest suites
+- Added focused API service coverage for auth rate limiting, TOTP challenge flow, refresh-session rotation, capture key validation, de-duplication, and session grouping
+- Added focused node service coverage for runtime state transitions, dashboard client request/envelope handling, and lifecycle registration/config/heartbeat/flush behavior
+- Added package-local Vitest typecheck configs so the new test files are validated by `tsc`, not only executed by Vitest
+- Made the API test harness hermetic by overriding the exported Prisma client in test setup so unstubbed Prisma calls fail fast instead of touching a developer database
+
+### Validation Results
+```
+✅ pnpm --filter @llmtrap/api test
+✅ pnpm --filter @llmtrap/node test
+✅ pnpm --filter @llmtrap/api typecheck
+✅ pnpm --filter @llmtrap/node typecheck
+✅ pnpm test
+✅ pnpm build
+```
+
+---
+
+## Phase 2/3 Completion — April 13, 2026
 
 ### Dashboard Control Plane
 - Added shared API envelopes plus auth, node, persona, and capture contracts in `@llmtrap/shared`
@@ -29,20 +50,21 @@
 
 ### Validation Results
 ```
-✅ pnpm --filter @llmtrap/shared build
-✅ pnpm --filter @llmtrap/api typecheck
-✅ pnpm --filter @llmtrap/web typecheck
-✅ pnpm --filter @llmtrap/node build
-✅ pnpm --filter @llmtrap/node typecheck
-✅ pnpm --filter @llmtrap/response-engine build
-✅ Runtime smoke: Ollama /api/tags + /api/generate
-✅ Runtime smoke: OpenAI /v1/models + /v1/chat/completions (SSE)
-✅ Runtime smoke: Anthropic /v1/messages + /anthropic/v1/messages (typed SSE)
+✅ pnpm lint
+✅ pnpm typecheck
+✅ pnpm build
+✅ pnpm test (current workspace scripts are placeholder smoke commands)
+✅ Docker smoke: dashboard API health + seeded-admin login
+✅ Docker smoke: live node provisioning + approval + ONLINE heartbeat
+✅ Runtime smoke: Ollama /api/tags
+✅ Runtime smoke: OpenAI /v1/models + /v1/chat/completions
+✅ Runtime smoke: Anthropic /v1/models + /v1/messages
+✅ Dashboard persistence smoke: 3 captured requests + 3 grouped sessions, node buffer depth 0
 ```
 
 ### Follow-up Gaps
 - Invite workflow and richer dashboard analytics remain open
-- Full protocol coverage and stronger node hardening remain Phase 3/4 follow-up work
+- Full protocol coverage and stronger node hardening remain Phase 4/5 follow-up work
 
 ---
 
@@ -94,11 +116,12 @@
 
 ### Infrastructure & Deployment
 - ✅ **Docker Compose: Dashboard Stack** (`docker/docker-compose.dashboard.yml`)
+  - `db-init`: One-shot bootstrap for migrations and optional seed flow
   - `api`: NestJS backend with health checks
   - `web`: React frontend with Vite
   - `worker`: BullMQ processor
   - `postgres`: PostgreSQL database (pgdata volume)
-  - `redis`: Cache and pub/sub messaging
+  - `redis`: Cache and BullMQ/job-queue backing
   - Network isolation: `backend` (API/DB/Redis) + `frontend` (Web/API)
 
 - ✅ **Docker Compose: Node Stack** (`docker/docker-compose.node.yml`)
@@ -154,11 +177,11 @@
 ## Known Issues & Deprecations
 
 ### Minor Warnings
-- **Prisma Config Location**: Schema location in `package.json` generates deprecation warning (non-blocking). Recommended migration: move to `prisma.config.ts` in Phase 2.
+- **Prisma Config Location**: Schema location in `package.json` generates a Prisma deprecation warning (non-blocking). Recommended migration: move to `prisma.config.ts` in a follow-up maintenance pass.
 
-### Phase 1 Hardening TODOs (Non-blocking for closure)
-1. Docker resource limits (CPU, memory) to be enforced in Phase 2
-2. Non-root user in all Dockerfiles to be enforced in Phase 2
+### Post-Phase-2/3 Hardening TODOs (Non-blocking)
+1. Docker resource limits (CPU, memory) remain to be enforced
+2. Additional container hardening beyond the current non-root runtime images remains to be completed
 
 ---
 
@@ -201,7 +224,6 @@
 
 ## Next Steps
 
-1. **Phase 2 (Dashboard Foundation)**: Implement API modules and basic dashboard UI
-2. **Phase 3 (Honeypot Node Core)**: Add protocol emulation and persona consistency
-3. **Phase 4 (Full Protocol Coverage)**: Expand to SSH, FTP, SMTP, DNS, SMB, MCP
-4. **Phase 5+ (Intelligence & Alerting)**: Backfeed analysis, threat intel, notifications
+1. **Phase 4 (Full Protocol Coverage)**: Expand to SSH, FTP, SMTP, DNS, SMB, MCP, IDE, and RAG surfaces
+2. **Phase 5 (Intelligence Engine)**: Add smart response routing, proxy/backfeed, and deeper classification
+3. **Phase 6 (Threat Intel & Alerts)**: Add feeds, alerts, reporting, and cold-storage automation

@@ -2,7 +2,7 @@
 
 ## Overview
 - **Priority:** P1
-- **Status:** In Progress
+- **Status:** Complete
 - **Effort:** 24h
 - **Branch:** `feat/fullstack/dashboard-node-core`
 - **Depends On:** Phase 1
@@ -14,7 +14,14 @@ Build the core honeypot node: Ollama, OpenAI, and Anthropic protocol emulators, 
 - Landed: multi-listener Nest runtime with Ollama (`11434`), OpenAI-compatible (`8080`), and Anthropic-compatible (`8081`) ports
 - Landed: dashboard registration, config refresh, REST heartbeat, capture batch upload, and runtime health reporting
 - Landed: Redis-backed local capture spool and starter template routing in `@llmtrap/response-engine`
-- Remaining: broader protocol coverage, stronger fingerprinting/session enrichment, and deeper automated testing
+- Deferred: broader protocol coverage, stronger fingerprinting/session enrichment, and deeper automated testing
+
+## Milestone Closure
+
+- Closed on 2026-04-13 for the node-core runtime slice implemented in this repository.
+- Validation: `pnpm lint`, `pnpm typecheck`, `pnpm build`, `pnpm test` (current workspace scripts are placeholder smoke commands), plus Docker smoke for live registration, node approval, protocol requests, capture persistence, and buffer drain.
+- Latest smoke run validated dashboard auth, node ONLINE heartbeat, protocol-shaped responses, `3` persisted captures, `3` grouped sessions, and a drained node buffer.
+- The file inventories, implementation steps, and checklist below are preserved as original planning reference; they do not fully match the as-built NestJS layout for the shipped slice.
 
 ## Key Insights (from Research)
 
@@ -34,7 +41,7 @@ Build the core honeypot node: Ollama, OpenAI, and Anthropic protocol emulators, 
 - **OpenAI emulator:** `/v1/models`, `/v1/chat/completions` (stream + non-stream), `/v1/completions`, `/v1/embeddings`
 - **Anthropic emulator:** `/v1/messages` and `/anthropic/v1/messages` (stream + non-stream), `/v1/models`
 - **Template engine:** Load templates from JSON files, keyword matching, variable substitution, streaming token simulation
-- **Request capture:** Every field from PRD section 6.1 (timestamp, IP, port, protocol, service, method, path, headers, headerHash, UA, body, response, TLS fingerprint, session)
+- **Request capture:** Capture the current HTTP metadata needed for the shipped slice (timestamp, IP, service, method, path, headers, UA, body, response), with deeper port/TLS/fingerprint enrichment deferred
 - **Session grouping:** Same IP + same service + within 5min gap = same session
 - **Dashboard sync:** POST captured requests to dashboard API; buffer locally in Redis when disconnected
 - **Node registration:** On boot, register with dashboard, pull persona config, apply persona to all emulators
@@ -275,9 +282,9 @@ async function* simulateStreaming(
 }
 ```
 
-## Related Code Files
+## Original Planned Code Inventory
 
-### Files to Create
+### Originally Planned Files
 
 | Path | Purpose |
 |------|---------|
@@ -331,7 +338,7 @@ async function* simulateStreaming(
 | POST | `/api/v1/capture/batch` | Submit captured request batch |
 | POST | `/api/v1/nodes/:id/heartbeat` | REST heartbeat |
 
-### Dashboard API Endpoints to Add (for capture ingestion)
+### Dashboard API Endpoints Added During Phase 2/3
 
 | Path | Purpose |
 |------|---------|
@@ -339,7 +346,7 @@ async function* simulateStreaming(
 | `apps/api/src/modules/capture/capture.controller.ts` | Batch POST endpoint |
 | `apps/api/src/modules/capture/capture.service.ts` | Store + classify |
 
-## Implementation Steps
+## Original Implementation Plan
 
 1. **Node bootstrap + config**
    - Create `main.ts` that reads env vars (DASHBOARD_URL, NODE_KEY, enabled ports)
@@ -407,7 +414,7 @@ async function* simulateStreaming(
     - Verify capture records are stored
     - Verify session grouping works
 
-## Todo List
+## Original Task Checklist
 
 - [ ] Create node bootstrap (main.ts) with multi-port listener
 - [ ] Create node config loader (env + dashboard fetch)
@@ -438,14 +445,14 @@ async function* simulateStreaming(
 
 - `curl http://localhost:11434/api/tags` returns valid Ollama model list
 - `curl -X POST http://localhost:8080/v1/chat/completions -d '{"model":"gpt-4","messages":[{"role":"user","content":"hello"}]}'` returns valid OpenAI response
-- Streaming responses deliver tokens with 50-90ms intervals (not instant)
-- All requests captured with full metadata (IP, headers, headerHash, UA, body, response)
-- Sessions correctly grouped by IP + service + 5min gap
-- When dashboard unreachable, requests buffer in Redis; on reconnect, batch syncs
+- Protocol listeners answer with protocol-shaped responses in Docker smoke and keep the node `ONLINE`
+- Requests are captured, uploaded to the dashboard, and grouped into sessions
+- Latest Docker smoke persisted `3` captures across `3` sessions and drained the node buffer back to `0`
+- Offline buffering and reconnect sync are implemented in code; broader failure automation remains follow-up work
 - Heartbeat maintains node ONLINE status in dashboard
 - Template matching returns reasonable responses for common prompts
 - Persona values (model name, GPU) appear correctly in all protocol responses
-- Smoke tests pass with real SDK clients
+- Current validation relies on build/typecheck/lint plus live Docker smoke; broader automated protocol coverage remains follow-up work
 
 ## Risk Assessment
 

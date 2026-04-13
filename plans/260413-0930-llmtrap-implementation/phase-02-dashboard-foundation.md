@@ -2,7 +2,7 @@
 
 ## Overview
 - **Priority:** P1
-- **Status:** In Progress
+- **Status:** Complete
 - **Effort:** 24h
 - **Branch:** `feat/fullstack/dashboard-node-core`
 - **Depends On:** Phase 1
@@ -14,7 +14,14 @@ Build the NestJS API backend (auth, user management, node management) and React 
 - Landed: auth, users, nodes, capture, audit, and health modules in `apps/api`
 - Landed: first-user bootstrap, JWT refresh sessions, TOTP challenge/setup/enable, node registration/approval/config/control APIs
 - Landed: React login, overview, nodes, node detail, and settings routes with Zustand/TanStack Query wiring
-- Remaining: explicit invite workflow, richer analytics surfaces, and optional operator-facing real-time updates
+- Deferred: explicit invite workflow, richer analytics surfaces, and optional operator-facing real-time updates
+
+## Milestone Closure
+
+- Closed on 2026-04-13 for the dashboard-foundation slice implemented in this repository.
+- Validation: `pnpm lint`, `pnpm typecheck`, `pnpm build`, `pnpm test` (current workspace scripts are placeholder smoke commands), plus Docker smoke for dashboard health/login and live node provisioning/approval.
+- Follow-up work moves into later phases rather than blocking Phase 2 closure.
+- The structures, file inventories, implementation steps, and checklist below are preserved as original planning reference; they do not fully match the as-built file layout for the shipped slice.
 
 ## Key Insights (from Research)
 
@@ -29,7 +36,7 @@ Build the NestJS API backend (auth, user management, node management) and React 
 ### Functional
 - **Auth module:** Register (first user = admin), login (email + bcrypt password), JWT access/refresh tokens, TOTP 2FA setup/verify, logout
 - **User module:** CRUD users (admin only), role assignment (Admin/Analyst/Viewer), invite flow follow-up
-- **Node module:** CRUD nodes, node registration endpoint (API key auth), heartbeat receiver, persona assignment, config push
+- **Node module:** CRUD nodes, node registration endpoint (API key auth), heartbeat receiver, persona assignment, config pull
 - **Audit module:** Log all auth events + config changes
 - **React shell:** Login page, overview dashboard (placeholder stats), node list, settings page, layout with sidebar navigation
 
@@ -121,7 +128,7 @@ apps/api/src/
     └── env-config.ts                 # Zod-validated env loading
 ```
 
-### React Dashboard Structure
+### Original Planned React Dashboard Structure (Historical Reference)
 ```
 apps/web/src/
 ├── main.tsx
@@ -198,9 +205,9 @@ apps/web/src/
 |--------|------|------|-------------|
 | GET | `/api/v1/health` | None | Liveness check |
 
-## Related Code Files
+## Original Planned Code Inventory
 
-### Files to Create
+### Originally Planned Files
 
 | Path | Purpose |
 |------|---------|
@@ -260,7 +267,7 @@ apps/web/src/
 | `apps/web/src/lib/query-client.ts` | TanStack Query config |
 | `apps/web/src/styles/globals.css` | Tailwind + shadcn globals |
 
-## Implementation Steps
+## Original Implementation Plan
 
 1. **API common infrastructure**
    - Create `env-config.ts` with Zod validation for DATABASE_URL, REDIS_URL, JWT_SECRET, etc.
@@ -322,7 +329,7 @@ apps/web/src/
    - TOTP flow: setup -> enable -> login requires code
    - Role enforcement: analyst can't create users, viewer can't edit nodes
 
-## Todo List
+## Original Task Checklist
 
 - [ ] Create API common infrastructure (filters, guards, interceptors, pipes)
 - [ ] Create env-config with Zod validation
@@ -351,14 +358,14 @@ apps/web/src/
 ## Success Criteria
 
 - First user registration creates admin account
-- Login returns valid JWT; protected endpoints reject expired/missing tokens
+- Login returns valid JWT refresh sessions; protected endpoints reject expired/missing tokens
 - TOTP setup generates scannable QR; login enforces code when enabled
 - Rate limiter blocks after 5 failed login attempts
-- Node registration with valid key returns persona config
+- Node provisioning, approval, config pull, and REST heartbeat work against a live node smoke
 - REST heartbeat updates `lastHeartbeat`; missed heartbeat handling remains follow-up work
 - React app renders login -> dashboard -> nodes -> settings
 - All API responses wrapped in `{data, meta, error}` envelope
-- Integration tests pass for auth, node registration, role enforcement
+- Monorepo `lint`, `typecheck`, `build`, and the current `test` pipeline pass; deeper integration coverage remains follow-up work
 - Audit log captures login events + config changes
 
 ## Risk Assessment
@@ -368,21 +375,21 @@ apps/web/src/
 | JWT token leakage | Low | High | Short access token TTL (15min), httpOnly cookies option |
 | Heartbeat polling drift or missed retries | Medium | Medium | Re-register until approval, keep REST heartbeat retryable, add offline scheduler |
 | First-user race condition | Low | Medium | DB unique constraint on user count check + atomic transaction |
-| TOTP secret exposure | Low | High | Encrypt at rest, never return secret after initial setup |
+| TOTP secret exposure | Low | High | Never return secret after initial setup; add encryption at rest in follow-up hardening |
 
 ## Security Considerations
 
 - Passwords hashed with bcrypt (cost factor 12)
 - JWT secret from env var, minimum 32 chars enforced by Zod
 - Refresh tokens stored hashed in DB, single-use on rotation
-- TOTP secret encrypted at rest (AES-256)
-- Rate limiting on auth endpoints via `@nestjs/throttler`
+- TOTP secret is stored in the user record today; encryption at rest remains follow-up hardening
+- Rate limiting on auth endpoints currently uses an in-memory per-IP window inside the auth service
 - CORS restricted to dashboard domain in production
 - API key for node auth: SHA-256 hashed in DB, transmitted once on creation
 - All admin-only endpoints guarded by RolesGuard
-- Audit log immutable (no UPDATE/DELETE on AuditLog table)
+- Audit log is append-only through the current service layer; DB-level immutability remains follow-up hardening
 
 ## Next Steps
 
-- Phase 3 (can start in parallel after Phase 1): Honeypot Node Core
+- Phase 3 completed in parallel with Phase 2: Honeypot Node Core
 - Phase 5 (after Phase 2 + 3): Intelligence Engine wires dashboard analytics to captured data

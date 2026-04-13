@@ -12,6 +12,7 @@ import {
   ForbiddenException,
   Get,
   Headers,
+  Inject,
   Param,
   Patch,
   Post,
@@ -32,7 +33,11 @@ type RequestWithIp = {
 
 @Controller('nodes')
 export class NodesController {
-  constructor(private readonly nodesService: NodesService) {}
+  private readonly nodesService: NodesService;
+
+  constructor(@Inject(NodesService) nodesService: NodesService) {
+    this.nodesService = nodesService;
+  }
 
   @Post(':id/approve')
   @UseGuards(JwtAuthGuard, RolesGuard)
