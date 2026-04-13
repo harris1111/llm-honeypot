@@ -1,7 +1,17 @@
 # LLMTrap Project Changelog
 
 **Version:** 0.1.0-alpha  
-**Last Updated:** April 13, 2026
+**Last Updated:** April 14, 2026
+
+---
+
+## Documentation And Walkthrough Update — April 14, 2026
+
+### Cross-Platform Local Testing Guide
+- Added `docs/shipped-app-testing-walkthrough.md` as the canonical local walkthrough for the currently shipped slice
+- Documented Windows PowerShell, macOS bash, and Linux bash commands for dashboard startup, node provisioning, node approval, node startup, representative protocol probes, dashboard verification, and teardown
+- Linked the root `README.md` to the walkthrough so the short quickstart no longer has to duplicate the full testing flow
+- Added a repo rule that future user-testable feature changes must update the walkthrough in the same change
 
 ---
 

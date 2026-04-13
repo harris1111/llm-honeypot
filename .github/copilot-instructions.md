@@ -204,10 +204,16 @@ npx gitnexus setup
 - `.dockerignore` to exclude node_modules, .env, .git
 
 ## Important Sync Rule
-> **`CLAUDE.md` and `copilot-instruction.md` MUST stay in sync.**
+> **`CLAUDE.md` and `.github/copilot-instructions.md` MUST stay in sync.**
 > When editing one file, apply the same edit to the other.
+
+## Walkthrough Maintenance Rule
+- `docs/shipped-app-testing-walkthrough.md` is the canonical local walkthrough for testing the currently shipped app.
+- When a change adds or changes user-testable functionality, ports, env vars, compose steps, node enrollment flow, dashboard routes, or representative protocol probes, update that walkthrough in the same change.
+- Keep `README.md` aligned with the walkthrough through links and short summaries instead of creating a second conflicting full guide.
 
 ## Error Tracking
 Distill encountered errors into bullets below. Each bullet = a lesson learned.
 <!-- ERRORS START -->
+- Shell scripts copied into Alpine images from a Windows worktree can fail with exit 127; strip CRLF line endings inside the image before executing them.
 <!-- ERRORS END -->

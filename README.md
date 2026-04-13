@@ -23,7 +23,7 @@ Phase 5 and Phase 6 work on response routing, threat intel, alert delivery, and 
 What is implemented today:
 
 - dashboard auth, users, nodes, capture, audit, and health modules
-- dashboard UI for login, overview, nodes, and settings
+- dashboard UI for login, overview, nodes, sessions, actors, personas, alerts, threat intel, export, live feed, and settings
 - node registration, config refresh, REST heartbeat, and capture batching
 - Redis-backed local capture spooling on the node
 - protocol-shaped responses for the AI HTTP surfaces plus MCP/IDE bait, RAG bait, homelab bait, and traditional protocol traps
@@ -96,6 +96,8 @@ Useful ports in the default setup:
 
 ## Quick start with Docker
 
+For the full current walkthrough, including Windows, macOS, and Linux commands for provisioning a node, generating representative traffic, and verifying the shipped dashboard routes, use [docs/shipped-app-testing-walkthrough.md](docs/shipped-app-testing-walkthrough.md).
+
 ### 1. Start the dashboard stack
 
 For local development, the shortest path is the committed local env file:
@@ -128,7 +130,7 @@ After logging into the web UI:
 1. Open the Nodes view.
 2. Create a node record.
 3. Copy the returned `nodeKey`.
-4. After the node first connects, approve it in the dashboard unless you have explicitly enabled auto-approval.
+4. Approve the pending node in the dashboard. The local walkthrough uses immediate approval before the first connect to shorten setup, but approving after first connect also works unless you have explicitly enabled auto-approval.
 
 You will use that key to start the honeypot node stack.
 
@@ -143,6 +145,8 @@ docker compose -f docker/docker-compose.node.yml up -d --build
 ```
 
 Or use your own env file derived from `docker/node-compose.env.example`.
+
+If you want a command-driven node provisioning flow instead of clicking through the UI, the complete PowerShell and bash variants live in [docs/shipped-app-testing-walkthrough.md](docs/shipped-app-testing-walkthrough.md).
 
 Important:
 
@@ -192,6 +196,8 @@ Repository-level scripts are orchestrated through Turborepo from the root `packa
 ## Testing and validation
 
 The current repo includes focused automated coverage for key API and node services using Vitest, including the Phase 4 runtime config inventory plus representative shell, RAG, and homelab helper coverage in `apps/node`.
+
+For a current end-to-end operator walkthrough of the shipped slice, including dashboard login, node approval, probe traffic, and route checks, use [docs/shipped-app-testing-walkthrough.md](docs/shipped-app-testing-walkthrough.md).
 
 Validated commands for the current shipped slice:
 
@@ -243,6 +249,7 @@ docker compose --env-file path-to-your-node-compose.env -f docker/docker-compose
 For deeper project context:
 
 - `LLMTrap-Requirements.md` for the broader product direction
+- `docs/shipped-app-testing-walkthrough.md` for the current Windows, macOS, and Linux local test flow
 - `docs/system-architecture.md` for the as-built architecture overview
 - `docs/development-roadmap.md` for milestone status
 - `plans/260413-0930-llmtrap-implementation/` for the phase plans
