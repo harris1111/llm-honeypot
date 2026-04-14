@@ -141,12 +141,12 @@ printf 'NODE_ID=%s\nNODE_KEY=%s\n' "$NODE_ID" "$NODE_KEY"
 
 ### Windows PowerShell
 
-The node reaches the dashboard API via the shared `llmtrap-controlplane` Docker network using the alias `dashboard-api`. No `host.docker.internal` or host IP needed.
+The node uses **host networking** so it sees real attacker IPs on incoming connections. On the same host, point `LLMTRAP_DASHBOARD_URL` at `http://127.0.0.1:4000`.
 
 ```powershell
 $tmp = Join-Path $env:TEMP 'llmtrap-node-compose.env'
 @"
-LLMTRAP_DASHBOARD_URL=http://dashboard-api:4000
+LLMTRAP_DASHBOARD_URL=http://127.0.0.1:4000
 LLMTRAP_NODE_KEY=$nodeKey
 "@ | Set-Content -Path $tmp -Encoding ascii
 
@@ -157,7 +157,7 @@ docker compose --env-file $tmp -f docker/docker-compose.node.yml up -d --build
 
 ```bash
 cat > /tmp/llmtrap-node-compose.env <<EOF
-LLMTRAP_DASHBOARD_URL=http://dashboard-api:4000
+LLMTRAP_DASHBOARD_URL=http://127.0.0.1:4000
 LLMTRAP_NODE_KEY=$NODE_KEY
 EOF
 
