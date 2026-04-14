@@ -134,35 +134,31 @@ export function LiveFeedRouteView() {
         <div className="stagger-children space-y-2">
         {events.map((event) => (
           <article key={event.id} className="border border-[var(--color-border-default)] rounded-[var(--radius-lg)] bg-[var(--color-bg-base)] p-3 transition-all duration-200 hover:border-[var(--color-border-strong)] hover:shadow-[var(--shadow-sm)] hover:-translate-y-0.5 sm:p-4">
-            <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <span className="border border-[var(--color-info-border)] rounded-[var(--radius-md)] bg-[var(--color-info-bg)] px-2 py-0.5 text-xs font-bold tracking-widest text-[var(--color-info)]">
-                    {event.method}
-                  </span>
-                  <span className="border border-[var(--color-border-default)] rounded-[var(--radius-md)] px-2 py-0.5 text-xs uppercase tracking-widest text-[var(--color-text-secondary)]">
-                    {event.service}
-                  </span>
-                  <span className="border border-[var(--color-border-default)] rounded-[var(--radius-md)] px-2 py-0.5 text-xs uppercase tracking-widest text-[var(--color-text-tertiary)]">
-                    {event.classification ?? 'unclassified'}
-                  </span>
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="border border-[var(--color-info-border)] rounded-[var(--radius-md)] bg-[var(--color-info-bg)] px-2 py-0.5 text-xs font-bold tracking-widest text-[var(--color-info)]">
+                {event.method}
+              </span>
+              <span className="border border-[var(--color-border-default)] rounded-[var(--radius-md)] px-2 py-0.5 text-xs uppercase tracking-widest text-[var(--color-text-secondary)]">
+                {event.service}
+              </span>
+              <span className="border border-[var(--color-border-default)] rounded-[var(--radius-md)] px-2 py-0.5 text-xs uppercase tracking-widest text-[var(--color-text-tertiary)]">
+                {event.classification ?? 'unclassified'}
+              </span>
+            </div>
+            <p className="mt-2 break-all text-sm text-[var(--color-accent)]">{event.path ?? '/'}</p>
+            <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
+              {[
+                { label: 'Node', value: event.nodeId },
+                { label: 'Actor', value: event.actorId ?? 'unknown' },
+                { label: 'IP', value: event.sourceIp },
+                { label: 'Strategy', value: event.strategy ?? 'unknown' },
+              ].map((item) => (
+                <div key={item.label} className="border border-[var(--color-border-default)] rounded-[var(--radius-lg)] bg-[var(--color-bg-surface)] px-2.5 py-2">
+                  <p className="text-xs text-[var(--color-text-tertiary)]">{item.label}</p>
+                  <p className="mt-1 break-all text-xs text-[var(--color-text-secondary)]">{item.value}</p>
                 </div>
-                <p className="mt-2 break-all text-sm text-[var(--color-accent)]">{event.path ?? '/'}</p>
-                <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
-                  {[
-                    { label: 'Node', value: event.nodeId },
-                    { label: 'Actor', value: event.actorId ?? 'unknown' },
-                    { label: 'IP', value: event.sourceIp },
-                    { label: 'Strategy', value: event.strategy ?? 'unknown' },
-                  ].map((item) => (
-                    <div key={item.label} className="border border-[var(--color-border-default)] rounded-[var(--radius-lg)] bg-[var(--color-bg-surface)] px-2.5 py-2">
-                      <p className="text-xs text-[var(--color-text-tertiary)]">{item.label}</p>
-                      <p className="mt-1 break-all text-xs text-[var(--color-text-secondary)]">{item.value}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div className="min-w-0 border border-[var(--color-border-default)] rounded-[var(--radius-lg)] bg-[var(--color-bg-surface)] px-3 py-2 xl:w-52">
+              ))}
+              <div className="border border-[var(--color-border-default)] rounded-[var(--radius-lg)] bg-[var(--color-bg-surface)] px-2.5 py-2">
                 <p className="text-xs text-[var(--color-text-tertiary)]">Captured</p>
                 <time className="mt-1 block text-xs font-medium tabular-nums text-[var(--color-text-primary)]" dateTime={event.timestamp}>
                   {TIMESTAMP_FORMATTER.format(new Date(event.timestamp))}
