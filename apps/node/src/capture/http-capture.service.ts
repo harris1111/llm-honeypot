@@ -34,7 +34,9 @@ export class HttpCaptureService {
     this.runtimeStateService.incrementRequestCount();
 
     const headers = this.normalizeHeaders(input.request.headers);
-    const sourceIp = input.request.ip ?? input.request.socket?.remoteAddress ?? '0.0.0.0';
+    const forwarded = input.request.headers['x-forwarded-for'];
+    const forwardedIp = typeof forwarded === 'string' ? forwarded.split(',')[0]?.trim() : undefined;
+    const sourceIp = forwardedIp || input.request.ip || input.request.socket?.remoteAddress || '0.0.0.0';
 
     try {
       await this.captureSyncService.queueCapture({

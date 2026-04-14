@@ -6,9 +6,9 @@ export function SessionsRouteView() {
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">Sessions</h1>
-      <div className="space-y-2">
+      <div className="stagger-children space-y-2">
         {(sessionsQuery.data ?? []).map((session) => (
-          <article key={session.id} className="border border-[var(--color-border-default)] rounded-[var(--radius-lg)] bg-[var(--color-bg-base)] p-4 transition hover:border-[var(--color-border-strong)]">
+          <article key={session.id} className="border border-[var(--color-border-default)] rounded-[var(--radius-lg)] bg-[var(--color-bg-base)] p-4 transition-all duration-200 hover:border-[var(--color-border-strong)] hover:shadow-[var(--shadow-sm)] hover:-translate-y-0.5">
             <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
               <div>
                 <p className="text-sm font-medium text-[var(--color-text-primary)]">

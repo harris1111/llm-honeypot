@@ -131,8 +131,9 @@ export function LiveFeedRouteView() {
             {feedQuery.isLoading ? '...' : events.length ? 'Newest first.' : 'Waiting for traffic.'}
           </p>
         </div>
+        <div className="stagger-children space-y-2">
         {events.map((event) => (
-          <article key={event.id} className="border border-[var(--color-border-default)] rounded-[var(--radius-lg)] bg-[var(--color-bg-base)] p-3 transition-colors hover:border-[var(--color-border-strong)] sm:p-4">
+          <article key={event.id} className="border border-[var(--color-border-default)] rounded-[var(--radius-lg)] bg-[var(--color-bg-base)] p-3 transition-all duration-200 hover:border-[var(--color-border-strong)] hover:shadow-[var(--shadow-sm)] hover:-translate-y-0.5 sm:p-4">
             <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-1.5">
@@ -178,6 +179,7 @@ export function LiveFeedRouteView() {
             ) : null}
           </article>
         ))}
+        </div>
         {!feedQuery.isLoading && !events.length ? (
           <p className="border border-dashed border-[var(--color-border-default)] rounded-[var(--radius-lg)] px-4 py-6 text-center text-xs text-[var(--color-text-tertiary)]">
             No events match current filters.

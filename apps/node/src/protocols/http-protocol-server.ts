@@ -77,7 +77,9 @@ export async function startHttpProtocolServer(
   protocolCaptureService: ProtocolCaptureService,
 ): Promise<ProtocolListenerHandle> {
   const server = createServer(async (request, response) => {
-    const sourceIp = request.socket.remoteAddress ?? '0.0.0.0';
+    const forwarded = request.headers['x-forwarded-for'];
+    const forwardedIp = typeof forwarded === 'string' ? forwarded.split(',')[0]?.trim() : undefined;
+    const sourceIp = forwardedIp || request.socket.remoteAddress || '0.0.0.0';
     let parsedBody: unknown;
     let requestPath = request.url ?? '/';
 

@@ -24,12 +24,14 @@ export class DashboardApiService {
   }
 
   async registerNode(): Promise<NodeRegistrationResponse> {
+    const publicIp = await this.discoverPublicIp();
     return this.request(
       '/api/v1/nodes/register',
       {
         body: JSON.stringify({
           hostname: hostname(),
           nodeKey: this.config.nodeKey,
+          publicIp,
           services: this.config.serviceList,
           version: this.config.version,
         }),
@@ -38,6 +40,25 @@ export class DashboardApiService {
       },
       (data) => nodeRegistrationResponseSchema.parse(data),
     );
+  }
+
+  private async discoverPublicIp(): Promise<string | undefined> {
+    const endpoints = ['https://api.ipify.org', 'https://ifconfig.me/ip', 'https://icanhazip.com'];
+    for (const endpoint of endpoints) {
+      try {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 3000);
+        const res = await fetch(endpoint, { signal: controller.signal });
+        clearTimeout(timer);
+        if (res.ok) {
+          const ip = (await res.text()).trim();
+          if (ip && /^[\d.:a-f]+$/i.test(ip)) return ip;
+        }
+      } catch {
+        // try next endpoint
+      }
+    }
+    return undefined;
   }
 
   async sendHeartbeat(nodeId: string, heartbeat: NodeHeartbeat): Promise<void> {
