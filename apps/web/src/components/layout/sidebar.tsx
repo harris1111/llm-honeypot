@@ -1,7 +1,5 @@
 import { Link } from '@tanstack/react-router';
 
-import { ThemeToggle } from '../ui/theme-toggle';
-
 const navigation = [
   { label: 'Overview', to: '/overview' },
   { label: 'Nodes', to: '/nodes' },
@@ -35,9 +33,6 @@ export function Sidebar() {
           </Link>
         ))}
       </nav>
-      <div className="border-t border-[var(--color-border-default)] px-3 py-3">
-        <ThemeToggle />
-      </div>
     </aside>
   );
 }
