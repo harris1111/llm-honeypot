@@ -1,9 +1,11 @@
 # LLMTrap — Product Requirements Document
 
 **Version:** 1.0
-**Date:** April 13, 2026
+**Date:** April 14, 2026
 **License:** MIT or Apache 2.0 (open source from day 1)
 **Status:** Draft — Pending Review
+
+This document captures product direction and the target shape of the platform. For current shipped behavior, use `README.md`, `docs/development-roadmap.md`, and `docs/project-changelog.md`.
 
 ---
 
@@ -14,7 +16,7 @@ LLMTrap is an open-source, multi-protocol AI honeypot platform designed for secu
 The platform consists of two main components:
 
 - **Honeypot Nodes** — lightweight Docker containers deployed on VPS instances, each impersonating a believable AI-enabled homelab or startup server
-- **Central Dashboard** — a separate web application for managing multiple nodes, analyzing captured traffic, and exporting threat intelligence
+- **Central Dashboard** — a separate web application with a public landing page, a public docs home, and a protected operator dashboard for managing nodes, analyzing captured traffic, and exporting threat intelligence
 
 **Primary Goals:**
 1. Research & publish findings about real-world AI infrastructure attacks
@@ -58,12 +60,24 @@ The platform consists of two main components:
 | Layer | Technology |
 |---|---|
 | Backend API | NestJS (TypeScript) |
-| Frontend Dashboard | React (TypeScript) + Vite |
+| Frontend Web App | React (TypeScript) + Vite |
 | Database | PostgreSQL (primary), Redis (caching, pub/sub for real-time) |
 | Cold Storage | S3-compatible (MinIO, AWS S3, Backblaze B2) |
 | Deployment | Docker Compose (per-component containers) |
 | Node ↔ Dashboard Comms | Authenticated REST API + WebSocket heartbeat |
 | Real-time Streaming | WebSocket (Socket.IO) with toggle on/off |
+
+### 2.3 Open-Source Entry Surface
+
+The shipped web app should expose a clear public entry surface before operators authenticate:
+
+- `/` — public landing page with feature highlights and architecture summary
+- `/docs` — public docs home and runbook index
+- `/docs/getting-started`, `/docs/deploy-dashboard`, `/docs/enroll-node`, `/docs/smoke-tests` — dedicated in-app walkthrough pages for the local operator flow
+- `/login` — operator authentication route
+- `/overview` — protected operator dashboard home after sign-in
+
+This keeps the project legible to first-time contributors while preserving a separate authenticated workflow for operators.
 
 ---
 

@@ -8,7 +8,7 @@
 
 ## Executive Summary
 
-LLMTrap is an open-source, multi-protocol AI honeypot platform for security research. Phase 1 established the monorepo and deployment baseline. Phase 2 and Phase 3 are complete, Phase 4 is now complete, and the current milestone is carrying Phase 5/6 slices across the dashboard API, worker, and dashboard UI: operator analytics/persona/actor views, background classification/enrichment/alert processing, and threat-intel/export/live-feed surfaces.
+LLMTrap is an open-source, multi-protocol AI honeypot platform for security research. Phase 1 established the monorepo and deployment baseline. Phase 2 and Phase 3 are complete, Phase 4 is now complete, and the current milestone is carrying Phase 5/6 slices across the dashboard API, worker, and dashboard UI: operator analytics/persona/actor views, background classification/enrichment/alert processing, and threat-intel/export/live-feed surfaces. The current web package also exposes a public landing page and a multi-page docs area under `/docs` so first-time evaluators can bootstrap the stack before entering the authenticated operator dashboard.
 
 ---
 
@@ -53,7 +53,7 @@ LLMTrap is an open-source, multi-protocol AI honeypot platform for security rese
 - API modules: auth, users, nodes, capture, audit, health
 - Node lifecycle endpoints: register, approve, config pull, REST heartbeat, capture batch ingest
 - React shell: login, overview, nodes list/detail, settings, auth state, node CRUD workflows
-- **[NEW]** Public landing page at `/`, repository docs at `/docs`, and protected operator overview at `/overview`
+- **[NEW]** Public landing page at `/`, multi-page public docs under `/docs/*`, and protected operator overview at `/overview`
 - Shared envelopes/contracts exported through `@llmtrap/shared`
 
 #### Deferred Follow-up Work

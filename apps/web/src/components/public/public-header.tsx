@@ -18,7 +18,7 @@ export function PublicHeader() {
           className="rounded-full border border-transparent px-4 py-2 text-stone-300 no-underline transition hover:border-stone-700 hover:bg-white/5 hover:text-stone-100"
           to="/docs"
         >
-          Repository docs
+          Docs
         </Link>
         <Link
           className="rounded-full border border-emerald-400/35 bg-emerald-400/10 px-4 py-2 font-medium text-emerald-100 no-underline transition hover:border-emerald-300/50 hover:bg-emerald-400/15"

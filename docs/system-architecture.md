@@ -150,7 +150,7 @@ llm-honeypot/
 │
 ├── apps/                      # Deployable applications
 │   ├── api/                   # NestJS dashboard API
-│   ├── web/                   # React frontend
+│   ├── web/                   # React public landing, docs home, and operator UI
 │   ├── worker/                # BullMQ job processor
 │   └── node/                  # Honeypot node emulator
 │
@@ -162,7 +162,7 @@ llm-honeypot/
 │
 ├── docker/                    # Container definitions
 │   ├── Dockerfile.api         # NestJS API image
-│   ├── Dockerfile.web         # React frontend image
+│   ├── Dockerfile.web         # Public/dashboard frontend image
 │   ├── Dockerfile.worker      # BullMQ processor image
 │   ├── Dockerfile.node        # Honeypot node image
 │   ├── docker-compose.dashboard.yml
@@ -175,6 +175,10 @@ llm-honeypot/
 │
 ├── templates/                 # Starter response templates
 │   └── core.json
+│
+├── tests/                     # Smoke tests and future browser e2e
+├── docs/                      # Architecture, roadmap, changelog, walkthrough
+├── plans/                     # Execution plans and reports
 │
 ├── turbo.json                 # Turborepo pipeline config
 ├── pnpm-workspace.yaml        # Workspace definition
@@ -199,16 +203,6 @@ llm-honeypot/
 - `analytics`, `alerts`, `export`, `response-config`, `threat-intel`, `live-feed`
 - `live-feed` module includes both WebSocket gateway and polling REST endpoints
 - `export` module includes report/data export plus archive manifest listing and archive retrieval
-
-**Modules (Current expanded scope):**
-- `auth`: JWT sessions, refresh, TOTP, bootstrap registration
-- `users`: Admin-managed user CRUD
-- `nodes`: Node provisioning, registration, approval, config, heartbeat
-- `capture`: Batch ingest and session grouping
-- `audit`: Auth and control-plane audit events
-- `health`: Liveness/readiness endpoints
-- `analytics`, `alerts`, `export`, `response-config`, `threat-intel`, `live-feed`
-- `live-feed` module includes both WebSocket gateway and polling REST endpoints
 
 **Design Pattern:**
 ```
@@ -253,7 +247,11 @@ Controller → Service → Repository → Prisma
 
 **Current routes:**
 - `/` — public landing page with shipped feature highlights
-- `/docs` — public repository guide covering apps, packages, and support directories
+- `/docs` — public docs home and runbook index
+- `/docs/getting-started` — prerequisites, ports, credentials, and route map
+- `/docs/deploy-dashboard` — dashboard compose bootstrap and local health checks
+- `/docs/enroll-node` — node creation, approval, and runtime startup flow
+- `/docs/smoke-tests` — listener probes, operator verification, smoke scripts, and teardown
 - `/login` — bootstrap/login/TOTP verification
 - `/overview` — authenticated dashboard home
 - `/nodes` and `/nodes/:nodeId` — provisioning and config edits
@@ -262,6 +260,7 @@ Controller → Service → Repository → Prisma
 
 **Delivery notes:**
 - Protected dashboard routes are lazy-loaded so anonymous traffic hitting `/` or `/docs` does not eagerly fetch every operator view.
+- The public docs area is static, ships with the frontend bundle, and renders typed in-app walkthrough content instead of depending on runtime markdown parsing.
 
 **Port:** 3000  
 **Bundle:** Shared entry chunk plus lazy route chunks for protected views
@@ -391,6 +390,35 @@ model Actor { ... }             // Threat intel actors
 
 ---
 
+## Supporting Repository Surfaces
+
+### docker
+
+- Holds the compose definitions for the dashboard and node stacks.
+- Carries the Dockerfiles, env examples, nginx config, and bootstrap scripts used by local and server deployments.
+
+### templates
+
+- Stores the shipped starter response templates used by the response engine and review workflows.
+
+### personas
+
+- Stores the built-in persona presets that shape hardware, model, and behavioral claims on node responses.
+
+### tests
+
+- Holds repository-owned smoke coverage today and the future browser-driven e2e surface.
+
+### docs
+
+- Holds the human-facing repository docs: roadmap, changelog, system architecture, and shipped-app walkthrough.
+
+### plans
+
+- Holds implementation plans and supporting reports for shipped work and in-flight tasks.
+
+---
+
 ## Data Flow Examples
 
 ### Attack Detection Flow
@@ -414,15 +442,17 @@ model Actor { ... }             // Threat intel actors
 ### Current Dashboard Control-Plane Flow
 
 ```
-1. User logs into dashboard (Web)
+1. Visitor enters through `/`, `/docs`, or `/login`
    ↓
-2. TanStack Query fetches control-plane routes such as `/api/v1/nodes` using the JWT issued by the auth module
+2. Authenticated operators are redirected into `/overview`
    ↓
-3. API queries PostgreSQL and returns envelope-shaped responses
+3. TanStack Query fetches control-plane routes such as `/api/v1/nodes` using the JWT issued by the auth module
    ↓
-4. Dashboard renders login, overview, node management, and settings surfaces
+4. API queries PostgreSQL and returns envelope-shaped responses
    ↓
-5. Rich session analytics and charts remain later-phase work
+5. Dashboard renders overview, node management, response-engine, alert, export, and threat-intel surfaces while public pages remain outside the auth shell
+   ↓
+6. Richer analytics and broader operator automation remain later-phase work
 ```
 
 ---
@@ -472,11 +502,10 @@ model Actor { ... }             // Threat intel actors
 
 ## Performance Characteristics
 
-### Build Performance (Phase 1)
-- `pnpm install`: <10s (post-cache)
-- `pnpm build`: <200ms per package via Turbo caching
-- Web bundle: 225 KB → 73 KB gzipped (73% reduction)
-- Type checking: 127ms (all packages)
+### Build Performance (Current Baseline)
+- Turborepo keeps repeated workspace builds incremental and cache-friendly
+- The web app ships a shared entry bundle plus lazy route chunks for protected dashboard views
+- Exact build and typecheck timings vary by workstation, cache state, and the current route surface
 
 ### Runtime Performance (Expected)
 - API response time: <100ms (80th percentile, local DB)
