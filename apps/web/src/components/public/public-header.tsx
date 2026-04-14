@@ -1,8 +1,11 @@
 import { Link } from '@tanstack/react-router';
 
+import { useAuthStore } from '../../lib/auth-store';
 import { ThemeToggle } from '../ui/theme-toggle';
 
 export function PublicHeader() {
+  const isAuthenticated = Boolean(useAuthStore((s) => s.accessToken));
+
   return (
     <header className="border-b border-[var(--color-border-default)]">
       <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-6 lg:px-8">
@@ -14,9 +17,15 @@ export function PublicHeader() {
           <Link activeProps={{ className: 'text-[var(--color-accent)]' }} className="text-[var(--color-text-secondary)] no-underline transition hover:text-[var(--color-text-primary)]" to="/docs">
             Docs
           </Link>
-          <Link className="text-[var(--color-text-secondary)] no-underline transition hover:text-[var(--color-text-primary)]" to="/login">
-            Login
-          </Link>
+          {isAuthenticated ? (
+            <Link className="text-[var(--color-text-secondary)] no-underline transition hover:text-[var(--color-text-primary)]" to="/overview">
+              Dashboard
+            </Link>
+          ) : (
+            <Link className="text-[var(--color-text-secondary)] no-underline transition hover:text-[var(--color-text-primary)]" to="/login">
+              Login
+            </Link>
+          )}
           <ThemeToggle />
         </nav>
       </div>

@@ -24,8 +24,10 @@ export interface DocsCodeSample {
 export interface DocsSection {
   body?: string[];
   bullets?: string[];
+  callout?: { icon?: string; text: string; variant?: 'info' | 'tip' | 'warning' };
   checklist?: string[];
   codeSamples?: DocsCodeSample[];
+  diagram?: string;
   id: string;
   intro: string;
   title: string;

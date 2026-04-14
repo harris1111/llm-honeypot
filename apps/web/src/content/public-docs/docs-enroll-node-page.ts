@@ -73,8 +73,9 @@ export const docsEnrollNodePage: DocsPage = {
       codeSamples: [
         { variants: { windows: windowsNodeApproval, macos: macNodeApproval, linux: linuxNodeApproval }, language: 'bash', title: 'Create and approve the node' },
       ],
+      callout: { text: 'Copy the **node key** immediately — it is only shown once during creation.', variant: 'warning' },
       id: 'create-approve',
-      intro: 'Sign in, create a node record, capture the issued node key, and approve the node before the runtime connects.',
+      intro: 'Sign in, create a node record, capture the issued **node key**, and approve the node before the runtime connects.',
       title: 'Create and approve a local node',
     },
     {
@@ -82,15 +83,15 @@ export const docsEnrollNodePage: DocsPage = {
         { variants: { windows: windowsNodeBoot, macos: macNodeBoot, linux: linuxNodeBoot }, language: 'bash', title: 'Start the node runtime' },
       ],
       id: 'start-runtime',
-      intro: 'Once you have an approved node key, start the honeypot runtime with an env file that points back at the dashboard stack.',
+      intro: 'Once you have an approved node key, start the honeypot runtime with an env file that points back at the **dashboard stack**.',
       title: 'Start the honeypot runtime',
     },
     {
       checklist: [
-        'The Nodes view shows local-test-node with status ONLINE.',
-        'The node detail page loads and shows the node status badge plus config form.',
-        'The runtime only continues into config refresh, heartbeat, and capture upload after the node is approved.',
-        'You are ready to open the Smoke tests page and generate probe traffic.',
+        'The Nodes view shows `local-test-node` with status **ONLINE**.',
+        'The node detail page loads and shows the node **status badge** plus config form.',
+        'The runtime only continues into config refresh, heartbeat, and capture upload after the node is **approved**.',
+        'You are ready to open the **Smoke tests** page and generate probe traffic.',
       ],
       id: 'confirm-online',
       intro: 'The node should be visible in the dashboard before you spend time generating traffic.',
