@@ -1,15 +1,17 @@
 import type { FormEvent } from 'react';
 import { useState } from 'react';
+import { useNavigate } from '@tanstack/react-router';
 
 import { useAuth } from '../../hooks/use-auth';
 
 type AuthMode = 'login' | 'register';
 
 export function LoginForm() {
+  const navigate = useNavigate();
   const { login, register, tempToken, verifyTotp } = useAuth();
   const [mode, setMode] = useState<AuthMode>('login');
   const [email, setEmail] = useState('admin@llmtrap.local');
-  const [password, setPassword] = useState('change-me-please');
+  const [password, setPassword] = useState('ChangeMe123456!');
   const [totpCode, setTotpCode] = useState('');
 
   const mutation = mode === 'login' ? login : register;
@@ -21,15 +23,22 @@ export function LoginForm() {
 
     if (tempToken) {
       await verifyTotp.mutateAsync(totpCode);
+      navigate({ to: '/overview' });
       return;
     }
 
     if (mode === 'login') {
-      await login.mutateAsync({ email, password });
+      const response = await login.mutateAsync({ email, password });
+      if (!response.requiresTotp) {
+        navigate({ to: '/overview' });
+      }
       return;
     }
 
-    await register.mutateAsync({ email, password });
+    const response = await register.mutateAsync({ email, password });
+    if (!response.requiresTotp) {
+      navigate({ to: '/overview' });
+    }
   }
 
   return (

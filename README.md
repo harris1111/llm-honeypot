@@ -25,7 +25,7 @@ Phase 5 and Phase 6 work on proxy routing, alert delivery, cold storage, and dee
 What is implemented today:
 
 - dashboard auth, users, nodes, capture, audit, and health modules
-- dashboard UI for login, overview, nodes, sessions, actors, personas, alerts, threat intel, export, live feed, and settings
+- dashboard UI with a public landing page at `/`, repository docs at `/docs`, operator login at `/login`, overview at `/overview`, plus nodes, sessions, actors, personas, alerts, threat intel, export, live feed, and settings
 - node registration, config refresh, REST heartbeat, and capture batching
 - Redis-backed local capture spooling on the node
 - protocol-shaped responses for the AI HTTP surfaces plus MCP/IDE bait, RAG bait, homelab bait, and traditional protocol traps
@@ -66,7 +66,7 @@ Current control-plane flow:
 ```text
 apps/
 	api/       NestJS dashboard API
-	web/       React/Vite dashboard UI
+	web/       React/Vite public landing, repo docs, and dashboard UI
 	worker/    worker bootstrap and future background jobs
 	node/      honeypot runtime
 packages/
@@ -126,6 +126,10 @@ That file seeds a local bootstrap admin for Docker-only testing:
 After startup, verify:
 
 - Web UI: `http://localhost:3000`
+- Public landing: `http://localhost:3000/`
+- Repository docs: `http://localhost:3000/docs`
+- Operator login: `http://localhost:3000/login`
+- Operator overview: `http://localhost:3000/overview`
 - API health: `http://localhost:4000/api/v1/health`
 - Proxied API health: `http://localhost:3000/api/v1/health`
 
@@ -135,6 +139,18 @@ Notes:
 - the example env intentionally does not seed an admin user
 - `JWT_SECRET` is required for any non-local deployment
 - the committed local env also provisions a MinIO bucket for archive smoke and targets `http://host.docker.internal:7780/smoke-alert` for webhook smoke; the worker compose service maps that hostname to the host gateway for same-host Linux testing
+
+### Public web entry points
+
+The shipped web app now exposes two public routes before the authenticated dashboard:
+
+- `/` for the product landing page and shipped feature summary
+- `/docs` for a repository explainer that covers apps, packages, and supporting directories
+
+Protected operator routes remain under the dashboard shell:
+
+- `/login` for authentication
+- `/overview` for the operator dashboard home after sign-in
 
 ### 2. Create a node in the dashboard
 

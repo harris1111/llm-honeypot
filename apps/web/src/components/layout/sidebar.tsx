@@ -1,7 +1,7 @@
 import { Link } from '@tanstack/react-router';
 
 const navigation = [
-  { description: 'Live node, session, and capture snapshot', label: 'Overview', to: '/' },
+  { description: 'Live node, session, and capture snapshot', label: 'Overview', to: '/overview' },
   { description: 'Approve and configure nodes', label: 'Nodes', to: '/nodes' },
   { description: 'Recent captured interaction timelines', label: 'Sessions', to: '/sessions' },
   { description: 'Correlated operators, scanners, and repeat visitors', label: 'Actors', to: '/actors' },

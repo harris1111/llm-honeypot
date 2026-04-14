@@ -5,6 +5,33 @@
 
 ---
 
+## Public Landing, Repo Docs, And Dashboard Entry Split — April 14, 2026
+
+### Public Web Surface
+- Added a public landing page at `/` with shipped feature highlights, architecture summary, and clear operator CTA links
+- Added a public repository docs page at `/docs` that summarizes the deployable apps, shared packages, and supporting directories
+- Kept the operator login public at `/login` while moving the authenticated dashboard home to `/overview`
+
+### Router And Operator Flow
+- Split the web router into a public frame and an authenticated dashboard frame instead of branching on pathname checks inside one shell
+- Added auth-aware redirects so authenticated visits to `/` or `/login` land on `/overview`
+- Updated the login form to navigate to `/overview` after successful sign-in or TOTP verification
+- Lazy-loaded protected dashboard route views so the public entry no longer eagerly ships the full operator surface
+
+### Documentation Updates
+- Updated `README.md` with the new public web entry points and protected dashboard route
+- Updated `docs/system-architecture.md` to document the public landing/docs routes and lazy route delivery
+- Updated `docs/development-roadmap.md` and `docs/shipped-app-testing-walkthrough.md` to reflect the public onboarding split and `/overview` verification flow
+
+### Validation Results
+```
+✅ pnpm --filter @llmtrap/web lint
+✅ pnpm --filter @llmtrap/web typecheck
+✅ pnpm --filter @llmtrap/web build
+```
+
+---
+
 ## Cold Storage, Shared Live Feed, And Smoke Automation — April 14, 2026
 
 ### Cold Storage And Archive Retrieval

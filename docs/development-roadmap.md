@@ -1,7 +1,7 @@
 # LLMTrap Development Roadmap
 
 **Project Version:** 0.1.0  
-**Last Updated:** April 13, 2026  
+**Last Updated:** April 14, 2026  
 **Status:** Phase 1 Complete, Phase 2/3 Complete, Phase 4 Complete, Phase 5/6 In Progress
 
 ---
@@ -53,6 +53,7 @@ LLMTrap is an open-source, multi-protocol AI honeypot platform for security rese
 - API modules: auth, users, nodes, capture, audit, health
 - Node lifecycle endpoints: register, approve, config pull, REST heartbeat, capture batch ingest
 - React shell: login, overview, nodes list/detail, settings, auth state, node CRUD workflows
+- **[NEW]** Public landing page at `/`, repository docs at `/docs`, and protected operator overview at `/overview`
 - Shared envelopes/contracts exported through `@llmtrap/shared`
 
 #### Deferred Follow-up Work
@@ -167,6 +168,7 @@ LLMTrap is an open-source, multi-protocol AI honeypot platform for security rese
 - `pnpm test` passes for the current workspace test surface (placeholder package scripts; deeper coverage remains future work)
 - Docker smoke confirms dashboard health, seeded-admin login, live node provisioning/approval, and protocol-shaped Ollama/OpenAI-compatible/Anthropic-compatible responses
 - Latest runtime smoke persisted `3` captured requests across `3` grouped sessions and drained the node buffer back to `0`
+- The shipped web entry now splits public onboarding (`/`, `/docs`) from the authenticated dashboard home (`/overview`)
 
 ### Phase 4/5/6 (Current In-Progress Slice)
 - `pnpm typecheck` passes across all workspace packages after protocol, worker, API, and web additions

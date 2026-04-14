@@ -1,15 +1,17 @@
 # Shipped App Testing Walkthrough
 
-This is the canonical local walkthrough for testing the currently shipped Phase 1 to Phase 6 slice.
+This is the canonical local walkthrough for testing the currently shipped slice: completed Phase 1 to Phase 4 functionality plus the currently landed Phase 5 and Phase 6 surfaces.
 
 Update this file whenever local testing steps, ports, env vars, compose usage, node enrollment flow, dashboard routes, or representative protocol probes change.
 
 ## What This Walkthrough Verifies
 
 - the dashboard stack boots and the seeded local admin can sign in
+- the public landing route at `/` renders and links operators to the right next steps
+- the public repository docs route at `/docs` summarizes the apps, packages, and support directories
 - a node can be created, approved, and brought to `ONLINE`
 - representative AI, RAG, homelab, and traditional listeners respond locally
-- the dashboard Overview, Nodes, Sessions, Actors, Personas, Alerts, Threat Intel, Export, Live Feed, Response Engine, and Settings routes load
+- the authenticated dashboard Overview, Nodes, Sessions, Actors, Personas, Alerts, Threat Intel, Export, Live Feed, Response Engine, and Settings routes load from `/overview` onward
 - manual backfeed can create reviewable template candidates through the dashboard Response Engine route
 - approved templates can flow back to the node through config sync for live template routing
 - threat-intel API endpoints support filters by node, classification, service, source IP, time window, and result limit
@@ -237,7 +239,11 @@ dig @127.0.0.1 -p 20053 example.com +short
 
 The node batches captures on a flush interval and the worker correlates actors on a separate interval. After running the probes, wait up to 45 seconds and refresh before treating empty Overview, Sessions, or Actors screens as a failure.
 
-Open `http://localhost:3000` and confirm the following.
+Open `http://localhost:3000` and confirm the public landing page loads with feature copy plus visible links to `Repository docs` and `Operator login`.
+
+Open `http://localhost:3000/docs` and confirm the repository explainer page renders cards for apps, packages, and supporting directories.
+
+Open `http://localhost:3000/login`, sign in with the shared local credentials if needed, confirm the app redirects you into `http://localhost:3000/overview`, and then verify the following.
 
 1. `Overview` shows registered nodes, captured sessions, and captured requests above zero after the probe traffic has had time to flush and refresh into the dashboard.
 2. `Nodes` lists `local-test-node` as `ONLINE`.

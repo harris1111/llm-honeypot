@@ -71,7 +71,7 @@ Remote browsers and remote nodes do not connect directly to the API container. A
 **Services:**
 - **db-init** (one-shot bootstrap): Runs migrations and optional seed/bootstrap steps
 - **api** (NestJS): Core business logic, REST endpoints, WebSocket gateway
-- **web** (React): Dashboard UI for operator workflows
+- **web** (React): Public landing/docs routes plus dashboard UI for operator workflows
 - **worker** (NestJS background worker): Scheduled jobs (classification, enrichment, archival, alerts, webhook dispatch)
 - **postgres**: Primary relational DB
 - **redis**: Cache layer + message broker
@@ -243,7 +243,7 @@ Controller → Service → Repository → Prisma
 ### apps/web (React Frontend)
 
 **Stack:**
-- React 18 (functional components)
+- React 19 (functional components)
 - Vite (HMR, instant builds)
 - TanStack Router (manually declared route tree)
 - TanStack Query (server state)
@@ -252,13 +252,19 @@ Controller → Service → Repository → Prisma
 - Recharts (visualizations)
 
 **Current routes:**
+- `/` — public landing page with shipped feature highlights
+- `/docs` — public repository guide covering apps, packages, and support directories
 - `/login` — bootstrap/login/TOTP verification
-- `/` — overview shell
+- `/overview` — authenticated dashboard home
 - `/nodes` and `/nodes/:nodeId` — provisioning and config edits
+- `/sessions`, `/actors`, `/personas`, `/alerts`, `/threat-intel`, `/export`, `/live-feed`, `/response-engine` — authenticated operator workflows
 - `/settings` — TOTP setup and operator settings foundation
 
+**Delivery notes:**
+- Protected dashboard routes are lazy-loaded so anonymous traffic hitting `/` or `/docs` does not eagerly fetch every operator view.
+
 **Port:** 3000  
-**Bundle:** ~73 KB gzipped (target: <100 KB)
+**Bundle:** Shared entry chunk plus lazy route chunks for protected views
 
 ---
 
