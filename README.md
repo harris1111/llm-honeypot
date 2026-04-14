@@ -22,10 +22,21 @@ Phase 5 and Phase 6 work on proxy routing, alert delivery, cold storage, and dee
 - Phase 5: in progress (response strategies + backfeed landed)
 - Phase 6: in progress (threat-intel, alerts, live feed, archives, and smoke harness landed)
 
+## Feature map by phase
+
+| Phase | Status | Shipped outcome |
+|---|---|---|
+| 1 | Complete | Monorepo, shared packages, Prisma schema, and Docker Compose baseline |
+| 2 | Complete | Dashboard auth, node lifecycle APIs, operator shell, and the public web entry split |
+| 3 | Complete | Node registration, capture buffering, config sync, and initial AI protocol listeners |
+| 4 | Complete | Expanded AI, MCP, IDE bait, RAG, homelab, and traditional protocol coverage |
+| 5 | In progress | Response strategies, personas, actors, backfeed, and response-engine workflows |
+| 6 | In progress | Threat intel, alerts, live feed, archive retrieval, export tooling, and smoke automation |
+
 What is implemented today:
 
 - dashboard auth, users, nodes, capture, audit, and health modules
-- dashboard UI with a public landing page at `/`, repository docs at `/docs`, operator login at `/login`, overview at `/overview`, plus nodes, sessions, actors, personas, alerts, threat intel, export, live feed, and settings
+- dashboard UI with a public landing page at `/`, a multi-page public docs area under `/docs`, operator login at `/login`, overview at `/overview`, plus nodes, sessions, actors, personas, alerts, threat intel, export, live feed, and settings
 - node registration, config refresh, REST heartbeat, and capture batching
 - Redis-backed local capture spooling on the node
 - protocol-shaped responses for the AI HTTP surfaces plus MCP/IDE bait, RAG bait, homelab bait, and traditional protocol traps
@@ -66,7 +77,7 @@ Current control-plane flow:
 ```text
 apps/
 	api/       NestJS dashboard API
-	web/       React/Vite public landing, repo docs, and dashboard UI
+	web/       React/Vite public landing, docs home, and dashboard UI
 	worker/    worker bootstrap and future background jobs
 	node/      honeypot runtime
 packages/
@@ -79,9 +90,35 @@ docker/
 	docker-compose.node.yml
 docs/
 plans/
+tests/
 templates/
 personas/
 ```
+
+## Repository surfaces
+
+### Deployable apps
+
+- `apps/api` runs the NestJS control-plane API for auth, node lifecycle, capture ingest, exports, alerts, threat intel, and archives.
+- `apps/web` serves the React/Vite web app: public landing at `/`, public docs home plus in-app walkthrough pages under `/docs`, login at `/login`, and the protected dashboard at `/overview` and below.
+- `apps/worker` runs background processing for alert delivery, archive creation, and future enrichment-style workloads.
+- `apps/node` hosts the honeypot runtime that exposes bait protocols, captures requests, and syncs with the dashboard.
+
+### Shared packages
+
+- `packages/shared` contains shared DTOs, schemas, constants, and utilities used across the monorepo.
+- `packages/db` owns the Prisma schema, migrations, and database exports.
+- `packages/response-engine` provides the template and response-routing primitives used by the node runtime.
+- `packages/persona-engine` keeps persona-specific hardware, model, and uptime claims internally consistent.
+
+### Supporting directories
+
+- `docker/` contains the Dockerfiles, compose stacks, env templates, and bootstrap scripts for dashboard and node deployments.
+- `templates/` contains shipped starter response templates.
+- `personas/` contains built-in personas such as `homelabber`, `researcher`, and `startup`.
+- `tests/` contains smoke coverage today and the future browser e2e surface.
+- `docs/` contains the architecture reference, roadmap, changelog, and shipped-app walkthrough.
+- `plans/` contains implementation plans and research reports for shipped and in-flight work.
 
 ## Prerequisites
 
@@ -108,7 +145,7 @@ Useful ports in the default setup:
 
 ## Quick start with Docker
 
-For the full current walkthrough, including Windows, macOS, and Linux commands for provisioning a node, generating representative traffic, and verifying the shipped dashboard routes, use [docs/shipped-app-testing-walkthrough.md](docs/shipped-app-testing-walkthrough.md).
+For the full current walkthrough, including Windows, macOS, and Linux commands for provisioning a node, generating representative traffic, and verifying the shipped dashboard routes, use the in-app docs area under `/docs` alongside [docs/shipped-app-testing-walkthrough.md](docs/shipped-app-testing-walkthrough.md).
 
 ### 1. Start the dashboard stack
 
@@ -127,7 +164,7 @@ After startup, verify:
 
 - Web UI: `http://localhost:3000`
 - Public landing: `http://localhost:3000/`
-- Repository docs: `http://localhost:3000/docs`
+- Public docs: `http://localhost:3000/docs`
 - Operator login: `http://localhost:3000/login`
 - Operator overview: `http://localhost:3000/overview`
 - API health: `http://localhost:4000/api/v1/health`
@@ -145,7 +182,14 @@ Notes:
 The shipped web app now exposes two public routes before the authenticated dashboard:
 
 - `/` for the product landing page and shipped feature summary
-- `/docs` for a repository explainer that covers apps, packages, and supporting directories
+- `/docs` for the docs home and runbook index
+
+The public docs area then splits into dedicated pages for the main local tasks:
+
+- `/docs/getting-started` for prerequisites, ports, credentials, and route map
+- `/docs/deploy-dashboard` for dashboard compose boot and health checks
+- `/docs/enroll-node` for node creation, approval, and runtime startup
+- `/docs/smoke-tests` for probes, dashboard verification, smoke scripts, and teardown
 
 Protected operator routes remain under the dashboard shell:
 
@@ -175,7 +219,7 @@ docker compose -f docker/docker-compose.node.yml up -d --build
 
 Or use your own env file derived from `docker/node-compose.env.example`.
 
-If you want a command-driven node provisioning flow instead of clicking through the UI, the complete PowerShell and bash variants live in [docs/shipped-app-testing-walkthrough.md](docs/shipped-app-testing-walkthrough.md).
+If you want a command-driven node provisioning flow instead of clicking through the UI, the same steps are now rendered in-app under `/docs/enroll-node` and remain mirrored in [docs/shipped-app-testing-walkthrough.md](docs/shipped-app-testing-walkthrough.md).
 
 Important:
 
@@ -282,10 +326,11 @@ docker compose --env-file path-to-your-node-compose.env -f docker/docker-compose
 
 For deeper project context:
 
-- `LLMTrap-Requirements.md` for the broader product direction
+- `LLMTrap-Requirements.md` at the repo root for broader product direction and future intent
 - `docs/shipped-app-testing-walkthrough.md` for the current Windows, macOS, and Linux local test flow
 - `docs/system-architecture.md` for the as-built architecture overview
 - `docs/development-roadmap.md` for milestone status
+- `docs/project-changelog.md` for shipped changes and validation history
 - `plans/260413-0930-llmtrap-implementation/` for the phase plans
 
 ## Roadmap

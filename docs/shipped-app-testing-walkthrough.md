@@ -8,7 +8,7 @@ Update this file whenever local testing steps, ports, env vars, compose usage, n
 
 - the dashboard stack boots and the seeded local admin can sign in
 - the public landing route at `/` renders and links operators to the right next steps
-- the public repository docs route at `/docs` summarizes the apps, packages, and support directories
+- the public docs area at `/docs` and `/docs/*` renders the in-app walkthrough pages for getting started, dashboard deployment, node enrollment, and smoke validation
 - a node can be created, approved, and brought to `ONLINE`
 - representative AI, RAG, homelab, and traditional listeners respond locally
 - the authenticated dashboard Overview, Nodes, Sessions, Actors, Personas, Alerts, Threat Intel, Export, Live Feed, Response Engine, and Settings routes load from `/overview` onward
@@ -44,6 +44,7 @@ Update this file whenever local testing steps, ports, env vars, compose usage, n
 docker compose --env-file docker/dashboard-compose.local.env -f docker/docker-compose.dashboard.yml up -d --build
 Invoke-WebRequest -UseBasicParsing http://localhost:4000/api/v1/health | Select-Object -ExpandProperty Content
 Invoke-WebRequest -UseBasicParsing http://localhost:3000/healthz | Select-Object -ExpandProperty Content
+Invoke-WebRequest -UseBasicParsing http://localhost:3000/docs | Select-Object StatusCode
 ```
 
 ### macOS
@@ -52,6 +53,7 @@ Invoke-WebRequest -UseBasicParsing http://localhost:3000/healthz | Select-Object
 docker compose --env-file docker/dashboard-compose.local.env -f docker/docker-compose.dashboard.yml up -d --build
 curl http://localhost:4000/api/v1/health
 curl http://localhost:3000/healthz
+curl -I http://localhost:3000/docs
 ```
 
 ### Linux
@@ -74,6 +76,7 @@ docker compose \
 
 curl http://localhost:4000/api/v1/health
 curl http://localhost:3000/healthz
+curl -I http://localhost:3000/docs
 ```
 
 The committed local env also starts MinIO for archive smoke. Local endpoints:
@@ -239,9 +242,11 @@ dig @127.0.0.1 -p 20053 example.com +short
 
 The node batches captures on a flush interval and the worker correlates actors on a separate interval. After running the probes, wait up to 45 seconds and refresh before treating empty Overview, Sessions, or Actors screens as a failure.
 
-Open `http://localhost:3000` and confirm the public landing page loads with feature copy plus visible links to `Repository docs` and `Operator login`.
+Open `http://localhost:3000` and confirm the public landing page loads with feature copy plus visible links to `Docs` and `Operator login`.
 
-Open `http://localhost:3000/docs` and confirm the repository explainer page renders cards for apps, packages, and supporting directories.
+Open `http://localhost:3000/docs` and confirm the docs home renders a sidebar-driven runbook index for the local workflow.
+
+Open `http://localhost:3000/docs/getting-started`, `http://localhost:3000/docs/deploy-dashboard`, `http://localhost:3000/docs/enroll-node`, and `http://localhost:3000/docs/smoke-tests` and confirm each page renders inside the same docs shell with the correct page-specific sections and anchors.
 
 Open `http://localhost:3000/login`, sign in with the shared local credentials if needed, confirm the app redirects you into `http://localhost:3000/overview`, and then verify the following.
 

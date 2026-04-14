@@ -31,7 +31,7 @@ export function LandingRouteView() {
               className="rounded-full border border-white/10 px-5 py-3 font-medium text-stone-100 no-underline transition hover:border-white/20 hover:bg-white/5"
               to="/docs"
             >
-              Read repository docs
+              Read docs
             </Link>
           </div>
         </div>
@@ -66,13 +66,13 @@ export function LandingRouteView() {
       <FeaturesSection items={featureCards} />
       <section className="mx-auto max-w-7xl px-6 pb-18 pt-4 lg:px-8">
         <div className="rounded-[2.5rem] border border-orange-300/20 bg-[linear-gradient(135deg,rgba(28,25,23,0.92),rgba(17,24,39,0.88))] p-8 sm:p-10">
-          <p className="text-xs uppercase tracking-[0.35em] text-orange-300">Contributor path</p>
+          <p className="text-xs uppercase tracking-[0.35em] text-orange-300">Operator path</p>
           <h2 className="mt-4 max-w-3xl text-3xl font-semibold tracking-tight text-stone-50 sm:text-4xl">
-            Start on the public surface, then drop into the dashboard when you need to operate the trap.
+            Start on the public surface, follow the local docs, then drop into the dashboard when you need to operate the trap.
           </h2>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link className="rounded-full border border-white/10 px-5 py-3 font-medium text-stone-100 no-underline transition hover:border-white/20 hover:bg-white/5" to="/docs">
-              Explore apps and packages
+              Open setup docs
             </Link>
             <Link className="rounded-full border border-emerald-300/45 bg-emerald-400/15 px-5 py-3 font-medium text-emerald-100 no-underline transition hover:border-emerald-200/70 hover:bg-emerald-400/20" to="/login">
               Go to operator login

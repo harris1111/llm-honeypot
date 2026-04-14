@@ -4,7 +4,6 @@ import { createRootRoute, createRoute, createRouter, Outlet, redirect } from '@t
 
 import { useAuthStore } from './lib/auth-store';
 import { LandingRouteView } from './routes/landing';
-import { RepositoryDocsRouteView } from './routes/repository-docs';
 
 function lazyRouteView(loader: () => Promise<{ default: ComponentType<Record<string, never>> }>) {
   const Component = lazy(loader);
@@ -22,6 +21,11 @@ function RoutePendingState() {
   return <div className="rounded-[2rem] border border-stone-800 bg-stone-900/85 px-5 py-6 text-sm text-stone-300">Loading route…</div>;
 }
 
+const DocsRouteView = lazyRouteView(() => import('./routes/repository-docs').then((module) => ({ default: module.DocsRouteView })));
+const DocsGettingStartedRouteView = lazyRouteView(() => import('./routes/docs-getting-started').then((module) => ({ default: module.DocsGettingStartedRouteView })));
+const DocsDeployDashboardRouteView = lazyRouteView(() => import('./routes/docs-deploy-dashboard').then((module) => ({ default: module.DocsDeployDashboardRouteView })));
+const DocsEnrollNodeRouteView = lazyRouteView(() => import('./routes/docs-enroll-node').then((module) => ({ default: module.DocsEnrollNodeRouteView })));
+const DocsSmokeTestsRouteView = lazyRouteView(() => import('./routes/docs-smoke-tests').then((module) => ({ default: module.DocsSmokeTestsRouteView })));
 const LoginRouteView = lazyRouteView(() => import('./routes/login').then((module) => ({ default: module.LoginRouteView })));
 const DashboardFrame = lazyRouteView(() => import('./components/layout/dashboard-frame').then((module) => ({ default: module.DashboardFrame })));
 const OverviewRouteView = lazyRouteView(() => import('./routes/overview').then((module) => ({ default: module.OverviewRouteView })));
@@ -85,10 +89,34 @@ const landingRoute = createRoute({
   path: '/',
 });
 
-const repositoryDocsRoute = createRoute({
-  component: RepositoryDocsRouteView,
+const docsRoute = createRoute({
+  component: DocsRouteView,
   getParentRoute: () => publicFrameRoute,
   path: '/docs',
+});
+
+const docsGettingStartedRoute = createRoute({
+  component: DocsGettingStartedRouteView,
+  getParentRoute: () => publicFrameRoute,
+  path: '/docs/getting-started',
+});
+
+const docsDeployDashboardRoute = createRoute({
+  component: DocsDeployDashboardRouteView,
+  getParentRoute: () => publicFrameRoute,
+  path: '/docs/deploy-dashboard',
+});
+
+const docsEnrollNodeRoute = createRoute({
+  component: DocsEnrollNodeRouteView,
+  getParentRoute: () => publicFrameRoute,
+  path: '/docs/enroll-node',
+});
+
+const docsSmokeTestsRoute = createRoute({
+  component: DocsSmokeTestsRouteView,
+  getParentRoute: () => publicFrameRoute,
+  path: '/docs/smoke-tests',
 });
 
 const loginRoute = createRoute({
@@ -171,7 +199,7 @@ const liveFeedRoute = createRoute({
 });
 
 const routeTree = rootRoute.addChildren([
-  publicFrameRoute.addChildren([landingRoute, repositoryDocsRoute]),
+  publicFrameRoute.addChildren([landingRoute, docsRoute, docsGettingStartedRoute, docsDeployDashboardRoute, docsEnrollNodeRoute, docsSmokeTestsRoute]),
   dashboardFrameRoute.addChildren([
     overviewRoute,
     nodesRoute,
