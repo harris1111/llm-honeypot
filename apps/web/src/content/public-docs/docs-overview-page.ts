@@ -9,17 +9,20 @@ export const docsOverviewPage: DocsPage = {
     { label: 'Traditional listeners', value: '7' },
     { label: 'Smoke scripts', value: '3' },
   ],
-  relatedPageIds: ['getting-started', 'deploy-dashboard', 'enroll-node', 'smoke-tests'],
+  relatedPageIds: ['getting-started', 'how-it-works', 'deploy-dashboard', 'enroll-node', 'configure-node', 'using-dashboard', 'smoke-tests'],
   sections: [
     {
       id: 'quickstart',
       title: 'Quick start',
       intro: 'Follow these steps in order to go from zero to a running honeypot with captured traffic.',
       checklist: [
+        'Read How It Works to understand the architecture and capture pipeline.',
         'Check prerequisites and note the default ports and credentials.',
         'Boot the dashboard stack with Docker Compose.',
         'Create and approve a node in the dashboard UI.',
+        'Configure the node: response strategy, service toggles, and persona.',
         'Start the node stack and probe the bait endpoints.',
+        'Explore the dashboard: sessions, actors, live feed, and threat intel.',
       ],
     },
     {

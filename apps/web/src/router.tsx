@@ -29,6 +29,9 @@ const DocsRouteView = lazyRouteView(() => import('./routes/repository-docs').the
 const DocsGettingStartedRouteView = lazyRouteView(() => import('./routes/docs-getting-started').then((module) => ({ default: module.DocsGettingStartedRouteView })));
 const DocsDeployDashboardRouteView = lazyRouteView(() => import('./routes/docs-deploy-dashboard').then((module) => ({ default: module.DocsDeployDashboardRouteView })));
 const DocsEnrollNodeRouteView = lazyRouteView(() => import('./routes/docs-enroll-node').then((module) => ({ default: module.DocsEnrollNodeRouteView })));
+const DocsHowItWorksRouteView = lazyRouteView(() => import('./routes/docs-how-it-works').then((module) => ({ default: module.DocsHowItWorksRouteView })));
+const DocsConfigureNodeRouteView = lazyRouteView(() => import('./routes/docs-configure-node').then((module) => ({ default: module.DocsConfigureNodeRouteView })));
+const DocsUsingDashboardRouteView = lazyRouteView(() => import('./routes/docs-using-dashboard').then((module) => ({ default: module.DocsUsingDashboardRouteView })));
 const DocsSmokeTestsRouteView = lazyRouteView(() => import('./routes/docs-smoke-tests').then((module) => ({ default: module.DocsSmokeTestsRouteView })));
 const LoginRouteView = lazyRouteView(() => import('./routes/login').then((module) => ({ default: module.LoginRouteView })));
 const DashboardFrame = lazyRouteView(() => import('./components/layout/dashboard-frame').then((module) => ({ default: module.DashboardFrame })));
@@ -117,6 +120,24 @@ const docsEnrollNodeRoute = createRoute({
   path: '/docs/enroll-node',
 });
 
+const docsHowItWorksRoute = createRoute({
+  component: DocsHowItWorksRouteView,
+  getParentRoute: () => publicFrameRoute,
+  path: '/docs/how-it-works',
+});
+
+const docsConfigureNodeRoute = createRoute({
+  component: DocsConfigureNodeRouteView,
+  getParentRoute: () => publicFrameRoute,
+  path: '/docs/configure-node',
+});
+
+const docsUsingDashboardRoute = createRoute({
+  component: DocsUsingDashboardRouteView,
+  getParentRoute: () => publicFrameRoute,
+  path: '/docs/using-dashboard',
+});
+
 const docsSmokeTestsRoute = createRoute({
   component: DocsSmokeTestsRouteView,
   getParentRoute: () => publicFrameRoute,
@@ -203,7 +224,7 @@ const liveFeedRoute = createRoute({
 });
 
 const routeTree = rootRoute.addChildren([
-  publicFrameRoute.addChildren([landingRoute, docsRoute, docsGettingStartedRoute, docsDeployDashboardRoute, docsEnrollNodeRoute, docsSmokeTestsRoute]),
+  publicFrameRoute.addChildren([landingRoute, docsRoute, docsGettingStartedRoute, docsDeployDashboardRoute, docsEnrollNodeRoute, docsHowItWorksRoute, docsConfigureNodeRoute, docsUsingDashboardRoute, docsSmokeTestsRoute]),
   dashboardFrameRoute.addChildren([
     overviewRoute,
     nodesRoute,
