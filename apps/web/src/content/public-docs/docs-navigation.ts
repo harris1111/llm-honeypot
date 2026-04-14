@@ -26,6 +26,24 @@ export const docsNavigation: DocsNavigationItem[] = [
     to: '/docs/enroll-node',
   },
   {
+    id: 'how-it-works',
+    summary: 'Architecture, protocol emulation, capture pipeline, persona and response engines, sync, and security.',
+    title: 'How it works',
+    to: '/docs/how-it-works',
+  },
+  {
+    id: 'configure-node',
+    summary: 'Response strategy, service toggles, persona assignment, ports, env vars, and live config sync.',
+    title: 'Configure node',
+    to: '/docs/configure-node',
+  },
+  {
+    id: 'using-dashboard',
+    summary: 'Every dashboard page explained: sessions, actors, personas, alerts, threat intel, live feed, and more.',
+    title: 'Using the dashboard',
+    to: '/docs/using-dashboard',
+  },
+  {
     id: 'smoke-tests',
     summary: 'Probe listeners, verify the UI, and run the shipped smoke scripts.',
     title: 'Smoke tests',
