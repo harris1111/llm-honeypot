@@ -3,7 +3,7 @@ import { useThemeStore, type Theme } from '../../lib/theme-store';
 const themes: Array<{ icon: string; label: string; value: Theme }> = [
   { icon: '☀', label: 'Light', value: 'light' },
   { icon: '◑', label: 'Dark', value: 'dark' },
-  { icon: '>', label: 'Hacker', value: 'hacker' },
+  { icon: '⌘', label: 'Hacker', value: 'hacker' },
 ];
 
 export function ThemeToggle() {
@@ -21,7 +21,7 @@ export function ThemeToggle() {
           aria-label={item.label}
           className={`rounded-[var(--radius-sm)] px-2.5 py-1 text-xs font-medium transition-all ${
             theme === item.value
-              ? 'bg-[var(--color-bg-base)] text-[var(--color-text-primary)] shadow-[var(--shadow-xs)]'
+              ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)] shadow-[var(--shadow-xs)]'
               : 'text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)]'
           }`}
           key={item.value}
