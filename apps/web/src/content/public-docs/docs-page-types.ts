@@ -1,4 +1,4 @@
-export type DocsPageId = 'overview' | 'getting-started' | 'deploy-dashboard' | 'enroll-node' | 'smoke-tests';
+export type DocsPageId = 'overview' | 'getting-started' | 'deploy-dashboard' | 'enroll-node' | 'how-it-works' | 'configure-node' | 'using-dashboard' | 'smoke-tests';
 
 export type DocsEnvironment = 'windows' | 'macos' | 'linux';
 
