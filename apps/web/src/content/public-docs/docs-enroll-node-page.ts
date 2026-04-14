@@ -38,23 +38,21 @@ const linuxNodeApproval = macNodeApproval;
 
 const windowsNodeBoot = `$tmp = Join-Path $env:TEMP 'llmtrap-node-compose.env'
 @"
-LLMTRAP_DASHBOARD_URL=http://host.docker.internal:4000
+LLMTRAP_DASHBOARD_URL=http://dashboard-api:4000
 LLMTRAP_NODE_KEY=$nodeKey
 "@ | Set-Content -Path $tmp -Encoding ascii
 
 docker compose --env-file $tmp -f docker/docker-compose.node.yml up -d --build`;
 
 const macNodeBoot = `cat > /tmp/llmtrap-node-compose.env <<EOF
-LLMTRAP_DASHBOARD_URL=http://host.docker.internal:4000
+LLMTRAP_DASHBOARD_URL=http://dashboard-api:4000
 LLMTRAP_NODE_KEY=$NODE_KEY
 EOF
 
 docker compose --env-file /tmp/llmtrap-node-compose.env -f docker/docker-compose.node.yml up -d --build`;
 
-const linuxNodeBoot = `DASHBOARD_HOST_IP="$(hostname -I | awk '{print $1}')"
-
-cat > /tmp/llmtrap-node-compose.env <<EOF
-LLMTRAP_DASHBOARD_URL=http://$DASHBOARD_HOST_IP:4000
+const linuxNodeBoot = `cat > /tmp/llmtrap-node-compose.env <<EOF
+LLMTRAP_DASHBOARD_URL=http://dashboard-api:4000
 LLMTRAP_NODE_KEY=$NODE_KEY
 EOF
 

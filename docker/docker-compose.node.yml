@@ -52,6 +52,7 @@ services:
     networks:
       - honeypot
       - internal
+      - controlplane
     volumes:
       - node-runtime:/home/llmtrap/.llmtrap-runtime
     ports:
@@ -105,6 +106,9 @@ networks:
     driver: bridge
   internal:
     driver: bridge
+  controlplane:
+    external: true
+    name: llmtrap-controlplane
 
 volumes:
   node-runtime:

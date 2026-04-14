@@ -55,6 +55,8 @@ curl -s -X POST http://127.0.0.1:4000/api/v1/nodes/NODE_ID/approve \
 
 ### 3. Start the node
 
+The node reaches the dashboard API through a shared Docker network (`llmtrap-controlplane`) using the internal alias `dashboard-api`. No host networking needed.
+
 ```bash
 docker compose --env-file node.env -f docker/docker-compose.node.yml up -d --build
 ```
@@ -65,6 +67,9 @@ docker compose --env-file node.env -f docker/docker-compose.node.yml up -d --bui
 curl http://127.0.0.1:4000/api/v1/health   # API
 curl http://127.0.0.1:3000                   # Web UI
 curl http://127.0.0.1:11434/api/version      # Fake Ollama
+
+# Verify node can reach dashboard internally
+docker exec llmtrap-node-trap-core-1 wget -qO- http://dashboard-api:4000/api/v1/health
 ```
 
 ## Bait surfaces
@@ -163,15 +168,19 @@ pnpm test
 
 | Variable | Description |
 |----------|-------------|
-| `LLMTRAP_DASHBOARD_URL` | Dashboard API URL (e.g. `http://127.0.0.1:4000`) |
+| `LLMTRAP_DASHBOARD_URL` | Must be reachable from the node container. Same-host Docker: `http://dashboard-api:4000` (uses the shared `llmtrap-controlplane` network). Multi-host: the dashboard origin URL. |
 | `LLMTRAP_NODE_KEY` | Key issued when creating a node |
 
 See `docker/dashboard-compose.env.example` and `docker/node-compose.env.example` for full reference.
 
+## Networking
+
+On the same host, the dashboard API is bound to `127.0.0.1:4000` (not reachable from other containers via host networking). Instead, both compose stacks share a Docker bridge network called `llmtrap-controlplane`. The dashboard API service has the alias `dashboard-api` on this network, so the node container connects to `http://dashboard-api:4000` internally.
+
 ## Security notes
 
-- Dashboard (ports 3000, 4000) should be behind a firewall or reverse proxy — not exposed to attackers
-- Bait ports are intentionally exposed — that's the honeypot
+- Dashboard (ports 3000, 4000) bound to `127.0.0.1` — use nginx or SSH port-forward for operator access
+- Bait ports are intentionally exposed on `0.0.0.0` — that's the honeypot
 - Honeypot services are sandboxed — no real shell, no real filesystem
 - All credentials in env files are for the operator, not the honeypot
 - Never commit real API keys or `.env` files
