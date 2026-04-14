@@ -28,25 +28,43 @@ export function NodesRouteView() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="text-xs uppercase tracking-[0.3em] text-stone-400">Nodes</p>
-          <h2 className="mt-2 text-3xl font-semibold text-stone-50">Provision and approve honeypot nodes</h2>
-        </div>
-      </div>
+      <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">Nodes</h1>
 
-      <form className="grid gap-4 rounded-[1.75rem] border border-stone-800 bg-stone-950/70 p-5 md:grid-cols-[1.4fr_1fr_1fr_auto]" onSubmit={(event) => void handleCreate(event)}>
-        <input className="rounded-2xl border border-stone-700 bg-stone-950 px-4 py-3 text-stone-100" onChange={(event) => setName(event.target.value)} placeholder="Node name" required value={name} />
-        <input className="rounded-2xl border border-stone-700 bg-stone-950 px-4 py-3 text-stone-100" onChange={(event) => setHostname(event.target.value)} placeholder="Hostname" value={hostname} />
-        <input className="rounded-2xl border border-stone-700 bg-stone-950 px-4 py-3 text-stone-100" onChange={(event) => setPublicIp(event.target.value)} placeholder="Public IP" value={publicIp} />
-        <button className="rounded-2xl bg-emerald-400 px-4 py-3 font-medium text-stone-950 transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:bg-stone-700 disabled:text-stone-400" disabled={createNode.isPending} type="submit">
-          {createNode.isPending ? 'Creating…' : 'Create node'}
+      <form
+        className="grid gap-3 border border-[var(--color-border-default)] rounded-[var(--radius-lg)] bg-[var(--color-bg-base)] p-4 md:grid-cols-[1.4fr_1fr_1fr_auto]"
+        onSubmit={(event) => void handleCreate(event)}
+      >
+        <input
+          className="border border-[var(--color-border-default)] rounded-[var(--radius-md)] bg-[var(--color-bg-surface)] px-3 py-2.5 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-[var(--color-input-border-focus)]"
+          onChange={(event) => setName(event.target.value)}
+          placeholder="Name"
+          required
+          value={name}
+        />
+        <input
+          className="border border-[var(--color-border-default)] rounded-[var(--radius-md)] bg-[var(--color-bg-surface)] px-3 py-2.5 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-[var(--color-input-border-focus)]"
+          onChange={(event) => setHostname(event.target.value)}
+          placeholder="Hostname"
+          value={hostname}
+        />
+        <input
+          className="border border-[var(--color-border-default)] rounded-[var(--radius-md)] bg-[var(--color-bg-surface)] px-3 py-2.5 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-[var(--color-input-border-focus)]"
+          onChange={(event) => setPublicIp(event.target.value)}
+          placeholder="IP"
+          value={publicIp}
+        />
+        <button
+          className="border border-[var(--color-border-strong)] rounded-[var(--radius-md)] bg-[var(--color-accent-subtle)] px-4 py-2.5 text-sm font-medium text-[var(--color-accent)] transition hover:bg-[var(--color-accent-muted)] disabled:cursor-not-allowed disabled:border-[var(--color-border-default)] disabled:text-[var(--color-text-tertiary)]"
+          disabled={createNode.isPending}
+          type="submit"
+        >
+          {createNode.isPending ? 'Creating...' : 'Create'}
         </button>
       </form>
 
       {latestKey ? (
-        <div className="rounded-[1.75rem] border border-emerald-500/35 bg-emerald-500/10 px-5 py-4 text-sm text-emerald-100">
-          Raw node key issued once: <span className="font-mono">{latestKey}</span>
+        <div className="border border-[var(--color-border-strong)] rounded-[var(--radius-lg)] bg-[var(--color-accent-muted)] px-4 py-3 text-xs text-[var(--color-accent)]">
+          <span className="text-[var(--color-accent)]">[KEY]</span> Issued once — save now: <span className="font-bold">{latestKey}</span>
         </div>
       ) : null}
 
@@ -54,6 +72,9 @@ export function NodesRouteView() {
         {(nodesQuery.data ?? []).map((node) => (
           <NodeCard key={node.id} node={node} />
         ))}
+        {!nodesQuery.isLoading && !nodesQuery.data?.length ? (
+          <p className="text-xs text-[var(--color-text-tertiary)]">No nodes yet.</p>
+        ) : null}
       </div>
     </div>
   );

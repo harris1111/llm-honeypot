@@ -15,7 +15,7 @@ Invoke-RestMethod -Method Post -Uri ("http://localhost:4000/api/v1/nodes/{0}/app
 Write-Host "NODE_ID=$nodeId"
 Write-Host "NODE_KEY=$nodeKey"`;
 
-const unixNodeApproval = `LOGIN_JSON="$(curl -s http://localhost:4000/api/v1/auth/login \
+const macNodeApproval = `LOGIN_JSON="$(curl -s http://localhost:4000/api/v1/auth/login \
   -H 'content-type: application/json' \
   -d '{"email":"admin@llmtrap.local","password":"ChangeMe123456!"}')"
 
@@ -34,17 +34,19 @@ curl -s -X POST "http://localhost:4000/api/v1/nodes/$NODE_ID/approve" \
 
 printf 'NODE_ID=%s\nNODE_KEY=%s\n' "$NODE_ID" "$NODE_KEY"`;
 
+const linuxNodeApproval = macNodeApproval;
+
 const windowsNodeBoot = `$tmp = Join-Path $env:TEMP 'llmtrap-node-compose.env'
 @"
 LLMTRAP_DASHBOARD_URL=http://host.docker.internal:4000
-LLMTRAP_NODE_KEY=replace-with-issued-node-key
+LLMTRAP_NODE_KEY=$nodeKey
 "@ | Set-Content -Path $tmp -Encoding ascii
 
 docker compose --env-file $tmp -f docker/docker-compose.node.yml up -d --build`;
 
 const macNodeBoot = `cat > /tmp/llmtrap-node-compose.env <<EOF
 LLMTRAP_DASHBOARD_URL=http://host.docker.internal:4000
-LLMTRAP_NODE_KEY=replace-with-issued-node-key
+LLMTRAP_NODE_KEY=$NODE_KEY
 EOF
 
 docker compose --env-file /tmp/llmtrap-node-compose.env -f docker/docker-compose.node.yml up -d --build`;
@@ -53,7 +55,7 @@ const linuxNodeBoot = `DASHBOARD_HOST_IP="$(hostname -I | awk '{print $1}')"
 
 cat > /tmp/llmtrap-node-compose.env <<EOF
 LLMTRAP_DASHBOARD_URL=http://$DASHBOARD_HOST_IP:4000
-LLMTRAP_NODE_KEY=replace-with-issued-node-key
+LLMTRAP_NODE_KEY=$NODE_KEY
 EOF
 
 docker compose --env-file /tmp/llmtrap-node-compose.env -f docker/docker-compose.node.yml up -d --build`;
@@ -71,8 +73,7 @@ export const docsEnrollNodePage: DocsPage = {
   sections: [
     {
       codeSamples: [
-        { code: windowsNodeApproval, language: 'powershell', title: 'Windows PowerShell' },
-        { code: unixNodeApproval, language: 'bash', title: 'macOS and Linux' },
+        { variants: { windows: windowsNodeApproval, macos: macNodeApproval, linux: linuxNodeApproval }, language: 'bash', title: 'Create and approve the node' },
       ],
       id: 'create-approve',
       intro: 'Sign in, create a node record, capture the issued node key, and approve the node before the runtime connects.',
@@ -80,9 +81,7 @@ export const docsEnrollNodePage: DocsPage = {
     },
     {
       codeSamples: [
-        { code: windowsNodeBoot, language: 'powershell', title: 'Windows PowerShell' },
-        { code: macNodeBoot, language: 'bash', title: 'macOS' },
-        { code: linuxNodeBoot, language: 'bash', title: 'Linux' },
+        { variants: { windows: windowsNodeBoot, macos: macNodeBoot, linux: linuxNodeBoot }, language: 'bash', title: 'Start the node runtime' },
       ],
       id: 'start-runtime',
       intro: 'Once you have an approved node key, start the honeypot runtime with an env file that points back at the dashboard stack.',

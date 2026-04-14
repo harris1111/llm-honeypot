@@ -75,7 +75,7 @@ describe('LiveFeedGateway helpers', () => {
 
     const roomKey = 'live-feed:service=openai';
 
-    (gateway as unknown as { roomFilters: Map<string, Record<string, never>> }).roomFilters.set(roomKey, {
+    (gateway as unknown as { roomFilters: Map<string, Record<string, string>> }).roomFilters.set(roomKey, {
       service: 'openai',
     });
     (gateway as unknown as { server: { adapter: { rooms: Map<string, Set<string>> } } }).server = {

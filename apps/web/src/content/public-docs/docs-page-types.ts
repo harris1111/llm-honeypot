@@ -1,5 +1,7 @@
 export type DocsPageId = 'overview' | 'getting-started' | 'deploy-dashboard' | 'enroll-node' | 'smoke-tests';
 
+export type DocsEnvironment = 'windows' | 'macos' | 'linux';
+
 export interface DocsNavigationItem {
   id: DocsPageId;
   summary: string;
@@ -13,7 +15,8 @@ export interface DocsQuickFact {
 }
 
 export interface DocsCodeSample {
-  code: string;
+  /** Per-environment code variants. If only one key, no env tabs shown. Use 'shared' convention via single key. */
+  variants: Partial<Record<DocsEnvironment, string>>;
   language: 'bash' | 'javascript' | 'powershell' | 'text';
   title: string;
 }

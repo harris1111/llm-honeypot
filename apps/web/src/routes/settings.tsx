@@ -1,6 +1,7 @@
 import { useState } from 'react';
 
 import { useAuth } from '../hooks/use-auth';
+import { ThemeToggle } from '../components/ui/theme-toggle';
 
 export function SettingsRouteView() {
   const { enableTotp, setupTotp, user } = useAuth();
@@ -11,56 +12,47 @@ export function SettingsRouteView() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <p className="text-xs uppercase tracking-[0.3em] text-stone-400">Settings</p>
-        <h2 className="mt-2 text-3xl font-semibold text-stone-50">Foundation settings</h2>
-      </div>
-      <article className="rounded-[1.75rem] border border-stone-800 bg-stone-950/70 p-5">
-        <h3 className="text-lg font-semibold text-stone-50">What is wired now</h3>
-        <ul className="mt-4 space-y-2 text-sm text-stone-300">
-          <li>JWT login and refresh-backed API access</li>
-          <li>Node provisioning, approval, and config edits</li>
-          <li>Shared envelope, capture ingestion, and registration contracts</li>
-        </ul>
+      <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">Settings</h1>
+
+      <article className="border border-[var(--color-border-default)] rounded-[var(--radius-lg)] bg-[var(--color-bg-base)] p-4">
+        <h2 className="text-sm font-semibold text-[var(--color-text-primary)]">Appearance</h2>
+        <div className="mt-4">
+          <ThemeToggle />
+        </div>
       </article>
 
-      <article className="rounded-[1.75rem] border border-stone-800 bg-stone-950/70 p-5">
+      <article className="border border-[var(--color-border-default)] rounded-[var(--radius-lg)] bg-[var(--color-bg-base)] p-4">
         <div className="flex items-start justify-between gap-4">
-          <div>
-            <h3 className="text-lg font-semibold text-stone-50">Two-factor authentication</h3>
-            <p className="mt-2 text-sm text-stone-400">
-              Lock operator access behind an authenticator app before broader team rollout.
-            </p>
-          </div>
-          <span className={`rounded-full px-3 py-1 text-xs font-medium ${user?.totpEnabled ? 'bg-emerald-500/15 text-emerald-200' : 'bg-amber-500/15 text-amber-200'}`}>
-            {user?.totpEnabled ? 'Enabled' : 'Not enabled'}
+          <h2 className="text-sm font-semibold text-[var(--color-text-primary)]">Two-factor auth</h2>
+          <span className={`border rounded-[var(--radius-full)] px-2 py-1 text-xs font-bold tracking-widest ${user?.totpEnabled ? 'border-[var(--color-success-border)] bg-[var(--color-success-bg)] text-[var(--color-success)]' : 'border-[var(--color-warning-border)] bg-[var(--color-warning-bg)] text-[var(--color-warning)]'}`}>
+            {user?.totpEnabled ? 'ENABLED' : 'DISABLED'}
           </span>
         </div>
 
-        <div className="mt-5 space-y-4">
+        <div className="mt-4 space-y-3">
           <button
-            className="rounded-2xl bg-emerald-400 px-4 py-3 font-medium text-stone-950 transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:bg-stone-700 disabled:text-stone-400"
+            className="border border-[var(--color-border-strong)] rounded-[var(--radius-md)] bg-[var(--color-accent-subtle)] px-4 py-2.5 text-sm font-medium text-[var(--color-accent)] transition hover:bg-[var(--color-accent-muted)] disabled:cursor-not-allowed disabled:border-[var(--color-border-default)] disabled:text-[var(--color-text-tertiary)]"
             disabled={setupTotp.isPending || Boolean(user?.totpEnabled)}
             onClick={() => void setupTotp.mutateAsync()}
             type="button"
           >
-            {setupTotp.isPending ? 'Generating secret…' : user?.totpEnabled ? 'TOTP already enabled' : 'Generate authenticator secret'}
+            {setupTotp.isPending ? 'Generating...' : user?.totpEnabled ? 'Already enabled' : 'Generate secret'}
           </button>
 
-          {setupError ? <p className="text-sm text-rose-300">{setupError}</p> : null}
+          {setupError ? <p className="text-xs text-[var(--color-error)]">{setupError}</p> : null}
 
           {setupTotp.data ? (
-            <div className="rounded-2xl border border-stone-800 bg-stone-900/80 p-4 text-sm text-stone-300">
-              <p className="font-medium text-stone-100">Manual entry key</p>
-              <p className="mt-2 break-all font-mono text-emerald-200">{setupTotp.data.manualEntryKey}</p>
-              <p className="mt-4 font-medium text-stone-100">otpauth URL</p>
-              <p className="mt-2 break-all font-mono text-xs text-stone-400">{setupTotp.data.otpauthUrl}</p>
+            <div className="border border-[var(--color-border-default)] rounded-[var(--radius-lg)] bg-[var(--color-bg-surface)] p-3 text-xs text-[var(--color-text-secondary)]">
+              <p className="font-medium text-[var(--color-text-primary)]">Manual entry key</p>
+              <p className="mt-1 break-all text-[var(--color-accent)]">{setupTotp.data.manualEntryKey}</p>
+              <p className="mt-3 font-medium text-[var(--color-text-primary)]">OTPAuth URL</p>
+              <p className="mt-1 break-all text-xs text-[var(--color-text-tertiary)]">{setupTotp.data.otpauthUrl}</p>
 
-              <div className="mt-4 space-y-3">
-                <label className="block space-y-2">
-                  <span className="text-sm text-stone-200">Verify code to enable TOTP</span>
+              <div className="mt-3 space-y-2">
+                <label className="block space-y-1.5">
+                  <span className="text-xs text-[var(--color-text-tertiary)]">Verify code</span>
                   <input
-                    className="w-full rounded-2xl border border-stone-700 bg-stone-950 px-4 py-3 text-stone-100 outline-none transition focus:border-emerald-400"
+                    className="w-full border border-[var(--color-border-default)] rounded-[var(--radius-md)] bg-[var(--color-bg-base)] px-3 py-2.5 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-[var(--color-input-border-focus)]"
                     inputMode="numeric"
                     maxLength={6}
                     onChange={(event) => setVerificationCode(event.target.value.replace(/\D/g, '').slice(0, 6))}
@@ -70,15 +62,15 @@ export function SettingsRouteView() {
                   />
                 </label>
 
-                {enableError ? <p className="text-sm text-rose-300">{enableError}</p> : null}
+                {enableError ? <p className="text-xs text-[var(--color-error)]">{enableError}</p> : null}
 
                 <button
-                  className="rounded-2xl border border-emerald-400/30 px-4 py-3 font-medium text-emerald-200 transition hover:border-emerald-300 hover:text-emerald-100 disabled:cursor-not-allowed disabled:border-stone-700 disabled:text-stone-500"
+                  className="border border-[var(--color-border-strong)] rounded-[var(--radius-md)] px-4 py-2.5 text-sm font-medium text-[var(--color-accent)] transition hover:bg-[var(--color-accent-muted)] disabled:cursor-not-allowed disabled:border-[var(--color-border-default)] disabled:text-[var(--color-text-tertiary)]"
                   disabled={enableTotp.isPending || verificationCode.length !== 6 || Boolean(user?.totpEnabled)}
                   onClick={() => void enableTotp.mutateAsync(verificationCode)}
                   type="button"
                 >
-                  {enableTotp.isPending ? 'Verifying…' : 'Enable TOTP'}
+                  {enableTotp.isPending ? 'Verifying...' : 'Enable'}
                 </button>
               </div>
             </div>

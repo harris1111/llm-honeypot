@@ -44,39 +44,59 @@ export function NodeConfigForm({ isSubmitting, node, onSubmit }: NodeConfigFormP
   }
 
   return (
-    <form className="space-y-4" onSubmit={(event) => void handleSubmit(event)}>
-      <div className="grid gap-4 sm:grid-cols-2">
-        <label className="space-y-2">
-          <span className="text-sm text-stone-300">Node name</span>
-          <input className="w-full rounded-2xl border border-stone-700 bg-stone-950 px-4 py-3 text-stone-100" onChange={(event) => setName(event.target.value)} value={name} />
+    <form className="space-y-3" onSubmit={(event) => void handleSubmit(event)}>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <label className="space-y-1.5">
+          <span className="text-xs text-[var(--color-text-tertiary)]">Name</span>
+          <input
+            className="w-full border border-[var(--color-border-default)] rounded-[var(--radius-md)] bg-[var(--color-bg-surface)] px-3 py-2.5 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-[var(--color-input-border-focus)]"
+            onChange={(event) => setName(event.target.value)}
+            value={name}
+          />
         </label>
-        <label className="space-y-2">
-          <span className="text-sm text-stone-300">Hostname</span>
-          <input className="w-full rounded-2xl border border-stone-700 bg-stone-950 px-4 py-3 text-stone-100" onChange={(event) => setHostname(event.target.value)} value={hostname} />
+        <label className="space-y-1.5">
+          <span className="text-xs text-[var(--color-text-tertiary)]">Hostname</span>
+          <input
+            className="w-full border border-[var(--color-border-default)] rounded-[var(--radius-md)] bg-[var(--color-bg-surface)] px-3 py-2.5 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-[var(--color-input-border-focus)]"
+            onChange={(event) => setHostname(event.target.value)}
+            value={hostname}
+          />
         </label>
-        <label className="space-y-2">
-          <span className="text-sm text-stone-300">Public IP</span>
-          <input className="w-full rounded-2xl border border-stone-700 bg-stone-950 px-4 py-3 text-stone-100" onChange={(event) => setPublicIp(event.target.value)} value={publicIp} />
+        <label className="space-y-1.5">
+          <span className="text-xs text-[var(--color-text-tertiary)]">IP</span>
+          <input
+            className="w-full border border-[var(--color-border-default)] rounded-[var(--radius-md)] bg-[var(--color-bg-surface)] px-3 py-2.5 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-[var(--color-input-border-focus)]"
+            onChange={(event) => setPublicIp(event.target.value)}
+            value={publicIp}
+          />
         </label>
-        <label className="space-y-2">
-          <span className="text-sm text-stone-300">Persona ID</span>
-          <input className="w-full rounded-2xl border border-stone-700 bg-stone-950 px-4 py-3 text-stone-100" onChange={(event) => setPersonaId(event.target.value)} value={personaId} />
+        <label className="space-y-1.5">
+          <span className="text-xs text-[var(--color-text-tertiary)]">Persona</span>
+          <input
+            className="w-full border border-[var(--color-border-default)] rounded-[var(--radius-md)] bg-[var(--color-bg-surface)] px-3 py-2.5 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-[var(--color-input-border-focus)]"
+            onChange={(event) => setPersonaId(event.target.value)}
+            value={personaId}
+          />
         </label>
       </div>
 
-      <label className="block space-y-2">
-        <span className="text-sm text-stone-300">Config JSON</span>
+      <label className="block space-y-1.5">
+        <span className="text-xs text-[var(--color-text-tertiary)]">Config</span>
         <textarea
-          className="min-h-56 w-full rounded-[1.5rem] border border-stone-700 bg-stone-950 px-4 py-3 font-mono text-sm text-stone-100"
+          className="min-h-48 w-full border border-[var(--color-border-default)] rounded-[var(--radius-md)] bg-[var(--color-bg-surface)] px-3 py-2.5 text-sm text-[var(--color-accent)] outline-none transition focus:border-[var(--color-input-border-focus)]"
           onChange={(event) => setConfigText(event.target.value)}
           value={configText}
         />
       </label>
 
-      {jsonError ? <p className="text-sm text-rose-300">{jsonError}</p> : null}
+      {jsonError ? <p className="text-xs text-[var(--color-error)]">{jsonError}</p> : null}
 
-      <button className="rounded-2xl bg-emerald-400 px-4 py-3 text-sm font-medium text-stone-950 transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:bg-stone-700 disabled:text-stone-400" disabled={isSubmitting} type="submit">
-        {isSubmitting ? 'Saving…' : 'Save node configuration'}
+      <button
+        className="border border-[var(--color-border-strong)] rounded-[var(--radius-md)] bg-[var(--color-accent-subtle)] px-4 py-2.5 text-sm font-medium text-[var(--color-accent)] transition hover:bg-[var(--color-accent-muted)] disabled:cursor-not-allowed disabled:border-[var(--color-border-default)] disabled:text-[var(--color-text-tertiary)]"
+        disabled={isSubmitting}
+        type="submit"
+      >
+        {isSubmitting ? 'Saving...' : 'Save'}
       </button>
     </form>
   );

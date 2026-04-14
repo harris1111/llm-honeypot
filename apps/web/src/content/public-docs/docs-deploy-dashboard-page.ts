@@ -2,7 +2,7 @@ import type { DocsPage } from './docs-page-types';
 
 const windowsDashboardBoot = `docker compose --env-file docker/dashboard-compose.local.env -f docker/docker-compose.dashboard.yml up -d --build`;
 
-const unixDashboardBoot = `docker compose --env-file docker/dashboard-compose.local.env -f docker/docker-compose.dashboard.yml up -d --build`;
+const macDashboardBoot = `docker compose --env-file docker/dashboard-compose.local.env -f docker/docker-compose.dashboard.yml up -d --build`;
 
 const linuxDashboardBoot = `cat > /tmp/llmtrap-dashboard.linux.override.yml <<'EOF'
 services:
@@ -21,9 +21,11 @@ const windowsHealthChecks = `Invoke-WebRequest -UseBasicParsing http://localhost
 Invoke-WebRequest -UseBasicParsing http://localhost:3000/healthz | Select-Object -ExpandProperty Content
 Invoke-WebRequest -UseBasicParsing http://localhost:3000/docs | Select-Object StatusCode`;
 
-const unixHealthChecks = `curl http://localhost:4000/api/v1/health
+const macHealthChecks = `curl http://localhost:4000/api/v1/health
 curl http://localhost:3000/healthz
 curl -I http://localhost:3000/docs`;
+
+const linuxHealthChecks = macHealthChecks;
 
 export const docsDeployDashboardPage: DocsPage = {
   eyebrow: 'Deploy dashboard',
@@ -38,9 +40,7 @@ export const docsDeployDashboardPage: DocsPage = {
   sections: [
     {
       codeSamples: [
-        { code: windowsDashboardBoot, language: 'powershell', title: 'Windows PowerShell' },
-        { code: unixDashboardBoot, language: 'bash', title: 'macOS' },
-        { code: linuxDashboardBoot, language: 'bash', title: 'Linux override' },
+        { variants: { windows: windowsDashboardBoot, macos: macDashboardBoot, linux: linuxDashboardBoot }, language: 'bash', title: 'Start the stack' },
       ],
       id: 'boot-dashboard',
       intro: 'Bring up the dashboard stack first so the public web UI, API, worker, Postgres, Redis, and MinIO are all present before you create a node.',
@@ -48,8 +48,7 @@ export const docsDeployDashboardPage: DocsPage = {
     },
     {
       codeSamples: [
-        { code: windowsHealthChecks, language: 'powershell', title: 'Windows health checks' },
-        { code: unixHealthChecks, language: 'bash', title: 'macOS and Linux health checks' },
+        { variants: { windows: windowsHealthChecks, macos: macHealthChecks, linux: linuxHealthChecks }, language: 'bash', title: 'Run the health checks' },
       ],
       id: 'verify-health',
       intro: 'Verify both the proxied frontend and the API before you move on to node enrollment.',

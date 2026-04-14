@@ -7,27 +7,18 @@ export function Topbar() {
   const { logout, user } = useAuth();
 
   return (
-    <header className="flex flex-col gap-4 rounded-[2rem] border border-stone-800 bg-stone-900/85 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-      <div>
-        <p className="text-xs uppercase tracking-[0.3em] text-stone-400">Phase 5 / 6</p>
-        <h2 className="mt-2 text-2xl font-semibold text-stone-50">Operator Control Plane</h2>
-      </div>
-      <div className="flex items-center gap-3">
-        <div className="rounded-2xl border border-stone-800 bg-stone-950/70 px-4 py-2 text-right">
-          <p className="text-xs uppercase tracking-[0.2em] text-stone-400">Operator</p>
-          <p className="text-sm font-medium text-stone-100">{user?.email ?? 'Not loaded'}</p>
-        </div>
-        <button
-          className="rounded-2xl border border-stone-700 px-4 py-2 text-sm text-stone-200 transition hover:border-stone-500 hover:bg-stone-800"
-          onClick={async () => {
-            await logout.mutateAsync();
-            navigate({ to: '/login' });
-          }}
-          type="button"
-        >
-          Sign out
-        </button>
-      </div>
+    <header className="flex h-14 items-center justify-between border-b border-[var(--color-border-default)] bg-[var(--color-bg-base)] px-5">
+      <span className="text-sm text-[var(--color-text-tertiary)]">{user?.email ?? ''}</span>
+      <button
+        className="rounded-[var(--radius-md)] px-3 py-1.5 text-sm text-[var(--color-text-tertiary)] transition hover:text-[var(--color-error)]"
+        onClick={async () => {
+          await logout.mutateAsync();
+          navigate({ to: '/login' });
+        }}
+        type="button"
+      >
+        Sign out
+      </button>
     </header>
   );
 }
