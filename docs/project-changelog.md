@@ -5,11 +5,29 @@
 
 ---
 
-## Public Landing, Repo Docs, And Dashboard Entry Split — April 14, 2026
+## Multi-Page Public Docs Area — April 14, 2026
+
+### Public Docs Experience
+- Reworked the public docs surface into a multi-page docs area with `/docs`, `/docs/getting-started`, `/docs/deploy-dashboard`, `/docs/enroll-node`, and `/docs/smoke-tests`
+- Added a reusable docs shell with a left sidebar on desktop plus in-page anchor navigation for the current page sections
+- Moved the deeper operator walkthrough into typed in-app docs pages so the public web surface no longer hands users off immediately to repo markdown
+
+### Documentation Sync
+- Updated `README.md`, `docs/system-architecture.md`, `docs/development-roadmap.md`, `docs/shipped-app-testing-walkthrough.md`, and `LLMTrap-Requirements.md` to describe the multi-page `/docs` area
+- Kept the repo walkthrough markdown aligned as the repository mirror of the in-app runbook instead of the only detailed public guide
+
+### Validation Results
+```
+✅ pnpm --filter @llmtrap/web build
+```
+
+---
+
+## Public Landing, Docs Home, And Dashboard Entry Split — April 14, 2026
 
 ### Public Web Surface
 - Added a public landing page at `/` with shipped feature highlights, architecture summary, and clear operator CTA links
-- Added a public repository docs page at `/docs` that summarizes the deployable apps, shared packages, and supporting directories
+- Added a public docs page at `/docs` that now focuses on local quickstart, first-run flow, and walkthrough guidance for operators and evaluators
 - Kept the operator login public at `/login` while moving the authenticated dashboard home to `/overview`
 
 ### Router And Operator Flow
@@ -20,8 +38,9 @@
 
 ### Documentation Updates
 - Updated `README.md` with the new public web entry points and protected dashboard route
+- Updated `README.md`, `docs/system-architecture.md`, and `docs/shipped-app-testing-walkthrough.md` so `/docs` is described as a setup and walkthrough hub instead of a repository inventory page
 - Updated `docs/system-architecture.md` to document the public landing/docs routes and lazy route delivery
-- Updated `docs/development-roadmap.md` and `docs/shipped-app-testing-walkthrough.md` to reflect the public onboarding split and `/overview` verification flow
+- Updated `docs/development-roadmap.md`, `docs/shipped-app-testing-walkthrough.md`, and `LLMTrap-Requirements.md` to reflect the public onboarding split and `/overview` verification flow
 
 ### Validation Results
 ```
@@ -29,6 +48,16 @@
 ✅ pnpm --filter @llmtrap/web typecheck
 ✅ pnpm --filter @llmtrap/web build
 ```
+
+---
+
+## Documentation Surface Refresh — April 14, 2026
+
+### Contributor-Facing Docs
+- Expanded the root `README.md` with a phase-by-phase feature map and a clearer guide to the apps, packages, and supporting directories
+- Refreshed `docs/system-architecture.md` so the monorepo structure, control-plane flow, and supporting surfaces reflect the current public landing/docs split
+- Updated `LLMTrap-Requirements.md` so the central dashboard description now includes the public landing/docs surfaces in front of the protected operator dashboard
+- Tightened `docs/shipped-app-testing-walkthrough.md` so `/docs` verification now checks the quickstart and walkthrough surface instead of a repository explainer
 
 ---
 

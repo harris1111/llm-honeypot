@@ -13,7 +13,7 @@ export function LoginRouteView() {
               Public landing
             </Link>
             <Link className="rounded-full border border-white/10 px-4 py-2 text-stone-200 no-underline transition hover:border-white/20 hover:bg-white/5" to="/docs">
-              Repository docs
+              Docs
             </Link>
           </div>
           <h1 className="mt-6 text-4xl font-semibold tracking-tight text-stone-50">Operate the dashboard control plane.</h1>

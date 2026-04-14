@@ -82,8 +82,8 @@ export const appSurfaces: SurfaceCard[] = [
   {
     path: 'apps/web',
     title: 'Dashboard web app',
-    description: 'React plus TanStack Router dashboard for operators, now with a public entry surface and repository explainer.',
-    highlights: ['Public landing and repo docs routes', 'Protected dashboard views for nodes, sessions, actors, and alerts', 'Vite build with Tailwind styling'],
+    description: 'React plus TanStack Router app with a public landing page, public docs home, and the protected operator dashboard.',
+    highlights: ['Public landing and docs routes', 'Protected dashboard views for nodes, sessions, actors, and alerts', 'Vite build with Tailwind styling'],
   },
   {
     path: 'apps/worker',
