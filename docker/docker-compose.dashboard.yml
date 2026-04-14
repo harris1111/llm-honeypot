@@ -50,9 +50,6 @@ services:
       retries: 5
     networks:
       backend:
-      controlplane:
-        aliases:
-          - dashboard-api
     ports:
       - '127.0.0.1:4000:4000'
     restart: unless-stopped
@@ -179,9 +176,6 @@ networks:
   frontend:
     driver: bridge
   backend:
-    driver: bridge
-  controlplane:
-    name: llmtrap-controlplane
     driver: bridge
 
 volumes:

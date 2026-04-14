@@ -55,7 +55,7 @@ curl -s -X POST http://127.0.0.1:4000/api/v1/nodes/NODE_ID/approve \
 
 ### 3. Start the node
 
-The node reaches the dashboard API through a shared Docker network (`llmtrap-controlplane`) using the internal alias `dashboard-api`. No host networking needed.
+The node uses host networking so it can see real attacker IPs on incoming connections. On the same host, point `LLMTRAP_DASHBOARD_URL` at `http://127.0.0.1:4000`.
 
 ```bash
 docker compose --env-file node.env -f docker/docker-compose.node.yml up -d --build
@@ -67,9 +67,6 @@ docker compose --env-file node.env -f docker/docker-compose.node.yml up -d --bui
 curl http://127.0.0.1:4000/api/v1/health   # API
 curl http://127.0.0.1:3000                   # Web UI
 curl http://127.0.0.1:11434/api/version      # Fake Ollama
-
-# Verify node can reach dashboard internally
-docker exec llmtrap-node-trap-core-1 wget -qO- http://dashboard-api:4000/api/v1/health
 ```
 
 ## Bait surfaces
@@ -168,14 +165,14 @@ pnpm test
 
 | Variable | Description |
 |----------|-------------|
-| `LLMTRAP_DASHBOARD_URL` | Must be reachable from the node container. Same-host Docker: `http://dashboard-api:4000` (uses the shared `llmtrap-controlplane` network). Multi-host: the dashboard origin URL. |
+| `LLMTRAP_DASHBOARD_URL` | Must be reachable from the node. Same-host: `http://127.0.0.1:4000` (node uses host networking). Multi-host: the dashboard origin URL. |
 | `LLMTRAP_NODE_KEY` | Key issued when creating a node |
 
 See `docker/dashboard-compose.env.example` and `docker/node-compose.env.example` for full reference.
 
 ## Networking
 
-On the same host, the dashboard API is bound to `127.0.0.1:4000` (not reachable from other containers via host networking). Instead, both compose stacks share a Docker bridge network called `llmtrap-controlplane`. The dashboard API service has the alias `dashboard-api` on this network, so the node container connects to `http://dashboard-api:4000` internally.
+The node container runs with `network_mode: host` so that `socket.remoteAddress` returns real attacker IPs instead of the Docker gateway. Ports configured in the environment are bound directly on the host. On the same host, the dashboard API is bound to `127.0.0.1:4000`, which the node reaches as `http://127.0.0.1:4000`. Redis is published to `127.0.0.1:6379`.
 
 ## Security notes
 

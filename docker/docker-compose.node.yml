@@ -5,6 +5,10 @@ services:
     build:
       context: ..
       dockerfile: docker/Dockerfile.node
+    # Host networking lets the honeypot see real attacker IPs on
+    # socket.remoteAddress. Bridge networking NATs everything to the
+    # Docker gateway (e.g. 172.x.0.1), hiding the real source.
+    network_mode: host
     environment:
       LLMTRAP_DASHBOARD_URL: ${LLMTRAP_DASHBOARD_URL:?Set LLMTRAP_DASHBOARD_URL to the dashboard origin, e.g. https://dashboard.example.com}
       LLMTRAP_NODE_KEY: ${LLMTRAP_NODE_KEY:?Set LLMTRAP_NODE_KEY to the key issued by the dashboard}
@@ -40,7 +44,7 @@ services:
       SMB_PORT: ${SMB_PORT:-10445}
       TELNET_PORT: ${TELNET_PORT:-10023}
       LLMTRAP_RUNTIME_DIR: /home/llmtrap/.llmtrap-runtime
-      REDIS_URL: redis://redis:6379
+      REDIS_URL: redis://127.0.0.1:6379
     depends_on:
       redis:
         condition: service_healthy
@@ -49,44 +53,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    networks:
-      - honeypot
-      - internal
-      - controlplane
     volumes:
       - node-runtime:/home/llmtrap/.llmtrap-runtime
-    ports:
-      - '0.0.0.0:${NODE_HTTP_PORT:-11434}:${NODE_HTTP_PORT:-11434}'
-      - '0.0.0.0:${OPENAI_HTTP_PORT:-8080}:${OPENAI_HTTP_PORT:-8080}'
-      - '0.0.0.0:${ANTHROPIC_HTTP_PORT:-8081}:${ANTHROPIC_HTTP_PORT:-8081}'
-      - '0.0.0.0:${TEXT_GENERATION_WEBUI_HTTP_PORT:-5000}:${TEXT_GENERATION_WEBUI_HTTP_PORT:-5000}'
-      - '0.0.0.0:${LANGSERVE_HTTP_PORT:-8000}:${LANGSERVE_HTTP_PORT:-8000}'
-      - '0.0.0.0:${AUTOGPT_HTTP_PORT:-8084}:${AUTOGPT_HTTP_PORT:-8084}'
-      - '0.0.0.0:${LM_STUDIO_HTTP_PORT:-1234}:${LM_STUDIO_HTTP_PORT:-1234}'
-      - '0.0.0.0:${LLAMACPP_HTTP_PORT:-8082}:${LLAMACPP_HTTP_PORT:-8082}'
-      - '0.0.0.0:${VLLM_HTTP_PORT:-8083}:${VLLM_HTTP_PORT:-8083}'
-      - '0.0.0.0:${QDRANT_HTTP_PORT:-6333}:${QDRANT_HTTP_PORT:-6333}'
-      - '0.0.0.0:${CHROMADB_HTTP_PORT:-8085}:${CHROMADB_HTTP_PORT:-8085}'
-      - '0.0.0.0:${NEO4J_HTTP_PORT:-7474}:${NEO4J_HTTP_PORT:-7474}'
-      - '0.0.0.0:${WEAVIATE_HTTP_PORT:-8086}:${WEAVIATE_HTTP_PORT:-8086}'
-      - '0.0.0.0:${MILVUS_HTTP_PORT:-19530}:${MILVUS_HTTP_PORT:-19530}'
-      - '0.0.0.0:${PLEX_HTTP_PORT:-32400}:${PLEX_HTTP_PORT:-32400}'
-      - '0.0.0.0:${SONARR_HTTP_PORT:-8989}:${SONARR_HTTP_PORT:-8989}'
-      - '0.0.0.0:${RADARR_HTTP_PORT:-7878}:${RADARR_HTTP_PORT:-7878}'
-      - '0.0.0.0:${PROWLARR_HTTP_PORT:-9696}:${PROWLARR_HTTP_PORT:-9696}'
-      - '0.0.0.0:${PORTAINER_HTTP_PORT:-9000}:${PORTAINER_HTTP_PORT:-9000}'
-      - '0.0.0.0:${HOME_ASSISTANT_HTTP_PORT:-8123}:${HOME_ASSISTANT_HTTP_PORT:-8123}'
-      - '0.0.0.0:${GITEA_HTTP_PORT:-3001}:${GITEA_HTTP_PORT:-3001}'
-      - '0.0.0.0:${GRAFANA_HTTP_PORT:-3002}:${GRAFANA_HTTP_PORT:-3002}'
-      - '0.0.0.0:${PROMETHEUS_HTTP_PORT:-9090}:${PROMETHEUS_HTTP_PORT:-9090}'
-      - '0.0.0.0:${UPTIME_KUMA_HTTP_PORT:-3003}:${UPTIME_KUMA_HTTP_PORT:-3003}'
-      - '0.0.0.0:${HOST_SSH_PORT:-20022}:${SSH_PORT:-10022}'
-      - '0.0.0.0:${HOST_FTP_PORT:-20021}:${FTP_PORT:-10021}'
-      - '0.0.0.0:${HOST_SMTP_PORT:-20025}:${SMTP_PORT:-10025}'
-      - '0.0.0.0:${HOST_SMTP_SUBMISSION_PORT:-20587}:${SMTP_SUBMISSION_PORT:-10587}'
-      - '0.0.0.0:${HOST_DNS_PORT:-20053}:${DNS_PORT:-1053}/udp'
-      - '0.0.0.0:${HOST_SMB_PORT:-20445}:${SMB_PORT:-10445}'
-      - '0.0.0.0:${HOST_TELNET_PORT:-20023}:${TELNET_PORT:-10023}'
     restart: unless-stopped
 
   redis:
@@ -99,16 +67,13 @@ services:
       retries: 10
     networks:
       - internal
+    ports:
+      - '127.0.0.1:6379:6379'
     restart: unless-stopped
 
 networks:
-  honeypot:
-    driver: bridge
   internal:
     driver: bridge
-  controlplane:
-    external: true
-    name: llmtrap-controlplane
 
 volumes:
   node-runtime:

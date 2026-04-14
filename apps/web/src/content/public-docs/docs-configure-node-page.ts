@@ -117,7 +117,7 @@ ANTHROPIC_HTTP_PORT=8081`,
       intro:
         'The following environment variables control node behavior. Set them in a compose env file or pass them directly to the container.',
       bullets: [
-        '`LLMTRAP_DASHBOARD_URL` **(required)** — Full URL of the dashboard API, e.g., `http://dashboard-api:4000`.',
+        '`LLMTRAP_DASHBOARD_URL` **(required)** — Full URL of the dashboard API. Same-host: `http://127.0.0.1:4000`. Remote: the public dashboard URL.',
         '`LLMTRAP_NODE_KEY` **(required)** — The shared secret issued during node enrollment. Sent in the `x-node-key` header.',
         '`LLMTRAP_RUNTIME_DIR` — Directory for local state files. Default: `/home/llmtrap/.llmtrap-runtime`.',
         '`REDIS_URL` — Connection string for the local Redis buffer. Default: `redis://redis:6379`.',
