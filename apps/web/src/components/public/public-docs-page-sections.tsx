@@ -2,6 +2,7 @@ import { Link } from '@tanstack/react-router';
 
 import { getDocsNavigationItem, type DocsNavigationItem, type DocsPage } from '../../content/public-docs';
 import { CodeBlock } from '../ui/code-block';
+import { InlineMarkup } from '../ui/inline-markup';
 
 interface PublicDocsPageSectionsProps {
   page: DocsPage;
@@ -20,10 +21,10 @@ export function PublicDocsPageSections({ page }: PublicDocsPageSectionsProps) {
         return (
           <section className="scroll-mt-20" id={section.id} key={section.id}>
             <h2 className="text-2xl font-semibold text-[var(--color-text-primary)]">{section.title}</h2>
-            <p className="mt-3 text-base leading-7 text-[var(--color-text-secondary)]">{section.intro}</p>
+            <p className="mt-3 text-base leading-7 text-[var(--color-text-secondary)]"><InlineMarkup text={section.intro} /></p>
 
             {section.body?.map((paragraph) => (
-              <p className="mt-3 text-base leading-7 text-[var(--color-text-secondary)]" key={paragraph}>{paragraph}</p>
+              <p className="mt-3 text-base leading-7 text-[var(--color-text-secondary)]" key={paragraph}><InlineMarkup text={paragraph} /></p>
             ))}
 
             {section.bullets ? (
@@ -31,7 +32,7 @@ export function PublicDocsPageSections({ page }: PublicDocsPageSectionsProps) {
                 {section.bullets.map((bullet) => (
                   <li className="flex gap-2.5" key={bullet}>
                     <span className="mt-[11px] h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--color-text-tertiary)]" />
-                    <span>{bullet}</span>
+                    <span><InlineMarkup text={bullet} /></span>
                   </li>
                 ))}
               </ul>
@@ -42,7 +43,7 @@ export function PublicDocsPageSections({ page }: PublicDocsPageSectionsProps) {
                 {section.checklist.map((item, index) => (
                   <li className="flex gap-3" key={item}>
                     <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[var(--radius-full)] bg-[var(--color-accent-muted)] text-sm font-semibold text-[var(--color-accent)]">{index + 1}</span>
-                    <span className="pt-0.5">{item}</span>
+                    <span className="pt-0.5"><InlineMarkup text={item} /></span>
                   </li>
                 ))}
               </ol>
