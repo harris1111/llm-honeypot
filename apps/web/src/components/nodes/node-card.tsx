@@ -5,7 +5,7 @@ import { NodeStatusBadge } from './node-status-badge';
 
 export function NodeCard({ node }: { node: NodeRecord }) {
   return (
-    <article className="border border-[var(--color-border-default)] bg-[var(--color-bg-base)] p-4 rounded-[var(--radius-lg)] transition hover:border-[var(--color-border-strong)]">
+    <article className="border border-[var(--color-border-default)] bg-[var(--color-bg-base)] p-4 rounded-[var(--radius-lg)] transition-all duration-200 hover:border-[var(--color-border-strong)] hover:shadow-[var(--shadow-sm)] hover:-translate-y-0.5">
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-xs text-[var(--color-text-tertiary)]">{node.nodeKeyPrefix}</p>

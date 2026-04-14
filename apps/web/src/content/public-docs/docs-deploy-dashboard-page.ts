@@ -40,7 +40,7 @@ export const docsDeployDashboardPage: DocsPage = {
   sections: [
     {
       codeSamples: [
-        { variants: { windows: windowsDashboardBoot, macos: macDashboardBoot, linux: linuxDashboardBoot }, language: 'bash', title: 'Start the stack' },
+        { variants: { linux: linuxDashboardBoot, macos: macDashboardBoot, windows: windowsDashboardBoot }, language: 'bash', title: 'Start the stack' },
       ],
       id: 'boot-dashboard',
       intro: 'Bring up the dashboard stack first so the public web UI, API, worker, Postgres, Redis, and MinIO are all present before you create a node.',
@@ -48,7 +48,7 @@ export const docsDeployDashboardPage: DocsPage = {
     },
     {
       codeSamples: [
-        { variants: { windows: windowsHealthChecks, macos: macHealthChecks, linux: linuxHealthChecks }, language: 'bash', title: 'Run the health checks' },
+        { variants: { linux: linuxHealthChecks, macos: macHealthChecks, windows: windowsHealthChecks }, language: 'bash', title: 'Run the health checks' },
       ],
       id: 'verify-health',
       intro: 'Verify both the proxied frontend and the API before you move on to node enrollment.',

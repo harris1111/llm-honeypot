@@ -69,7 +69,7 @@ export function DocsRouteView() {
             { label: 'Compose stacks', value: '2', color: 'var(--color-accent)' },
             { label: 'AI surfaces', value: '9', color: 'var(--color-info)' },
             { label: 'Listeners', value: '7', color: 'var(--color-warning)' },
-            { label: 'Phases done', value: '4', color: 'var(--color-success)' },
+            { label: 'Protocols', value: '31', color: 'var(--color-success)' },
           ].map((fact) => (
             <div className="text-center" key={fact.label}>
               <p className="text-3xl font-bold" style={{ color: fact.color }}>{fact.value}</p>

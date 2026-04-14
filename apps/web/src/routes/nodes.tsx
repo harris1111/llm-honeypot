@@ -68,7 +68,7 @@ export function NodesRouteView() {
         </div>
       ) : null}
 
-      <div className="grid gap-4 xl:grid-cols-2">
+      <div className="stagger-children grid gap-4 xl:grid-cols-2">
         {(nodesQuery.data ?? []).map((node) => (
           <NodeCard key={node.id} node={node} />
         ))}
