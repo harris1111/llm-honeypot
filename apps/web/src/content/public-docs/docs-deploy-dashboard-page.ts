@@ -56,11 +56,12 @@ export const docsDeployDashboardPage: DocsPage = {
     },
     {
       bullets: [
-        'The committed local env seeds a bootstrap admin for Docker-only testing: admin@llmtrap.local / ChangeMe123456!.',
-        'The local dashboard stack also starts MinIO so archive smoke does not need external storage.',
-        'The worker webhook smoke target is wired to http://host.docker.internal:7780/smoke-alert for same-host testing.',
-        'If you reused an older stack after schema or storage changes, rerun db-init and minio-init before continuing.',
+        'The committed local env seeds a bootstrap admin for Docker-only testing: **`admin@llmtrap.local`** / **`ChangeMe123456!`**.',
+        'The local dashboard stack also starts **MinIO** so archive smoke does not need external storage.',
+        'The worker webhook smoke target is wired to `http://host.docker.internal:7780/smoke-alert` for same-host testing.',
+        'If you reused an older stack after schema or storage changes, rerun `db-init` and `minio-init` before continuing.',
       ],
+      callout: { text: 'The seeded password is for **local testing only**. Change it immediately when deploying to any shared or public environment.', variant: 'warning' },
       id: 'boot-notes',
       intro: 'The local compose stack is opinionated toward the shipped walkthrough and smoke suite.',
       title: 'Know what the local dashboard boot includes',
