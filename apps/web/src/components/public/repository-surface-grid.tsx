@@ -9,22 +9,25 @@ interface RepositorySurfaceGridProps {
 
 export function RepositorySurfaceGrid({ description, items, kicker, title }: RepositorySurfaceGridProps) {
   return (
-    <section className="mt-14">
+    <section className="mt-12">
       <div className="max-w-3xl">
-        <p className="text-xs uppercase tracking-[0.35em] text-emerald-300">{kicker}</p>
-        <h2 className="mt-4 text-3xl font-semibold tracking-tight text-stone-50">{title}</h2>
-        <p className="mt-4 text-base leading-7 text-stone-300">{description}</p>
+        <p className="text-[10px] uppercase tracking-widest text-[var(--color-accent)]">{kicker}</p>
+        <h2 className="mt-3 text-2xl font-semibold tracking-tight text-[var(--color-text-primary)]">{title}</h2>
+        <p className="mt-3 text-sm leading-7 text-[var(--color-text-secondary)]">{description}</p>
       </div>
-      <div className="mt-8 grid gap-5 xl:grid-cols-2">
+      <div className="mt-6 grid gap-4 xl:grid-cols-2">
         {items.map((item) => (
-          <article className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6" key={item.path}>
-            <p className="text-xs uppercase tracking-[0.3em] text-orange-300">{item.path}</p>
-            <h3 className="mt-4 text-2xl font-semibold text-stone-50">{item.title}</h3>
-            <p className="mt-3 text-sm leading-7 text-stone-300">{item.description}</p>
-            <ul className="mt-5 space-y-3 text-sm text-stone-200">
+          <article
+            className="rounded-[var(--radius-lg)] border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] p-5 transition hover:border-[var(--color-border-strong)]"
+            key={item.path}
+          >
+            <p className="text-[10px] uppercase tracking-widest text-[var(--color-info)]">{item.path}</p>
+            <h3 className="mt-3 text-lg font-semibold text-[var(--color-text-primary)]">{item.title}</h3>
+            <p className="mt-2 text-xs leading-6 text-[var(--color-text-secondary)]">{item.description}</p>
+            <ul className="mt-4 space-y-2 text-xs text-[var(--color-text-primary)]">
               {item.highlights.map((highlight) => (
-                <li className="flex gap-3" key={highlight}>
-                  <span aria-hidden className="mt-1 h-2.5 w-2.5 rounded-full bg-emerald-300" />
+                <li className="flex gap-2" key={highlight}>
+                  <span aria-hidden className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--color-accent)]" />
                   <span>{highlight}</span>
                 </li>
               ))}

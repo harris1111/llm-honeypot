@@ -18,7 +18,11 @@ function lazyRouteView(loader: () => Promise<{ default: ComponentType<Record<str
 }
 
 function RoutePendingState() {
-  return <div className="rounded-[2rem] border border-stone-800 bg-stone-900/85 px-5 py-6 text-sm text-stone-300">Loading route…</div>;
+  return (
+    <div className="border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] px-4 py-4 text-xs text-[var(--color-text-tertiary)]">
+      Loading route...
+    </div>
+  );
 }
 
 const DocsRouteView = lazyRouteView(() => import('./routes/repository-docs').then((module) => ({ default: module.DocsRouteView })));
@@ -59,7 +63,7 @@ function RootFrame() {
 
 function PublicFrame() {
   return (
-    <main className="min-h-screen bg-stone-950 text-stone-100">
+    <main className="min-h-screen bg-[var(--color-bg-base)] text-[var(--color-text-primary)]">
       <Outlet />
     </main>
   );

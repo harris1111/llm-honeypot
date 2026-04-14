@@ -42,34 +42,39 @@ export function LoginForm() {
   }
 
   return (
-    <form className="space-y-5" onSubmit={(event) => void handleSubmit(event)}>
-      <div className="flex gap-2 rounded-2xl border border-stone-800 bg-stone-950/70 p-1 text-sm">
+    <form className="space-y-4" onSubmit={(event) => void handleSubmit(event)}>
+      {/* Mode toggle */}
+      <div className="flex gap-1 rounded-[var(--radius-md)] border border-[var(--color-border-default)] bg-[var(--color-bg-raised)] p-1 text-xs">
         {(['login', 'register'] as const).map((value) => (
           <button
             key={value}
-            className={`flex-1 rounded-xl px-3 py-2 transition ${mode === value ? 'bg-emerald-500/15 text-emerald-100' : 'text-stone-400 hover:text-stone-200'}`}
+            className={`flex-1 rounded-[var(--radius-sm)] px-3 py-2 transition ${
+              mode === value
+                ? 'bg-[var(--color-accent-muted)] text-[var(--color-accent)]'
+                : 'text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)]'
+            }`}
             onClick={() => setMode(value)}
             type="button"
           >
-            {value === 'login' ? 'Sign in' : 'Create first admin'}
+            {value === 'login' ? 'Sign in' : 'Bootstrap admin'}
           </button>
         ))}
       </div>
 
-      <label className="block space-y-2">
-        <span className="text-sm text-stone-300">Email</span>
+      <label className="block space-y-1.5">
+        <span className="text-xs text-[var(--color-text-secondary)]">Email</span>
         <input
-          className="w-full rounded-2xl border border-stone-700 bg-stone-950 px-4 py-3 text-stone-100 outline-none transition focus:border-emerald-400"
+          className="w-full rounded-[var(--radius-md)] border border-[var(--color-input-border)] bg-[var(--color-input-bg)] px-3 py-2.5 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-[var(--color-input-border-focus)] focus:ring-2 focus:ring-[var(--color-focus-ring)]"
           onChange={(event) => setEmail(event.target.value)}
           type="email"
           value={email}
         />
       </label>
 
-      <label className="block space-y-2">
-        <span className="text-sm text-stone-300">Password</span>
+      <label className="block space-y-1.5">
+        <span className="text-xs text-[var(--color-text-secondary)]">Password</span>
         <input
-          className="w-full rounded-2xl border border-stone-700 bg-stone-950 px-4 py-3 text-stone-100 outline-none transition focus:border-emerald-400"
+          className="w-full rounded-[var(--radius-md)] border border-[var(--color-input-border)] bg-[var(--color-input-bg)] px-3 py-2.5 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-[var(--color-input-border-focus)] focus:ring-2 focus:ring-[var(--color-focus-ring)] disabled:cursor-not-allowed disabled:opacity-50"
           disabled={Boolean(tempToken)}
           onChange={(event) => setPassword(event.target.value)}
           type="password"
@@ -78,10 +83,10 @@ export function LoginForm() {
       </label>
 
       {tempToken ? (
-        <label className="block space-y-2 rounded-2xl border border-amber-500/40 bg-amber-500/10 px-4 py-3">
-          <span className="text-sm text-amber-100">Authenticator code</span>
+        <label className="block space-y-1.5 rounded-[var(--radius-md)] border border-[var(--color-warning-border)] bg-[var(--color-warning-bg)] p-3">
+          <span className="text-xs text-[var(--color-warning)]">Authenticator code</span>
           <input
-            className="w-full rounded-2xl border border-amber-400/30 bg-stone-950 px-4 py-3 text-stone-100 outline-none transition focus:border-amber-300"
+            className="w-full rounded-[var(--radius-md)] border border-[var(--color-warning-border)] bg-[var(--color-input-bg)] px-3 py-2.5 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-[var(--color-warning)] focus:ring-2 focus:ring-[var(--color-warning-border)]"
             inputMode="numeric"
             maxLength={6}
             onChange={(event) => setTotpCode(event.target.value.replace(/\D/g, '').slice(0, 6))}
@@ -89,18 +94,24 @@ export function LoginForm() {
             type="text"
             value={totpCode}
           />
-          <p className="text-xs text-amber-100/80">Enter the 6-digit code from your authenticator app to finish sign-in.</p>
+          <p className="text-[10px] text-[var(--color-warning)]">Enter the 6-digit code from your authenticator app.</p>
         </label>
       ) : null}
 
-      {errorMessage ? <p className="text-sm text-rose-300">{errorMessage}</p> : null}
+      {errorMessage ? <p className="text-xs text-[var(--color-error)]">{errorMessage}</p> : null}
 
       <button
-        className="w-full rounded-2xl bg-emerald-400 px-4 py-3 font-medium text-stone-950 transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:bg-stone-700 disabled:text-stone-400"
+        className="w-full rounded-[var(--radius-md)] bg-[var(--color-accent)] px-4 py-2.5 text-sm font-medium text-[var(--color-text-inverse)] transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
         disabled={activeMutation.isPending}
         type="submit"
       >
-        {activeMutation.isPending ? 'Submitting…' : tempToken ? 'Verify code' : mode === 'login' ? 'Sign in' : 'Bootstrap admin'}
+        {activeMutation.isPending
+          ? 'Processing…'
+          : tempToken
+            ? 'Verify code'
+            : mode === 'login'
+              ? 'Sign in'
+              : 'Bootstrap'}
       </button>
     </form>
   );

@@ -2,7 +2,6 @@ import { Outlet, useNavigate } from '@tanstack/react-router';
 import { useEffect } from 'react';
 
 import { useAuthStore } from '../../lib/auth-store';
-import { PageContainer } from './page-container';
 import { Sidebar } from './sidebar';
 import { Topbar } from './topbar';
 
@@ -21,16 +20,14 @@ export function DashboardFrame() {
   }
 
   return (
-    <main className="min-h-screen bg-stone-950 px-4 py-6 text-stone-100 lg:px-6">
-      <div className="mx-auto flex max-w-7xl flex-col gap-4 lg:flex-row">
-        <Sidebar />
-        <div className="min-w-0 flex-1 space-y-4">
-          <Topbar />
-          <PageContainer>
-            <Outlet />
-          </PageContainer>
-        </div>
+    <div className="flex min-h-screen bg-[var(--color-bg-base)] text-[var(--color-text-primary)]">
+      <Sidebar />
+      <div className="min-w-0 flex-1">
+        <Topbar />
+        <main className="p-6">
+          <Outlet />
+        </main>
       </div>
-    </main>
+    </div>
   );
 }

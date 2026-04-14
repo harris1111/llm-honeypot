@@ -11,78 +11,88 @@ interface PublicDocsLayoutProps {
 
 export function PublicDocsLayout({ page }: PublicDocsLayoutProps) {
   return (
-    <div className="relative overflow-hidden">
-      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-[26rem] bg-[radial-gradient(circle_at_top_left,rgba(251,146,60,0.16),transparent_36%),radial-gradient(circle_at_top_right,rgba(16,185,129,0.18),transparent_34%)]" />
+    <div className="min-h-screen bg-[var(--color-bg-base)] text-[var(--color-text-primary)]">
       <PublicHeader />
-      <div className="mx-auto max-w-7xl px-6 pb-18 pt-6 lg:px-8 lg:pt-8">
-        <div className="grid gap-8 lg:grid-cols-[18rem_minmax(0,1fr)] xl:grid-cols-[18rem_minmax(0,1fr)]">
-          <aside className="hidden self-start lg:sticky lg:top-6 lg:block">
-            <div className="rounded-[2rem] border border-white/10 bg-stone-900/80 p-5">
-              <p className="text-xs uppercase tracking-[0.35em] text-emerald-300">Docs navigation</p>
-              <nav aria-label="Docs pages" className="mt-5 flex flex-col gap-2">
-                {docsNavigation.map((item) => (
-                  <Link
-                    activeOptions={{ exact: true }}
-                    activeProps={{ className: 'border-emerald-300/40 bg-emerald-400/10 text-stone-50' }}
-                    className="rounded-[1.25rem] border border-transparent px-4 py-3 text-stone-300 no-underline transition hover:border-white/10 hover:bg-white/[0.04] hover:text-stone-100"
-                    key={item.id}
-                    to={item.to}
-                  >
-                    <span className="block text-sm font-medium">{item.title}</span>
-                    <span className="mt-1 block text-xs leading-5 text-stone-400">{item.summary}</span>
-                  </Link>
-                ))}
-              </nav>
-              <div className="mt-6 border-t border-white/10 pt-6">
-                <p className="text-xs uppercase tracking-[0.35em] text-orange-300">On this page</p>
-                <div className="mt-4 flex flex-col gap-2">
-                  {page.sections.map((section) => (
-                    <a className="rounded-full px-3 py-2 text-sm text-stone-300 transition hover:bg-white/[0.04] hover:text-stone-100" href={`#${section.id}`} key={section.id}>
-                      {section.title}
-                    </a>
-                  ))}
-                </div>
-              </div>
-            </div>
+
+      <div className="mx-auto max-w-7xl px-4 pb-16 pt-6 lg:px-6">
+        <div className="grid gap-8 lg:grid-cols-[200px_minmax(0,1fr)] xl:grid-cols-[200px_minmax(0,1fr)_160px]">
+
+          {/* Left sidebar — title-only nav */}
+          <aside className="hidden lg:block">
+            <nav className="sticky top-6 space-y-1">
+              <p className="mb-3 px-3 text-xs font-semibold uppercase tracking-wider text-[var(--color-text-tertiary)]">Docs</p>
+              {docsNavigation.map((item) => (
+                <Link
+                  activeOptions={{ exact: true }}
+                  activeProps={{ className: 'bg-[var(--color-sidebar-item-active-bg)] text-[var(--color-sidebar-item-active-text)] font-medium' }}
+                  className="block rounded-[var(--radius-md)] px-3 py-1.5 text-sm text-[var(--color-text-secondary)] no-underline transition hover:bg-[var(--color-sidebar-item-hover)] hover:text-[var(--color-text-primary)]"
+                  key={item.id}
+                  to={item.to}
+                >
+                  {item.title}
+                </Link>
+              ))}
+            </nav>
           </aside>
-          <div className="min-w-0">
-            <section className="rounded-[2.5rem] border border-white/10 bg-stone-900/75 p-8 backdrop-blur sm:p-10">
-              <p className="text-xs uppercase tracking-[0.35em] text-emerald-300">{page.eyebrow}</p>
-              <h1 className="mt-5 max-w-4xl text-5xl font-semibold tracking-[-0.04em] text-stone-50 sm:text-6xl">{page.title}</h1>
-              <p className="mt-6 max-w-3xl text-lg leading-8 text-stone-300">{page.summary}</p>
-              <div className="mt-6 flex flex-wrap gap-2 lg:hidden">
-                {docsNavigation.map((item) => (
-                  <Link
-                    activeOptions={{ exact: true }}
-                    activeProps={{ className: 'border-emerald-300/40 bg-emerald-400/10 text-stone-50' }}
-                    className="rounded-full border border-white/10 px-4 py-2 text-sm text-stone-200 no-underline transition hover:border-white/20 hover:bg-white/5"
-                    key={item.id}
-                    to={item.to}
-                  >
-                    {item.title}
-                  </Link>
-                ))}
-              </div>
-              <div className="mt-4 flex flex-wrap gap-2 lg:hidden">
+
+          {/* Main content */}
+          <div className="min-w-0 max-w-[var(--content-max-width)]">
+            {/* Breadcrumb */}
+            <nav className="mb-6 flex items-center gap-1.5 text-sm text-[var(--color-text-tertiary)]">
+              <Link className="no-underline transition hover:text-[var(--color-text-primary)]" to="/">Home</Link>
+              <span>/</span>
+              <Link className="no-underline transition hover:text-[var(--color-text-primary)]" to="/docs">Docs</Link>
+              {page.id !== 'overview' ? (
+                <>
+                  <span>/</span>
+                  <span className="text-[var(--color-text-primary)]">{page.title}</span>
+                </>
+              ) : null}
+            </nav>
+
+            {/* Page header — minimal */}
+            <h1 className="text-3xl font-bold tracking-tight text-[var(--color-text-primary)] sm:text-4xl">{page.title}</h1>
+            <p className="mt-4 text-lg leading-8 text-[var(--color-text-secondary)]">{page.summary}</p>
+
+            {/* Mobile nav */}
+            <div className="mt-6 flex flex-wrap gap-2 lg:hidden">
+              {docsNavigation.map((item) => (
+                <Link
+                  activeOptions={{ exact: true }}
+                  activeProps={{ className: 'border-[var(--color-accent)] text-[var(--color-accent)]' }}
+                  className="rounded-[var(--radius-full)] border border-[var(--color-border-default)] px-3 py-1 text-xs text-[var(--color-text-secondary)] no-underline"
+                  key={item.id}
+                  to={item.to}
+                >
+                  {item.title}
+                </Link>
+              ))}
+            </div>
+
+            {/* Sections */}
+            <PublicDocsPageSections page={page} />
+          </div>
+
+          {/* Right sidebar — TOC */}
+          <aside className="hidden xl:block">
+            <div className="sticky top-6">
+              <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-[var(--color-text-tertiary)]">On this page</p>
+              <nav className="space-y-1">
                 {page.sections.map((section) => (
-                  <a className="rounded-full border border-white/10 px-4 py-2 text-sm text-stone-200 transition hover:border-white/20 hover:bg-white/5" href={`#${section.id}`} key={section.id}>
+                  <a
+                    className="block py-1 text-sm text-[var(--color-text-tertiary)] no-underline transition hover:text-[var(--color-text-primary)]"
+                    href={`#${section.id}`}
+                    key={section.id}
+                  >
                     {section.title}
                   </a>
                 ))}
-              </div>
-              <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                {page.quickFacts.map((fact) => (
-                  <article className="rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-5" key={fact.label}>
-                    <p className="text-xs uppercase tracking-[0.3em] text-stone-400">{fact.label}</p>
-                    <p className="mt-3 text-xl font-semibold text-stone-50">{fact.value}</p>
-                  </article>
-                ))}
-              </div>
-            </section>
-            <PublicDocsPageSections page={page} />
-          </div>
+              </nav>
+            </div>
+          </aside>
         </div>
       </div>
+
       <PublicFooter />
     </div>
   );

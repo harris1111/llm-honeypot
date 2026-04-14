@@ -5,31 +5,31 @@ import { NodeStatusBadge } from './node-status-badge';
 
 export function NodeCard({ node }: { node: NodeRecord }) {
   return (
-    <article className="rounded-[1.75rem] border border-stone-800 bg-stone-950/70 p-5">
+    <article className="border border-[var(--color-border-default)] bg-[var(--color-bg-base)] p-4 rounded-[var(--radius-lg)] transition hover:border-[var(--color-border-strong)]">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-xs uppercase tracking-[0.2em] text-stone-400">{node.nodeKeyPrefix}</p>
-          <h3 className="mt-2 text-lg font-semibold text-stone-50">{node.name}</h3>
-          <p className="mt-1 text-sm text-stone-400">{node.hostname || node.publicIp || 'No host metadata yet'}</p>
+          <p className="text-xs text-[var(--color-text-tertiary)]">{node.nodeKeyPrefix}</p>
+          <h3 className="mt-1 text-sm font-semibold text-[var(--color-text-primary)]">{node.name}</h3>
+          <p className="mt-1 text-xs text-[var(--color-text-tertiary)]">{node.hostname ?? node.publicIp ?? 'no host'}</p>
         </div>
         <NodeStatusBadge status={node.status} />
       </div>
-      <dl className="mt-4 grid gap-3 text-sm text-stone-300 sm:grid-cols-2">
+      <dl className="mt-3 grid gap-3 text-xs text-[var(--color-text-secondary)] sm:grid-cols-2">
         <div>
-          <dt className="text-stone-500">Public IP</dt>
-          <dd>{node.publicIp ?? 'Pending registration'}</dd>
+          <dt className="text-[var(--color-text-tertiary)]">IP</dt>
+          <dd>{node.publicIp ?? '—'}</dd>
         </div>
         <div>
-          <dt className="text-stone-500">Last heartbeat</dt>
-          <dd>{node.lastHeartbeat ? new Date(node.lastHeartbeat).toLocaleString() : 'No heartbeat yet'}</dd>
+          <dt className="text-[var(--color-text-tertiary)]">Heartbeat</dt>
+          <dd>{node.lastHeartbeat ? new Date(node.lastHeartbeat).toLocaleString() : '—'}</dd>
         </div>
       </dl>
       <Link
-        className="mt-5 inline-flex rounded-2xl border border-stone-700 px-4 py-2 text-sm text-stone-100 transition hover:border-stone-500 hover:bg-stone-800"
+        className="mt-4 inline-flex border border-[var(--color-border-default)] rounded-[var(--radius-md)] px-3 py-1.5 text-xs text-[var(--color-text-secondary)] transition hover:border-[var(--color-border-strong)] hover:text-[var(--color-accent)]"
         params={{ nodeId: node.id }}
         to="/nodes/$nodeId"
       >
-        Inspect node
+        Inspect
       </Link>
     </article>
   );

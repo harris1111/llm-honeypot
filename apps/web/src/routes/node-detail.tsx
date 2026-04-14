@@ -15,27 +15,26 @@ export function NodeDetailRouteView() {
   const responseConfig = responseConfigQuery.data;
 
   if (!node) {
-    return <p className="text-sm text-stone-400">Loading node…</p>;
+    return <p className="text-xs text-[var(--color-text-tertiary)]">...</p>;
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 rounded-[1.75rem] border border-stone-800 bg-stone-950/70 p-5 lg:flex-row lg:items-start lg:justify-between">
+      <div className="flex flex-col gap-3 border border-[var(--color-border-default)] rounded-[var(--radius-lg)] bg-[var(--color-bg-base)] p-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
-          <p className="text-xs uppercase tracking-[0.25em] text-stone-400">Node detail</p>
-          <h2 className="mt-2 text-3xl font-semibold text-stone-50">{node.name}</h2>
-          <p className="mt-2 text-sm text-stone-400">Key prefix {node.nodeKeyPrefix}</p>
+          <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">{node.name}</h1>
+          <p className="mt-1 text-xs text-[var(--color-text-tertiary)]">{node.nodeKeyPrefix}</p>
         </div>
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2">
           <NodeStatusBadge status={node.status} />
           {node.status === 'PENDING' ? (
             <button
-              className="rounded-2xl bg-sky-400 px-4 py-3 text-sm font-medium text-sky-950 transition hover:bg-sky-300 disabled:cursor-not-allowed disabled:bg-stone-700 disabled:text-stone-400"
+              className="border border-[var(--color-info-border)] rounded-[var(--radius-md)] bg-[var(--color-info-bg)] px-3 py-2 text-xs font-medium text-[var(--color-info)] transition hover:bg-[var(--color-info-bg)] disabled:cursor-not-allowed disabled:border-[var(--color-border-default)] disabled:text-[var(--color-text-tertiary)]"
               disabled={approveNode.isPending}
               onClick={() => approveNode.mutate(node.id)}
               type="button"
             >
-              {approveNode.isPending ? 'Approving…' : 'Approve node'}
+              {approveNode.isPending ? 'Approving...' : 'Approve'}
             </button>
           ) : null}
         </div>
@@ -49,26 +48,23 @@ export function NodeDetailRouteView() {
         }}
       />
 
-      <article className="rounded-[1.75rem] border border-stone-800 bg-stone-950/70 p-5">
+      <article className="border border-[var(--color-border-default)] rounded-[var(--radius-lg)] bg-[var(--color-bg-base)] p-4">
         <div className="flex items-center justify-between gap-4">
-          <div>
-            <p className="text-xs uppercase tracking-[0.25em] text-stone-400">Response engine</p>
-            <h3 className="mt-2 text-xl font-semibold text-stone-50">Current strategy chain</h3>
-          </div>
-          {responseConfigQuery.isLoading ? <span className="text-sm text-stone-400">Loading…</span> : null}
+          <h2 className="text-sm font-semibold text-[var(--color-text-primary)]">Response engine</h2>
+          {responseConfigQuery.isLoading ? <span className="text-xs text-[var(--color-text-tertiary)]">...</span> : null}
         </div>
-        <div className="mt-4 grid gap-4 lg:grid-cols-2">
-          <div className="rounded-2xl border border-stone-800 bg-stone-900/70 p-4">
-            <p className="text-sm text-stone-400">Strategies</p>
-            <p className="mt-2 text-base font-medium text-stone-50">{responseConfig?.strategyChain.join(' -> ') ?? 'smart -> fixed_n -> budget'}</p>
-            <p className="mt-3 text-sm text-stone-400">Fixed-N threshold: {responseConfig?.fixedN.n ?? 3}</p>
-            <p className="mt-1 text-sm text-stone-400">Monthly budget: ${responseConfig?.budget.monthlyLimitUsd ?? 5}</p>
+        <div className="mt-3 grid gap-3 lg:grid-cols-2">
+          <div className="border border-[var(--color-border-default)] rounded-[var(--radius-lg)] bg-[var(--color-bg-surface)] p-3">
+            <p className="text-xs text-[var(--color-text-tertiary)]">Strategy chain</p>
+            <p className="mt-1 text-sm font-medium text-[var(--color-accent)]">{responseConfig?.strategyChain.join(' → ') ?? 'smart → fixed_n → budget'}</p>
+            <p className="mt-2 text-xs text-[var(--color-text-tertiary)]">fixed_n: {responseConfig?.fixedN.n ?? 3}</p>
+            <p className="mt-1 text-xs text-[var(--color-text-tertiary)]">budget: ${responseConfig?.budget.monthlyLimitUsd ?? 5}/mo</p>
           </div>
-          <div className="rounded-2xl border border-stone-800 bg-stone-900/70 p-4">
-            <p className="text-sm text-stone-400">Proxy target</p>
-            <p className="mt-2 text-base font-medium text-stone-50">{responseConfig?.proxy.model || 'No proxy model configured'}</p>
-            <p className="mt-3 break-all text-sm text-stone-400">{responseConfig?.proxy.baseUrl || 'Proxy disabled'}</p>
-            <p className="mt-3 text-sm text-stone-400">Backfeed enabled: {responseConfig?.backfeed.enabled ? 'Yes' : 'No'}</p>
+          <div className="border border-[var(--color-border-default)] rounded-[var(--radius-lg)] bg-[var(--color-bg-surface)] p-3">
+            <p className="text-xs text-[var(--color-text-tertiary)]">Proxy</p>
+            <p className="mt-1 text-sm font-medium text-[var(--color-text-primary)]">{responseConfig?.proxy.model || 'no proxy model'}</p>
+            <p className="mt-2 break-all text-xs text-[var(--color-text-tertiary)]">{responseConfig?.proxy.baseUrl || 'disabled'}</p>
+            <p className="mt-2 text-xs text-[var(--color-text-tertiary)]">backfeed: {responseConfig?.backfeed.enabled ? 'on' : 'off'}</p>
           </div>
         </div>
       </article>

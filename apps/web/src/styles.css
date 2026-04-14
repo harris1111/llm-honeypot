@@ -1,33 +1,287 @@
 @import 'tailwindcss';
 
-:root {
-  color-scheme: dark;
-  font-family: 'Space Grotesk', 'Segoe UI', sans-serif;
+/* ============================================================
+   LLMTRAP THEME SYSTEM
+   Three themes: light (default), dark, hacker
+   All components use var(--color-*) tokens, never raw hex.
+   Theme switches via data-theme attribute on <html>.
+   ============================================================ */
+
+/* ---------- LIGHT THEME (default) ---------- */
+:root,
+[data-theme="light"] {
+  color-scheme: light;
+
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', ui-monospace, SFMono-Regular, Consolas, monospace;
+
+  /* Backgrounds */
+  --color-bg-base: #ffffff;
+  --color-bg-surface: #f9fafb;
+  --color-bg-raised: #f3f4f6;
+  --color-bg-sunken: #f0f1f3;
+  --color-bg-overlay: rgba(255, 255, 255, 0.95);
+
+  /* Borders */
+  --color-border-default: #e5e7eb;
+  --color-border-muted: #f0f1f3;
+  --color-border-strong: #d1d5db;
+
+  /* Text */
+  --color-text-primary: #111827;
+  --color-text-secondary: #4b5563;
+  --color-text-tertiary: #9ca3af;
+  --color-text-inverse: #ffffff;
+
+  /* Accent */
+  --color-accent: #4f46e5;
+  --color-accent-hover: #4338ca;
+  --color-accent-muted: rgba(79, 70, 229, 0.08);
+  --color-accent-subtle: rgba(79, 70, 229, 0.12);
+
+  /* Semantic */
+  --color-success: #059669;
+  --color-success-bg: rgba(5, 150, 105, 0.08);
+  --color-success-border: rgba(5, 150, 105, 0.2);
+  --color-warning: #d97706;
+  --color-warning-bg: rgba(217, 119, 6, 0.08);
+  --color-warning-border: rgba(217, 119, 6, 0.2);
+  --color-error: #dc2626;
+  --color-error-bg: rgba(220, 38, 38, 0.08);
+  --color-error-border: rgba(220, 38, 38, 0.2);
+  --color-info: #2563eb;
+  --color-info-bg: rgba(37, 99, 235, 0.08);
+  --color-info-border: rgba(37, 99, 235, 0.2);
+
+  /* Code */
+  --color-code-bg: #f8f9fb;
+  --color-code-border: #e5e7eb;
+  --color-code-text: #1e293b;
+  --color-code-tab-bg: #f3f4f6;
+  --color-code-tab-active-bg: #ffffff;
+  --color-code-tab-text: #6b7280;
+  --color-code-tab-active-text: #111827;
+
+  /* Sidebar */
+  --color-sidebar-bg: #f9fafb;
+  --color-sidebar-border: #e5e7eb;
+  --color-sidebar-item-hover: rgba(79, 70, 229, 0.06);
+  --color-sidebar-item-active-bg: rgba(79, 70, 229, 0.08);
+  --color-sidebar-item-active-text: #4f46e5;
+  --color-sidebar-item-active-border: #4f46e5;
+
+  /* Input */
+  --color-input-bg: #ffffff;
+  --color-input-border: #d1d5db;
+  --color-input-border-focus: #4f46e5;
+  --color-focus-ring: rgba(79, 70, 229, 0.4);
+
+  /* Radius */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-2xl: 1rem;
+  --radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+
+  /* Layout */
+  --sidebar-docs-width: 220px;
+  --toc-width: 180px;
+  --content-max-width: 780px;
+  --sidebar-dashboard-width: 256px;
 }
 
+/* ---------- DARK THEME ---------- */
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --color-bg-base: #0f1117;
+  --color-bg-surface: #161b22;
+  --color-bg-raised: #1c2128;
+  --color-bg-sunken: #0d0f14;
+  --color-bg-overlay: rgba(22, 27, 34, 0.95);
+
+  --color-border-default: #30363d;
+  --color-border-muted: #21262d;
+  --color-border-strong: #484f58;
+
+  --color-text-primary: #e6edf3;
+  --color-text-secondary: #8b949e;
+  --color-text-tertiary: #6e7681;
+  --color-text-inverse: #0f1117;
+
+  --color-accent: #818cf8;
+  --color-accent-hover: #a5b4fc;
+  --color-accent-muted: rgba(129, 140, 248, 0.1);
+  --color-accent-subtle: rgba(129, 140, 248, 0.15);
+
+  --color-success: #34d399;
+  --color-success-bg: rgba(52, 211, 153, 0.1);
+  --color-success-border: rgba(52, 211, 153, 0.25);
+  --color-warning: #fbbf24;
+  --color-warning-bg: rgba(251, 191, 36, 0.1);
+  --color-warning-border: rgba(251, 191, 36, 0.25);
+  --color-error: #f87171;
+  --color-error-bg: rgba(248, 113, 113, 0.1);
+  --color-error-border: rgba(248, 113, 113, 0.25);
+  --color-info: #60a5fa;
+  --color-info-bg: rgba(96, 165, 250, 0.1);
+  --color-info-border: rgba(96, 165, 250, 0.25);
+
+  --color-code-bg: #0d1117;
+  --color-code-border: #30363d;
+  --color-code-text: #c9d1d9;
+  --color-code-tab-bg: #161b22;
+  --color-code-tab-active-bg: #0d1117;
+  --color-code-tab-text: #6e7681;
+  --color-code-tab-active-text: #e6edf3;
+
+  --color-sidebar-bg: #0d1117;
+  --color-sidebar-border: #21262d;
+  --color-sidebar-item-hover: rgba(129, 140, 248, 0.08);
+  --color-sidebar-item-active-bg: rgba(129, 140, 248, 0.12);
+  --color-sidebar-item-active-text: #818cf8;
+  --color-sidebar-item-active-border: #818cf8;
+
+  --color-input-bg: #0d1117;
+  --color-input-border: #30363d;
+  --color-input-border-focus: #818cf8;
+  --color-focus-ring: rgba(129, 140, 248, 0.5);
+
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.4), 0 1px 2px -1px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -4px rgba(0, 0, 0, 0.3);
+}
+
+/* ---------- HACKER THEME ---------- */
+[data-theme="hacker"] {
+  color-scheme: dark;
+
+  --font-sans: 'JetBrains Mono', 'Fira Code', ui-monospace, SFMono-Regular, Consolas, monospace;
+
+  --color-bg-base: #0a0a0a;
+  --color-bg-surface: #0d1117;
+  --color-bg-raised: #111820;
+  --color-bg-sunken: #060808;
+  --color-bg-overlay: rgba(13, 17, 23, 0.97);
+
+  --color-border-default: rgba(34, 197, 94, 0.15);
+  --color-border-muted: rgba(34, 197, 94, 0.08);
+  --color-border-strong: rgba(34, 197, 94, 0.3);
+
+  --color-text-primary: #c9d1d9;
+  --color-text-secondary: #6b7280;
+  --color-text-tertiary: #4b5563;
+  --color-text-inverse: #0a0a0a;
+
+  --color-accent: #22c55e;
+  --color-accent-hover: #4ade80;
+  --color-accent-muted: rgba(34, 197, 94, 0.1);
+  --color-accent-subtle: rgba(34, 197, 94, 0.15);
+
+  --color-success: #22c55e;
+  --color-success-bg: rgba(34, 197, 94, 0.1);
+  --color-success-border: rgba(34, 197, 94, 0.3);
+  --color-warning: #f59e0b;
+  --color-warning-bg: rgba(245, 158, 11, 0.1);
+  --color-warning-border: rgba(245, 158, 11, 0.3);
+  --color-error: #ef4444;
+  --color-error-bg: rgba(239, 68, 68, 0.1);
+  --color-error-border: rgba(239, 68, 68, 0.3);
+  --color-info: #06b6d4;
+  --color-info-bg: rgba(6, 182, 212, 0.1);
+  --color-info-border: rgba(6, 182, 212, 0.3);
+
+  --color-code-bg: #0a0a0a;
+  --color-code-border: rgba(34, 197, 94, 0.15);
+  --color-code-text: #4ade80;
+  --color-code-tab-bg: #0d1117;
+  --color-code-tab-active-bg: #0a0a0a;
+  --color-code-tab-text: #4b5563;
+  --color-code-tab-active-text: #22c55e;
+
+  --color-sidebar-bg: #0d1117;
+  --color-sidebar-border: rgba(34, 197, 94, 0.15);
+  --color-sidebar-item-hover: rgba(34, 197, 94, 0.06);
+  --color-sidebar-item-active-bg: rgba(34, 197, 94, 0.1);
+  --color-sidebar-item-active-text: #22c55e;
+  --color-sidebar-item-active-border: #22c55e;
+
+  --color-input-bg: #0a0a0a;
+  --color-input-border: rgba(34, 197, 94, 0.15);
+  --color-input-border-focus: #22c55e;
+  --color-focus-ring: rgba(34, 197, 94, 0.4);
+
+  --radius-sm: 0;
+  --radius-md: 0;
+  --radius-lg: 0;
+  --radius-xl: 0;
+  --radius-2xl: 0;
+  --radius-full: 0;
+
+  --shadow-xs: 0 0 10px rgba(34, 197, 94, 0.08);
+  --shadow-sm: 0 0 15px rgba(34, 197, 94, 0.1);
+  --shadow-md: 0 0 20px rgba(34, 197, 94, 0.12), inset 0 0 20px rgba(34, 197, 94, 0.03);
+  --shadow-lg: 0 0 30px rgba(34, 197, 94, 0.15), 0 0 60px rgba(34, 197, 94, 0.06);
+}
+
+/* ============================================================
+   BASE STYLES
+   ============================================================ */
 html {
-  background: #0c0a09;
+  background: var(--color-bg-base);
+  font-family: var(--font-sans);
 }
 
 body {
   margin: 0;
   min-width: 320px;
+  background: var(--color-bg-base);
+  color: var(--color-text-primary);
+}
+
+/* Hacker scanline overlay */
+[data-theme="hacker"] body {
   background:
-    radial-gradient(circle at top left, rgba(16, 185, 129, 0.18), transparent 36%),
-    radial-gradient(circle at bottom right, rgba(249, 115, 22, 0.15), transparent 28%),
-    #0c0a09;
+    repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(34,197,94,0.015) 2px, rgba(34,197,94,0.015) 4px),
+    radial-gradient(ellipse at 15% 5%, rgba(34,197,94,0.06), transparent 45%),
+    var(--color-bg-base);
 }
 
-* {
-  box-sizing: border-box;
+* { box-sizing: border-box; }
+a { text-decoration: none; color: inherit; }
+button, input, textarea, select { font: inherit; }
+
+pre, code {
+  font-family: var(--font-mono);
 }
 
-a {
-  text-decoration: none;
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--color-bg-base); }
+::-webkit-scrollbar-thumb { background: var(--color-border-default); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-border-strong); }
+
+/* Selection */
+::selection {
+  background: var(--color-accent-subtle);
+  color: var(--color-text-primary);
 }
 
-button,
-input,
-textarea {
-  font: inherit;
+/* Hacker-specific glow text */
+[data-theme="hacker"] .hacker-glow {
+  text-shadow: 0 0 10px rgba(34, 197, 94, 0.5), 0 0 40px rgba(34, 197, 94, 0.2);
+}
+
+/* Pulse for online status */
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
 }

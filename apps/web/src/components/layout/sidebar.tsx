@@ -1,39 +1,43 @@
 import { Link } from '@tanstack/react-router';
 
+import { ThemeToggle } from '../ui/theme-toggle';
+
 const navigation = [
-  { description: 'Live node, session, and capture snapshot', label: 'Overview', to: '/overview' },
-  { description: 'Approve and configure nodes', label: 'Nodes', to: '/nodes' },
-  { description: 'Recent captured interaction timelines', label: 'Sessions', to: '/sessions' },
-  { description: 'Correlated operators, scanners, and repeat visitors', label: 'Actors', to: '/actors' },
-  { description: 'Persona presets and custom node identities', label: 'Personas', to: '/personas' },
-  { description: 'Manual backfeed and pending template review queue', label: 'Response Engine', to: '/response-engine' },
-  { description: 'Rule definitions and alert delivery history', label: 'Alerts', to: '/alerts' },
-  { description: 'IOC exports, blocklists, and MITRE mapping', label: 'Threat Intel', to: '/threat-intel' },
-  { description: 'Recent request stream with optional auto-refresh', label: 'Live Feed', to: '/live-feed' },
-  { description: 'Generate markdown, HTML, JSON, and CSV exports', label: 'Export', to: '/export' },
-  { description: 'Global controls and env', label: 'Settings', to: '/settings' },
+  { label: 'Overview', to: '/overview' },
+  { label: 'Nodes', to: '/nodes' },
+  { label: 'Sessions', to: '/sessions' },
+  { label: 'Actors', to: '/actors' },
+  { label: 'Personas', to: '/personas' },
+  { label: 'Response Engine', to: '/response-engine' },
+  { label: 'Alerts', to: '/alerts' },
+  { label: 'Threat Intel', to: '/threat-intel' },
+  { label: 'Live Feed', to: '/live-feed' },
+  { label: 'Export', to: '/export' },
+  { label: 'Settings', to: '/settings' },
 ];
 
 export function Sidebar() {
   return (
-    <aside className="w-full rounded-[2rem] border border-stone-800 bg-stone-900/85 p-5 lg:w-72">
-      <div className="border-b border-stone-800 pb-4">
-        <p className="text-xs uppercase tracking-[0.35em] text-emerald-300">LLMTrap</p>
-        <h1 className="mt-3 text-xl font-semibold text-stone-50">Dashboard Control Plane</h1>
+    <aside className="flex w-full flex-col border-r border-[var(--color-sidebar-border)] bg-[var(--color-sidebar-bg)] lg:w-56">
+      <div className="flex h-14 items-center gap-2 border-b border-[var(--color-border-default)] px-4">
+        <span className="flex h-7 w-7 items-center justify-center rounded-[var(--radius-sm)] bg-[var(--color-accent)] text-xs font-bold text-[var(--color-text-inverse)]">L</span>
+        <span className="text-sm font-semibold text-[var(--color-text-primary)]">LLMTrap</span>
       </div>
-      <nav className="mt-5 space-y-3">
+      <nav className="flex-1 space-y-0.5 px-2 py-3">
         {navigation.map((item) => (
           <Link
             key={item.to}
-            activeProps={{ className: 'border-emerald-400/50 bg-emerald-500/10 text-emerald-100' }}
-            className="block rounded-2xl border border-stone-800 bg-stone-950/70 px-4 py-3 text-stone-300 transition hover:border-stone-700 hover:text-stone-100"
+            activeProps={{ className: 'bg-[var(--color-sidebar-item-active-bg)] text-[var(--color-sidebar-item-active-text)] font-medium' }}
+            className="block rounded-[var(--radius-md)] px-3 py-1.5 text-sm text-[var(--color-text-secondary)] transition hover:bg-[var(--color-sidebar-item-hover)] hover:text-[var(--color-text-primary)]"
             to={item.to}
           >
-            <p className="text-sm font-medium">{item.label}</p>
-            <p className="mt-1 text-xs text-stone-400">{item.description}</p>
+            {item.label}
           </Link>
         ))}
       </nav>
+      <div className="border-t border-[var(--color-border-default)] px-3 py-3">
+        <ThemeToggle />
+      </div>
     </aside>
   );
 }

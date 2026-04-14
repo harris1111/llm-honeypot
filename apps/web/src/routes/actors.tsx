@@ -5,21 +5,23 @@ export function ActorsRouteView() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <p className="text-xs uppercase tracking-[0.3em] text-stone-400">Actors</p>
-        <h2 className="mt-2 text-3xl font-semibold text-stone-50">Correlated operators and repeat scanners</h2>
-      </div>
+      <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">Actors</h1>
       <div className="grid gap-4 lg:grid-cols-2">
         {(actorsQuery.data ?? []).map((actor) => (
-          <article key={actor.id} className="rounded-[1.75rem] border border-stone-800 bg-stone-950/70 p-5">
-            <p className="text-xs uppercase tracking-[0.25em] text-stone-400">{actor.label ?? actor.id}</p>
-            <h3 className="mt-2 text-xl font-semibold text-stone-50">{actor.sessionCount} sessions</h3>
-            <p className="mt-3 text-sm text-stone-400">Services: {actor.recentServices.join(', ') || 'none'}</p>
-            <p className="mt-2 text-sm text-stone-400">IPs: {actor.sourceIps.join(', ') || 'none'}</p>
-            <p className="mt-2 text-sm text-stone-400">User agents: {actor.userAgents.join(', ') || 'none captured'}</p>
+          <article key={actor.id} className="border border-[var(--color-border-default)] rounded-[var(--radius-lg)] bg-[var(--color-bg-base)] p-4 transition hover:border-[var(--color-border-strong)]">
+            <p className="text-xs text-[var(--color-text-tertiary)]">{actor.label ?? actor.id}</p>
+            <p className="mt-1.5 text-lg font-bold text-[var(--color-accent)]">
+              {actor.sessionCount} <span className="text-sm font-normal text-[var(--color-text-tertiary)]">sessions</span>
+            </p>
+            <p className="mt-2 text-xs text-[var(--color-text-tertiary)]">services: {actor.recentServices.join(', ') || 'none'}</p>
+            <p className="mt-1 text-xs text-[var(--color-text-tertiary)]">ips: {actor.sourceIps.join(', ') || 'none'}</p>
+            <p className="mt-1 text-xs text-[var(--color-text-tertiary)]">agents: {actor.userAgents.join(', ') || 'none'}</p>
           </article>
         ))}
-        {actorsQuery.isLoading ? <p className="text-sm text-stone-400">Loading actors…</p> : null}
+        {actorsQuery.isLoading ? <p className="text-xs text-[var(--color-text-tertiary)]">...</p> : null}
+        {!actorsQuery.isLoading && !actorsQuery.data?.length ? (
+          <p className="text-xs text-[var(--color-text-tertiary)]">No actors yet.</p>
+        ) : null}
       </div>
     </div>
   );

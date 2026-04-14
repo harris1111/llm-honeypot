@@ -2,14 +2,14 @@ import { useAlertLogs, useAlertRules } from '../hooks/use-alerts';
 
 function severityBadgeClass(severity: string) {
   if (severity === 'critical') {
-    return 'border-rose-500/30 bg-rose-500/10 text-rose-200';
+    return 'border-[var(--color-error-border)] bg-[var(--color-error-bg)] text-[var(--color-error)]';
   }
 
   if (severity === 'warning') {
-    return 'border-amber-500/30 bg-amber-500/10 text-amber-200';
+    return 'border-[var(--color-warning-border)] bg-[var(--color-warning-bg)] text-[var(--color-warning)]';
   }
 
-  return 'border-cyan-500/30 bg-cyan-500/10 text-cyan-200';
+  return 'border-[var(--color-info-border)] bg-[var(--color-info-bg)] text-[var(--color-info)]';
 }
 
 export function AlertsRouteView() {
@@ -19,77 +19,70 @@ export function AlertsRouteView() {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-[2rem] border border-stone-800 bg-gradient-to-br from-stone-950 via-stone-950 to-rose-950/20 p-6">
-        <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
-          <div className="max-w-3xl">
-            <p className="text-xs uppercase tracking-[0.3em] text-stone-400">Alerts</p>
-            <h2 className="mt-2 text-3xl font-semibold text-stone-50">Rule definitions and delivery history</h2>
-            <p className="mt-3 text-sm leading-6 text-stone-400">
-              Internal logs stay available, and webhook delivery attempts now record success or failure details for operator review.
-            </p>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-3 xl:min-w-[26rem]">
-            <div className="rounded-[1.5rem] border border-stone-800 bg-stone-900/80 p-4">
-              <p className="text-xs uppercase tracking-[0.25em] text-stone-500">Rules</p>
-              <p className="mt-3 text-3xl font-semibold text-stone-50">{rulesQuery.data?.length ?? 0}</p>
-            </div>
-            <div className="rounded-[1.5rem] border border-stone-800 bg-stone-900/80 p-4">
-              <p className="text-xs uppercase tracking-[0.25em] text-stone-500">Deliveries</p>
-              <p className="mt-3 text-3xl font-semibold text-stone-50">{logsQuery.data?.length ?? 0}</p>
-            </div>
-            <div className="rounded-[1.5rem] border border-rose-500/20 bg-rose-500/10 p-4">
-              <p className="text-xs uppercase tracking-[0.25em] text-rose-200/80">Failures</p>
-              <p className="mt-3 text-3xl font-semibold text-stone-50">{failedDeliveries}</p>
-            </div>
-          </div>
+      <div className="flex flex-wrap items-end gap-6">
+        <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">Alerts</h1>
+        <div className="flex gap-4 text-xs text-[var(--color-text-tertiary)]">
+          <span>{rulesQuery.data?.length ?? 0} rules</span>
+          <span>{logsQuery.data?.length ?? 0} deliveries</span>
+          {failedDeliveries > 0 ? (
+            <span className="text-[var(--color-error)]">{failedDeliveries} failed</span>
+          ) : null}
         </div>
-      </section>
+      </div>
+
       <div className="grid gap-4 lg:grid-cols-[1.1fr,0.9fr]">
-        <article className="rounded-[1.75rem] border border-stone-800 bg-stone-950/70 p-5">
-          <h3 className="text-lg font-semibold text-stone-50">Rules</h3>
-          <div className="mt-4 space-y-3">
+        <article className="border border-[var(--color-border-default)] rounded-[var(--radius-lg)] bg-[var(--color-bg-base)] p-4">
+          <h2 className="text-sm font-semibold text-[var(--color-text-primary)]">Rules</h2>
+          <div className="mt-3 space-y-2">
             {(rulesQuery.data ?? []).map((rule) => (
-              <div key={rule.id} className="rounded-2xl border border-stone-800 bg-stone-900/70 px-4 py-3">
+              <div key={rule.id} className="border border-[var(--color-border-default)] rounded-[var(--radius-lg)] bg-[var(--color-bg-surface)] px-3 py-2.5">
                 <div className="flex items-center justify-between gap-3">
-                  <p className="text-sm font-medium text-stone-50">{rule.name}</p>
-                  <span className={`rounded-full border px-3 py-1 text-xs ${severityBadgeClass(rule.severity)}`}>{rule.severity}</span>
+                  <p className="text-xs font-medium text-[var(--color-text-primary)]">{rule.name}</p>
+                  <span className={`border rounded-[var(--radius-full)] px-2 py-0.5 text-xs font-bold tracking-widest ${severityBadgeClass(rule.severity)}`}>
+                    {rule.severity}
+                  </span>
                 </div>
-                <p className="mt-2 text-sm text-stone-400">Channels: {rule.channels.join(', ') || 'none'}</p>
+                <p className="mt-1 text-xs text-[var(--color-text-tertiary)]">{rule.channels.join(', ') || 'no channels'}</p>
               </div>
             ))}
-            {rulesQuery.isLoading ? <p className="text-sm text-stone-400">Loading alert rules…</p> : null}
-            {rulesQuery.error ? <p className="text-sm text-rose-200">{rulesQuery.error.message}</p> : null}
-            {!rulesQuery.isLoading && !rulesQuery.error && !rulesQuery.data?.length ? <p className="text-sm text-stone-400">No alert rules are configured yet.</p> : null}
+            {rulesQuery.isLoading ? <p className="text-xs text-[var(--color-text-tertiary)]">...</p> : null}
+            {rulesQuery.error ? <p className="text-xs text-[var(--color-error)]">{rulesQuery.error.message}</p> : null}
+            {!rulesQuery.isLoading && !rulesQuery.error && !rulesQuery.data?.length ? (
+              <p className="text-xs text-[var(--color-text-tertiary)]">No rules configured.</p>
+            ) : null}
           </div>
         </article>
-        <article className="rounded-[1.75rem] border border-stone-800 bg-stone-950/70 p-5">
-          <h3 className="text-lg font-semibold text-stone-50">Recent deliveries</h3>
-          <div className="mt-4 space-y-3">
+
+        <article className="border border-[var(--color-border-default)] rounded-[var(--radius-lg)] bg-[var(--color-bg-base)] p-4">
+          <h2 className="text-sm font-semibold text-[var(--color-text-primary)]">Deliveries</h2>
+          <div className="mt-3 space-y-2">
             {(logsQuery.data ?? []).map((log) => (
-              <div key={log.id} className="rounded-2xl border border-stone-800 bg-stone-900/70 px-4 py-3">
+              <div key={log.id} className="border border-[var(--color-border-default)] rounded-[var(--radius-lg)] bg-[var(--color-bg-surface)] px-3 py-2.5">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-sm font-medium text-stone-50">{log.ruleName} • {log.channel}</p>
-                    <p className="mt-1 text-sm text-stone-400">
-                      {log.sourceIp ?? 'unknown source'} • {log.service ?? 'unknown service'} • {log.classification ?? 'unclassified'}
+                    <p className="text-xs font-medium text-[var(--color-text-primary)]">{log.ruleName} &middot; {log.channel}</p>
+                    <p className="mt-1 text-xs text-[var(--color-text-tertiary)]">
+                      {log.sourceIp ?? 'unknown'} &middot; {log.service ?? 'unknown'} &middot; {log.classification ?? 'unclassified'}
                     </p>
                   </div>
-                  <span className={`rounded-full border px-3 py-1 text-xs ${log.success ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-200' : 'border-rose-500/30 bg-rose-500/10 text-rose-200'}`}>
+                  <span className={`border rounded-[var(--radius-full)] px-2 py-0.5 text-xs font-bold tracking-widest ${log.success ? 'border-[var(--color-success-border)] bg-[var(--color-success-bg)] text-[var(--color-success)]' : 'border-[var(--color-error-border)] bg-[var(--color-error-bg)] text-[var(--color-error)]'}`}>
                     {log.deliveryStatus}
                   </span>
                 </div>
-                <p className="mt-3 text-sm text-stone-400">
+                <p className="mt-2 text-xs text-[var(--color-text-tertiary)]">
                   {new Date(log.sentAt).toLocaleString()}
-                  {log.deliveryStatusCode ? ` • HTTP ${log.deliveryStatusCode}` : ''}
-                  {log.requestCount ? ` • ${log.requestCount} requests` : ''}
+                  {log.deliveryStatusCode ? ` · HTTP ${log.deliveryStatusCode}` : ''}
+                  {log.requestCount ? ` · ${log.requestCount} req` : ''}
                 </p>
-                {log.deliveryDetail ? <p className="mt-2 text-sm text-stone-300">{log.deliveryDetail}</p> : null}
-                {log.paths.length > 0 ? <p className="mt-2 text-xs text-stone-500">Paths: {log.paths.join(', ')}</p> : null}
+                {log.deliveryDetail ? <p className="mt-1 text-xs text-[var(--color-text-secondary)]">{log.deliveryDetail}</p> : null}
+                {log.paths.length > 0 ? <p className="mt-1 text-xs text-[var(--color-text-tertiary)]">{log.paths.join(', ')}</p> : null}
               </div>
             ))}
-            {logsQuery.isLoading ? <p className="text-sm text-stone-400">Loading alert logs…</p> : null}
-            {logsQuery.error ? <p className="text-sm text-rose-200">{logsQuery.error.message}</p> : null}
-            {!logsQuery.isLoading && !logsQuery.error && !logsQuery.data?.length ? <p className="text-sm text-stone-400">No alert deliveries have been recorded yet.</p> : null}
+            {logsQuery.isLoading ? <p className="text-xs text-[var(--color-text-tertiary)]">...</p> : null}
+            {logsQuery.error ? <p className="text-xs text-[var(--color-error)]">{logsQuery.error.message}</p> : null}
+            {!logsQuery.isLoading && !logsQuery.error && !logsQuery.data?.length ? (
+              <p className="text-xs text-[var(--color-text-tertiary)]">No deliveries yet.</p>
+            ) : null}
           </div>
         </article>
       </div>
