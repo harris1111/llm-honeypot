@@ -15,6 +15,7 @@ import { NodesModule } from './modules/nodes/nodes.module';
 import { PersonasModule } from './modules/personas/personas.module';
 import { ResponseConfigModule } from './modules/response-config/response-config.module';
 import { SessionsModule } from './modules/sessions/sessions.module';
+import { TemplatesModule } from './modules/templates/templates.module';
 import { ThreatIntelModule } from './modules/threat-intel/threat-intel.module';
 import { UsersModule } from './modules/users/users.module';
 
@@ -37,6 +38,7 @@ import { UsersModule } from './modules/users/users.module';
     PersonasModule,
     ResponseConfigModule,
     SessionsModule,
+    TemplatesModule,
     ThreatIntelModule,
     UsersModule,
   ],

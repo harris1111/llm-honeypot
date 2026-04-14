@@ -2,9 +2,11 @@ import { Prisma, prisma } from '@llmtrap/db';
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 
 import { AuditService } from '../audit/audit.service';
-import { responseConfigSchema, type ResponseConfigRecord } from './response-config.schemas';
-
-const defaultResponseConfig = responseConfigSchema.parse({});
+import {
+  defaultResponseConfig,
+  responseConfigSchema,
+  type ResponseConfigRecord,
+} from './response-config.schemas';
 
 @Injectable()
 export class ResponseConfigService {

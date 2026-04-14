@@ -13,6 +13,7 @@ import { NodeDetailRouteView } from './routes/node-detail';
 import { NodesRouteView } from './routes/nodes';
 import { OverviewRouteView } from './routes/overview';
 import { PersonasRouteView } from './routes/personas';
+import { ResponseEngineRouteView } from './routes/response-engine';
 import { SessionsRouteView } from './routes/sessions';
 import { SettingsRouteView } from './routes/settings';
 import { ThreatIntelRouteView } from './routes/threat-intel';
@@ -103,6 +104,13 @@ const personasRoute = createRoute({
   path: '/personas',
 });
 
+const responseEngineRoute = createRoute({
+  beforeLoad: requireAuth,
+  component: ResponseEngineRouteView,
+  getParentRoute: () => rootRoute,
+  path: '/response-engine',
+});
+
 const alertsRoute = createRoute({
   beforeLoad: requireAuth,
   component: AlertsRouteView,
@@ -139,6 +147,7 @@ const routeTree = rootRoute.addChildren([
   sessionsRoute,
   actorsRoute,
   personasRoute,
+  responseEngineRoute,
   alertsRoute,
   threatIntelRoute,
   liveFeedRoute,

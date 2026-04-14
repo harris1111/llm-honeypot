@@ -1,7 +1,8 @@
-import { routeTemplateResponse, splitResponseChunks } from '@llmtrap/response-engine';
+import { splitResponseChunks } from '@llmtrap/response-engine';
 import type { ModelDescriptor, ProtocolService } from '@llmtrap/shared';
 import { randomUUID } from 'node:crypto';
 
+import { resolveNodeTextResponse } from '../../response/response-strategy-router';
 import { RuntimeStateService } from '../../runtime/runtime-state.service';
 
 export type ChatMessage = {
@@ -11,12 +12,13 @@ export type ChatMessage = {
 
 export type CompletionResult = {
   chunks: string[];
+  completionTokens: number;
   content: string;
   created: number;
   id: string;
   modelName: string;
   promptTokens: number;
-  strategy: 'static' | 'template';
+  strategy: 'real_model' | 'static' | 'template';
 };
 
 export abstract class OpenAiCompatibleService {
@@ -24,13 +26,16 @@ export abstract class OpenAiCompatibleService {
 
   constructor(protected readonly runtimeStateService: RuntimeStateService) {}
 
-  buildChatCompletion(body: { messages?: ChatMessage[]; model?: string }): CompletionResult {
+  async buildChatCompletion(
+    body: { messages?: ChatMessage[]; model?: string },
+    sourceIp?: string,
+  ): Promise<CompletionResult> {
     const prompt = (body.messages ?? [])
       .map((message) => message.content?.trim())
       .filter((message): message is string => Boolean(message))
       .join(' ');
 
-    return this.buildCompletion(prompt, body.model, 'chatcmpl');
+    return this.buildCompletion(prompt, body.model, 'chatcmpl', sourceIp);
   }
 
   buildEmbeddingResponse(body: { input?: string | string[]; model?: string }) {
@@ -52,9 +57,12 @@ export abstract class OpenAiCompatibleService {
     };
   }
 
-  buildTextCompletion(body: { model?: string; prompt?: string | string[] }): CompletionResult {
+  async buildTextCompletion(
+    body: { model?: string; prompt?: string | string[] },
+    sourceIp?: string,
+  ): Promise<CompletionResult> {
     const prompt = Array.isArray(body.prompt) ? body.prompt.join(' ') : body.prompt ?? '';
-    return this.buildCompletion(prompt, body.model, 'cmpl');
+    return this.buildCompletion(prompt, body.model, 'cmpl', sourceIp);
   }
 
   listModels() {
@@ -69,21 +77,28 @@ export abstract class OpenAiCompatibleService {
     };
   }
 
-  protected buildCompletion(prompt: string, requestedModel: string | undefined, idPrefix: string): CompletionResult {
-    const routed = routeTemplateResponse({
-      modelName: requestedModel,
-      persona: this.runtimeStateService.getPersona(),
+  protected async buildCompletion(
+    prompt: string,
+    requestedModel: string | undefined,
+    idPrefix: string,
+    sourceIp?: string,
+  ): Promise<CompletionResult> {
+    const routed = await resolveNodeTextResponse({
       prompt,
+      requestedModel,
+      runtimeStateService: this.runtimeStateService,
       service: this.serviceName,
+      sourceIp,
     });
 
     return {
       chunks: splitResponseChunks(routed.content),
+      completionTokens: routed.completionTokens,
       content: routed.content,
       created: Math.floor(Date.now() / 1000),
       id: `${idPrefix}-${randomUUID()}`,
       modelName: routed.modelName,
-      promptTokens: Math.max(1, Math.ceil(prompt.length / 4)),
+      promptTokens: routed.promptTokens,
       strategy: routed.strategy,
     };
   }

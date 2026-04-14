@@ -26,7 +26,7 @@ export class OllamaController {
     @Req() request: ProtocolRequest,
     @Res() response: ResponseWriter,
   ): Promise<void> {
-    const completion = this.ollamaService.buildChatResponse(body);
+    const completion = await this.ollamaService.buildChatResponse(body, request.ip ?? request.socket?.remoteAddress);
     const payload = {
       created_at: completion.createdAt,
       done: true,
@@ -65,7 +65,7 @@ export class OllamaController {
     @Req() request: ProtocolRequest,
     @Res() response: ResponseWriter,
   ): Promise<void> {
-    const completion = this.ollamaService.buildGenerateResponse(body);
+    const completion = await this.ollamaService.buildGenerateResponse(body, request.ip ?? request.socket?.remoteAddress);
     const payload = {
       created_at: completion.createdAt,
       done: true,

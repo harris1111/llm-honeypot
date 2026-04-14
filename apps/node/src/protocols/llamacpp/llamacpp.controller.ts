@@ -7,6 +7,7 @@ import {
   createChatCompletionStreamEntries,
   createTextCompletionPayload,
   createTextCompletionStreamEntries,
+  getRequestSourceIp,
   OpenAiCompatibleControllerSupport,
   type ResponseWriter,
 } from '../openai-compatible/openai-compatible-controller-support';
@@ -27,7 +28,7 @@ export class LlamacppController extends OpenAiCompatibleControllerSupport {
     @Req() request: ProtocolRequest,
     @Res() response: ResponseWriter,
   ): Promise<void> {
-    const completion = this.llamacppService.buildChatCompletion(body);
+    const completion = await this.llamacppService.buildChatCompletion(body, getRequestSourceIp(request));
     const payload = createChatCompletionPayload(completion);
 
     if (body.stream) {
@@ -45,7 +46,7 @@ export class LlamacppController extends OpenAiCompatibleControllerSupport {
     @Req() request: ProtocolRequest,
     @Res() response: ResponseWriter,
   ): Promise<void> {
-    const completion = this.llamacppService.buildTextCompletion(body);
+    const completion = await this.llamacppService.buildTextCompletion(body, getRequestSourceIp(request));
     const payload = createTextCompletionPayload(completion);
 
     if (body.stream) {
@@ -91,14 +92,14 @@ export class LlamacppController extends OpenAiCompatibleControllerSupport {
     @Req() request: ProtocolRequest,
     @Res() response: ResponseWriter,
   ): Promise<void> {
-    const completion = this.llamacppService.buildTextCompletion(body);
+    const completion = await this.llamacppService.buildTextCompletion(body, getRequestSourceIp(request));
     const payload = {
       content: completion.content,
       generation_settings: { n_predict: 128 },
       model: completion.modelName,
       prompt_tokens: completion.promptTokens,
       stopped_eos: true,
-      tokens_predicted: completion.chunks.length,
+      tokens_predicted: completion.completionTokens,
       truncated: false,
     };
 

@@ -11,13 +11,13 @@ export class TextGenerationWebuiService extends TemplateProtocolService {
     super(runtimeStateService);
   }
 
-  buildChatResponse(body: { messages?: Array<{ content?: string }>; prompt?: string }) {
+  async buildChatResponse(body: { messages?: Array<{ content?: string }>; prompt?: string }, sourceIp?: string) {
     const prompt = body.messages?.map((message) => message.content ?? '').join(' ') ?? body.prompt ?? '';
-    return this.buildPromptResult(prompt, undefined, 'tgw-chat');
+    return this.buildPromptResult(prompt, undefined, 'tgw-chat', sourceIp);
   }
 
-  buildGenerateResponse(body: { prompt?: string }) {
-    return this.buildPromptResult(body.prompt ?? '', undefined, 'tgw-generate');
+  async buildGenerateResponse(body: { prompt?: string }, sourceIp?: string) {
+    return this.buildPromptResult(body.prompt ?? '', undefined, 'tgw-generate', sourceIp);
   }
 
   getCurrentModel() {

@@ -5,6 +5,7 @@ import type { WorkerRuntimeConfig } from './config/worker-runtime-config.service
 import { WorkerRuntimeConfigService } from './config/worker-runtime-config.service';
 import { ActorCorrelationProcessorService } from './processors/actor-correlation-processor.service';
 import { AlertProcessorService } from './processors/alert-processor.service';
+import { ArchiveProcessorService } from './processors/archive-processor.service';
 import { ClassificationProcessorService } from './processors/classification-processor.service';
 import { EnrichmentProcessorService } from './processors/enrichment-processor.service';
 import type { WorkerProcessor } from './processors/processor-contract';
@@ -31,6 +32,7 @@ export class WorkerService implements OnModuleDestroy, OnModuleInit {
 
   constructor(
     private readonly configService: WorkerRuntimeConfigService,
+    private readonly archiveProcessor: ArchiveProcessorService,
     private readonly classificationProcessor: ClassificationProcessorService,
     private readonly enrichmentProcessor: EnrichmentProcessorService,
     private readonly actorProcessor: ActorCorrelationProcessorService,
@@ -38,6 +40,7 @@ export class WorkerService implements OnModuleDestroy, OnModuleInit {
   ) {}
 
   onModuleInit(): void {
+    this.scheduleProcessor(this.archiveProcessor, this.configService.snapshot.intervals.archiveMs);
     this.scheduleProcessor(this.classificationProcessor, this.configService.snapshot.intervals.classificationMs);
     this.scheduleProcessor(this.enrichmentProcessor, this.configService.snapshot.intervals.enrichmentMs);
     this.scheduleProcessor(this.actorProcessor, this.configService.snapshot.intervals.actorMs);

@@ -1,3 +1,4 @@
+import { defaultResponseConfig } from '@llmtrap/shared';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { RuntimeStateService } from '../src/runtime/runtime-state.service';
@@ -90,5 +91,82 @@ describe('RuntimeStateService', () => {
     service.clearSyncError();
 
     expect(service.getNodeId()).toBeNull();
+  });
+
+  it('parses response config from node config and falls back to shared defaults', () => {
+    const service = new RuntimeStateService();
+
+    expect(service.getResponseConfig()).toEqual(defaultResponseConfig);
+
+    service.applyConfig({
+      config: {
+        responseConfig: {
+          fixedN: { n: 1 },
+          strategyChain: ['fixed_n'],
+        },
+      },
+      node: baseNode,
+      persona: null,
+      services: { ollama: true },
+    });
+
+    expect(service.getResponseConfig()).toMatchObject({
+      budget: defaultResponseConfig.budget,
+      fixedN: { n: 1, resetPeriod: 'never' },
+      strategyChain: ['fixed_n'],
+    });
+  });
+
+  it('falls back to shared defaults when response config is invalid', () => {
+    const service = new RuntimeStateService();
+
+    service.applyConfig({
+      config: {
+        responseConfig: {
+          proxy: { baseUrl: 'https://proxy.local/v1', model: 'gpt-4o-mini' },
+          smart: { validationPatterns: ['/([/'] },
+          strategyChain: ['smart'],
+        },
+      },
+      node: baseNode,
+      persona: null,
+      services: { openai: true },
+    });
+
+    expect(service.getResponseConfig()).toEqual(defaultResponseConfig);
+  });
+
+  it('returns approved runtime templates from node config and ignores malformed entries', () => {
+    const service = new RuntimeStateService();
+
+    service.applyConfig({
+      config: {
+        responseTemplates: [
+          {
+            category: 'manual-backfeed',
+            id: 'template-1',
+            keywords: ['config', 'vault'],
+            responseText: 'approved template response',
+          },
+          {
+            category: 'broken-template',
+            id: 'template-2',
+            keywords: [],
+          },
+        ],
+      },
+      node: baseNode,
+      persona: null,
+      services: { openai: true },
+    });
+
+    expect(service.getResponseTemplates()).toEqual([
+      {
+        category: 'manual-backfeed',
+        id: 'template-1',
+        keywords: ['config', 'vault'],
+        responseText: 'approved template response',
+      },
+    ]);
   });
 });

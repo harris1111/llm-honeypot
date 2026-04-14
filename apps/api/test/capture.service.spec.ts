@@ -5,15 +5,20 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { AuditService } from '../src/modules/audit/audit.service';
 import { CaptureService } from '../src/modules/capture/capture.service';
+import { LiveFeedService } from '../src/modules/live-feed/live-feed.service';
 
 function createService() {
   const auditService = {
     record: vi.fn().mockResolvedValue(undefined),
   } as unknown as AuditService;
+  const liveFeedService = {
+    publish: vi.fn(),
+  } as unknown as LiveFeedService;
 
   return {
     auditService,
-    service: new CaptureService(auditService),
+    liveFeedService,
+    service: new CaptureService(auditService, liveFeedService),
   };
 }
 
@@ -57,7 +62,7 @@ describe('CaptureService', () => {
       },
     };
     vi.mocked(prisma.$transaction).mockImplementation(async (callback) => callback(transaction as never));
-    const { auditService, service } = createService();
+    const { auditService, liveFeedService, service } = createService();
     const input: CaptureBatchRequest = {
       nodeId: 'node-123',
       records: [createRecord()],
@@ -70,11 +75,13 @@ describe('CaptureService', () => {
       where: { id: 'node-123' },
     });
     expect(auditService.record).not.toHaveBeenCalled();
+    expect(liveFeedService.publish).not.toHaveBeenCalled();
   });
 
   it('deduplicates repeated captures and groups fresh requests into the active session', async () => {
     const duplicate = { id: 'capture-duplicate' };
     const session = {
+      actorId: 'actor-123',
       classification: 'scanner',
       id: 'session-123',
       userAgent: 'curl/8.3.0',
@@ -90,7 +97,7 @@ describe('CaptureService', () => {
       honeypotSession: {
         create: vi.fn(),
         findFirst: vi.fn().mockResolvedValue(session),
-        update: vi.fn().mockResolvedValue({ id: 'session-123' }),
+        update: vi.fn().mockResolvedValue({ actorId: 'actor-123', id: 'session-123' }),
       },
       node: {
         findUnique: vi.fn().mockResolvedValue({
@@ -101,7 +108,7 @@ describe('CaptureService', () => {
       },
     };
     vi.mocked(prisma.$transaction).mockImplementation(async (callback) => callback(transaction as never));
-    const { auditService, service } = createService();
+    const { auditService, liveFeedService, service } = createService();
     const input: CaptureBatchRequest = {
       nodeId: 'node-123',
       records: [
@@ -156,6 +163,21 @@ describe('CaptureService', () => {
       action: 'capture.batch-ingested',
       details: { count: 2 },
       target: 'node-123',
+    });
+    expect(liveFeedService.publish).toHaveBeenCalledTimes(1);
+    expect(liveFeedService.publish).toHaveBeenCalledWith({
+      actorId: 'actor-123',
+      classification: 'attacker',
+      id: 'capture-created',
+      method: 'POST',
+      nodeId: 'node-123',
+      path: '/v1/chat/completions',
+      responseCode: 200,
+      service: 'openai-http',
+      sourceIp: '203.0.113.10',
+      strategy: 'static',
+      timestamp: new Date('2026-04-13T09:31:00.000Z'),
+      userAgent: 'curl/8.4.0',
     });
   });
 });

@@ -48,7 +48,7 @@ export class AnthropicController {
   private async capture(
     request: ProtocolRequest,
     responseBody: unknown,
-    responseStrategy: 'static' | 'template',
+    responseStrategy: 'real_model' | 'static' | 'template',
   ): Promise<void> {
     await this.httpCaptureService.recordInteraction({
       protocol: 'http',
@@ -65,7 +65,7 @@ export class AnthropicController {
     request: ProtocolRequest,
     response: ResponseWriter,
   ): Promise<void> {
-    const message = this.anthropicService.buildMessageResponse(body);
+    const message = await this.anthropicService.buildMessageResponse(body, request.ip ?? request.socket?.remoteAddress);
     const payload = {
       content: [{ text: message.content, type: 'text' }],
       id: message.id,
@@ -76,7 +76,7 @@ export class AnthropicController {
       type: 'message',
       usage: {
         input_tokens: message.promptTokens,
-        output_tokens: message.chunks.length,
+        output_tokens: message.completionTokens,
       },
     };
 
@@ -101,7 +101,14 @@ export class AnthropicController {
 
   private async streamSse(
     response: ResponseWriter,
-    message: { chunks: string[]; content: string; id: string; modelName: string; promptTokens: number },
+    message: {
+      chunks: string[];
+      completionTokens: number;
+      content: string;
+      id: string;
+      modelName: string;
+      promptTokens: number;
+    },
   ): Promise<void> {
     if (this.isClosed(response)) {
       return;
@@ -172,7 +179,7 @@ export class AnthropicController {
         `event: message_delta\ndata: ${JSON.stringify({
           delta: { stop_reason: 'end_turn' },
           type: 'message_delta',
-          usage: { output_tokens: message.chunks.length },
+          usage: { output_tokens: message.completionTokens },
         })}\n\n`,
       )
     ) {

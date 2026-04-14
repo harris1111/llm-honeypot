@@ -1,8 +1,9 @@
-import { routeTemplateResponse, splitResponseChunks } from '@llmtrap/response-engine';
+import { splitResponseChunks } from '@llmtrap/response-engine';
 import type { ModelDescriptor } from '@llmtrap/shared';
 import { randomUUID } from 'node:crypto';
 import { Injectable } from '@nestjs/common';
 
+import { resolveNodeTextResponse } from '../../response/response-strategy-router';
 import { RuntimeStateService } from '../../runtime/runtime-state.service';
 
 type AnthropicMessage = {
@@ -12,35 +13,41 @@ type AnthropicMessage = {
 
 type MessageResult = {
   chunks: string[];
+  completionTokens: number;
   content: string;
   id: string;
   modelName: string;
   promptTokens: number;
-  strategy: 'static' | 'template';
+  strategy: 'real_model' | 'static' | 'template';
 };
 
 @Injectable()
 export class AnthropicService {
   constructor(private readonly runtimeStateService: RuntimeStateService) {}
 
-  buildMessageResponse(body: { messages?: AnthropicMessage[]; model?: string }): MessageResult {
+  async buildMessageResponse(
+    body: { messages?: AnthropicMessage[]; model?: string },
+    sourceIp?: string,
+  ): Promise<MessageResult> {
     const prompt = (body.messages ?? [])
       .map((message) => this.normalizeMessageContent(message.content))
       .filter((message): message is string => Boolean(message))
       .join(' ');
-    const routed = routeTemplateResponse({
-      modelName: body.model,
-      persona: this.runtimeStateService.getPersona(),
+    const routed = await resolveNodeTextResponse({
       prompt,
+      requestedModel: body.model,
+      runtimeStateService: this.runtimeStateService,
       service: 'anthropic',
+      sourceIp,
     });
 
     return {
       chunks: splitResponseChunks(routed.content),
+      completionTokens: routed.completionTokens,
       content: routed.content,
       id: `msg_${randomUUID().replaceAll('-', '')}`,
       modelName: routed.modelName,
-      promptTokens: Math.max(1, Math.ceil(prompt.length / 4)),
+      promptTokens: routed.promptTokens,
       strategy: routed.strategy,
     };
   }

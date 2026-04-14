@@ -1,10 +1,13 @@
+import type { TemplateDefinition } from '@llmtrap/response-engine';
 import type {
   NodeConfig,
   NodeHeartbeat,
   NodeRecord,
   NodeRegistrationResponse,
   PersonaDefinition,
+  ResponseConfigRecord,
 } from '@llmtrap/shared';
+import { defaultResponseConfig, responseConfigSchema } from '@llmtrap/shared';
 import { Injectable } from '@nestjs/common';
 
 @Injectable()
@@ -83,6 +86,20 @@ export class RuntimeStateService {
     return RuntimeStateService.store.persona;
   }
 
+  getResponseConfig(): ResponseConfigRecord {
+    const parsed = responseConfigSchema.safeParse(RuntimeStateService.store.config.responseConfig ?? {});
+    return parsed.success ? parsed.data : defaultResponseConfig;
+  }
+
+  getResponseTemplates(): TemplateDefinition[] {
+    const rawTemplates = RuntimeStateService.store.config.responseTemplates;
+    if (!Array.isArray(rawTemplates)) {
+      return [];
+    }
+
+    return rawTemplates.filter(isTemplateDefinition);
+  }
+
   incrementRequestCount(): void {
     RuntimeStateService.store.requestCount += 1;
   }
@@ -90,4 +107,20 @@ export class RuntimeStateService {
   markSyncError(error: unknown): void {
     RuntimeStateService.store.lastSyncError = error instanceof Error ? error.message : 'Unknown sync failure';
   }
+}
+
+function isTemplateDefinition(value: unknown): value is TemplateDefinition {
+  if (!value || typeof value !== 'object') {
+    return false;
+  }
+
+  const template = value as Partial<TemplateDefinition>;
+  return Boolean(
+    template.id &&
+      template.category &&
+      Array.isArray(template.keywords) &&
+      template.keywords.every((keyword) => typeof keyword === 'string' && keyword.trim().length > 0) &&
+      typeof template.responseText === 'string' &&
+      template.responseText.trim().length > 0,
+  );
 }

@@ -1,10 +1,35 @@
 import { z } from 'zod';
 
 const portSchema = z.coerce.number().int().positive().max(65_535);
+const optionalBooleanSchema = z.preprocess((value) => {
+  if (value === undefined || value === null || value === '') {
+    return undefined;
+  }
+
+  if (typeof value === 'boolean') {
+    return value;
+  }
+
+  return String(value).toLowerCase() === 'true';
+}, z.boolean().optional());
+const optionalStringSchema = z.preprocess(
+  (value) => (typeof value === 'string' && value.trim() === '' ? undefined : value),
+  z.string().min(1).optional(),
+);
+const optionalUrlSchema = z.preprocess(
+  (value) => (typeof value === 'string' && value.trim() === '' ? undefined : value),
+  z.string().url().optional(),
+);
 
 const baseEnvSchema = z.object({
   DATABASE_URL: z.string().url(),
   REDIS_URL: z.string().url(),
+  S3_ACCESS_KEY_ID: optionalStringSchema,
+  S3_BUCKET: optionalStringSchema,
+  S3_ENDPOINT: optionalUrlSchema,
+  S3_FORCE_PATH_STYLE: optionalBooleanSchema,
+  S3_REGION: optionalStringSchema,
+  S3_SECRET_ACCESS_KEY: optionalStringSchema,
 });
 
 export const apiEnvSchema = baseEnvSchema.extend({
@@ -16,6 +41,11 @@ export const apiEnvSchema = baseEnvSchema.extend({
 });
 
 export const workerEnvSchema = baseEnvSchema.extend({
+  WORKER_ALERT_WEBHOOK_TIMEOUT_MS: z.coerce.number().int().positive().default(5000),
+  WORKER_ALERT_WEBHOOK_URL: z.preprocess(
+    (value) => (typeof value === 'string' && value.trim() === '' ? undefined : value),
+    z.string().url().optional(),
+  ),
   WORKER_CONCURRENCY: z.coerce.number().int().positive().default(4),
   WORKER_PORT: portSchema.default(4100),
 });

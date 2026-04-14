@@ -22,7 +22,7 @@ export class OpenAiCompatibleControllerSupport {
   protected async capture(
     request: ProtocolRequest,
     responseBody: unknown,
-    responseStrategy: 'static' | 'template',
+    responseStrategy: 'real_model' | 'static' | 'template',
   ): Promise<void> {
     await this.httpCaptureService.recordInteraction({
       protocol: 'http',
@@ -87,9 +87,9 @@ export function createChatCompletionPayload(completion: CompletionResult) {
     model: completion.modelName,
     object: 'chat.completion',
     usage: {
-      completion_tokens: completion.chunks.length,
+      completion_tokens: completion.completionTokens,
       prompt_tokens: completion.promptTokens,
-      total_tokens: completion.promptTokens + completion.chunks.length,
+      total_tokens: completion.promptTokens + completion.completionTokens,
     },
   };
 }
@@ -129,11 +129,15 @@ export function createTextCompletionPayload(completion: CompletionResult) {
     model: completion.modelName,
     object: 'text_completion',
     usage: {
-      completion_tokens: completion.chunks.length,
+      completion_tokens: completion.completionTokens,
       prompt_tokens: completion.promptTokens,
-      total_tokens: completion.promptTokens + completion.chunks.length,
+      total_tokens: completion.promptTokens + completion.completionTokens,
     },
   };
+}
+
+export function getRequestSourceIp(request: ProtocolRequest): string | undefined {
+  return request.ip ?? request.socket?.remoteAddress;
 }
 
 export function createTextCompletionStreamEntries(completion: CompletionResult): unknown[] {

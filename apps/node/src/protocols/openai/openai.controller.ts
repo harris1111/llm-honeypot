@@ -2,6 +2,7 @@ import { Body, Controller, Get, Post, Req, Res } from '@nestjs/common';
 
 import { HttpCaptureService } from '../../capture/http-capture.service';
 import type { ProtocolRequest } from '../../capture/http-capture.service';
+import { getRequestSourceIp } from '../openai-compatible/openai-compatible-controller-support';
 import { OpenAiService } from './openai.service';
 
 type ResponseWriter = {
@@ -26,7 +27,7 @@ export class OpenAiController {
     @Req() request: ProtocolRequest,
     @Res() response: ResponseWriter,
   ): Promise<void> {
-    const completion = this.openAiService.buildChatCompletion(body);
+    const completion = await this.openAiService.buildChatCompletion(body, getRequestSourceIp(request));
     const payload = {
       choices: [
         {
@@ -40,9 +41,9 @@ export class OpenAiController {
       model: completion.modelName,
       object: 'chat.completion',
       usage: {
-        completion_tokens: completion.chunks.length,
+        completion_tokens: completion.completionTokens,
         prompt_tokens: completion.promptTokens,
-        total_tokens: completion.promptTokens + completion.chunks.length,
+        total_tokens: completion.promptTokens + completion.completionTokens,
       },
     };
 
@@ -84,7 +85,7 @@ export class OpenAiController {
     @Req() request: ProtocolRequest,
     @Res() response: ResponseWriter,
   ): Promise<void> {
-    const completion = this.openAiService.buildTextCompletion(body);
+    const completion = await this.openAiService.buildTextCompletion(body, getRequestSourceIp(request));
     const payload = {
       choices: [{ finish_reason: 'stop', index: 0, text: completion.content }],
       created: completion.created,
@@ -92,9 +93,9 @@ export class OpenAiController {
       model: completion.modelName,
       object: 'text_completion',
       usage: {
-        completion_tokens: completion.chunks.length,
+        completion_tokens: completion.completionTokens,
         prompt_tokens: completion.promptTokens,
-        total_tokens: completion.promptTokens + completion.chunks.length,
+        total_tokens: completion.promptTokens + completion.completionTokens,
       },
     };
 
@@ -141,7 +142,7 @@ export class OpenAiController {
   private async capture(
     request: ProtocolRequest,
     responseBody: unknown,
-    responseStrategy: 'static' | 'template',
+    responseStrategy: 'real_model' | 'static' | 'template',
   ): Promise<void> {
     await this.httpCaptureService.recordInteraction({
       protocol: 'http',

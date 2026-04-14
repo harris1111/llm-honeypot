@@ -1,9 +1,23 @@
 import { prisma } from '@llmtrap/db';
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 
 import { AuditService } from '../audit/audit.service';
+import { ArchiveStorageService } from './archive-storage.service';
 import { renderReport, renderSessionExportCsv } from './report-renderer';
 import type { ReportSnapshot } from './report-renderer';
+
+type ArchiveManifestRecord = {
+  archiveSizeBytes: number;
+  bucket: string;
+  createdAt: string;
+  format: string;
+  id: string;
+  periodEnd: string;
+  periodStart: string;
+  requestCount: number;
+  sessionCount: number;
+  storageKey: string;
+};
 
 type SessionRow = {
   actorId: string | null;
@@ -17,7 +31,41 @@ type SessionRow = {
 
 @Injectable()
 export class ExportService {
-  constructor(@Inject(AuditService) private readonly auditService: AuditService) {}
+  constructor(
+    @Inject(AuditService) private readonly auditService: AuditService,
+    @Inject(ArchiveStorageService) private readonly archiveStorageService: ArchiveStorageService,
+  ) {}
+
+  async getArchive(currentUserId: string, archiveId: string, ipAddress?: string, previewLines: number | null = null) {
+    const manifest = await prisma.archiveManifest.findUnique({ where: { id: archiveId } });
+    if (!manifest) {
+      throw new NotFoundException('Archive not found');
+    }
+
+    const preview = previewLines
+      ? await this.archiveStorageService.readArchivePreview(manifest.bucket, manifest.storageKey, previewLines)
+      : null;
+    const content = preview
+      ? preview.content
+      : await this.archiveStorageService.readArchive(manifest.bucket, manifest.storageKey);
+
+    await this.auditService.record({
+      action: 'export.archive.read',
+      details: preview ? { previewLines: preview.lineCount, truncated: preview.truncated } : undefined,
+      ip: ipAddress,
+      target: archiveId,
+      userId: currentUserId,
+    });
+
+    return {
+      content,
+      filename: manifest.storageKey.split('/').at(-1) ?? `${manifest.id}.${manifest.format}`,
+      format: manifest.format,
+      manifest: this.serializeArchiveManifest(manifest),
+      previewLineCount: preview?.lineCount ?? null,
+      truncated: preview?.truncated ?? false,
+    };
+  }
 
   async getData(currentUserId: string, format: 'csv' | 'json', days: number, ipAddress?: string) {
     const snapshot = await this.buildSnapshot(days);
@@ -38,6 +86,22 @@ export class ExportService {
       generatedAt: snapshot.generatedAt,
       summary: snapshot.summary,
     };
+  }
+
+  async listArchives(currentUserId: string, ipAddress?: string): Promise<ArchiveManifestRecord[]> {
+    const manifests = await prisma.archiveManifest.findMany({
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+    });
+
+    await this.auditService.record({
+      action: 'export.archive.list',
+      ip: ipAddress,
+      target: 'archive:list',
+      userId: currentUserId,
+    });
+
+    return manifests.map((manifest) => this.serializeArchiveManifest(manifest));
   }
 
   async getReport(currentUserId: string, format: 'html' | 'json' | 'markdown', days: number, ipAddress?: string) {
@@ -116,6 +180,25 @@ export class ExportService {
         .map(([actorId, count]) => ({ id: actorId, label: actorMap.get(actorId)?.label ?? null, sessions: count }))
         .sort((left, right) => right.sessions - left.sessions)
         .slice(0, 10),
+    };
+  }
+
+  private serializeArchiveManifest(
+    manifest: Awaited<ReturnType<typeof prisma.archiveManifest.findUnique>> extends infer TValue
+      ? NonNullable<TValue>
+      : never,
+  ): ArchiveManifestRecord {
+    return {
+      archiveSizeBytes: manifest.archiveSizeBytes,
+      bucket: manifest.bucket,
+      createdAt: manifest.createdAt.toISOString(),
+      format: manifest.format,
+      id: manifest.id,
+      periodEnd: manifest.periodEnd.toISOString(),
+      periodStart: manifest.periodStart.toISOString(),
+      requestCount: manifest.requestCount,
+      sessionCount: manifest.sessionCount,
+      storageKey: manifest.storageKey,
     };
   }
 }

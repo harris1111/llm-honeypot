@@ -1,31 +1,31 @@
 import { useQuery } from '@tanstack/react-query';
 
-import { apiClient } from '../lib/api-client';
+import { apiClient, type ThreatIntelFilters } from '../lib/api-client';
 
-export function useThreatBlocklist() {
+export function useThreatBlocklist(filters: ThreatIntelFilters = {}) {
   return useQuery({
-    queryFn: apiClient.getThreatBlocklist,
-    queryKey: ['threat-intel', 'blocklist'],
+    queryFn: () => apiClient.getThreatBlocklist(filters),
+    queryKey: ['threat-intel', 'blocklist', filters],
   });
 }
 
-export function useThreatIocFeed() {
+export function useThreatIocFeed(filters: ThreatIntelFilters = {}) {
   return useQuery({
-    queryFn: apiClient.getThreatIocFeed,
-    queryKey: ['threat-intel', 'ioc'],
+    queryFn: () => apiClient.getThreatIocFeed(filters),
+    queryKey: ['threat-intel', 'ioc', filters],
   });
 }
 
-export function useThreatMitre() {
+export function useThreatMitre(filters: ThreatIntelFilters = {}) {
   return useQuery({
-    queryFn: apiClient.getThreatMitre,
-    queryKey: ['threat-intel', 'mitre'],
+    queryFn: () => apiClient.getThreatMitre(filters),
+    queryKey: ['threat-intel', 'mitre', filters],
   });
 }
 
-export function useThreatStix() {
+export function useThreatStix(filters: ThreatIntelFilters = {}) {
   return useQuery({
-    queryFn: apiClient.getThreatStix,
-    queryKey: ['threat-intel', 'stix'],
+    queryFn: () => apiClient.getThreatStix(filters),
+    queryKey: ['threat-intel', 'stix', filters],
   });
 }

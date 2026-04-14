@@ -2,15 +2,16 @@
 
 LLMTrap is an open-source multi-protocol AI honeypot for security research. It is designed to emulate attractive AI infrastructure targets, capture malicious or opportunistic traffic, and give the operator a dashboard for reviewing sessions, nodes, and captured requests.
 
-The repository currently ships the Phase 1 to Phase 4 slice:
+The repository currently ships the Phase 1 to Phase 4 slice, with partial Phase 5 and Phase 6 work:
 
 - a dashboard stack built with NestJS, React, PostgreSQL, Redis, and a worker process
 - a honeypot node that registers with the dashboard, syncs config, sends heartbeats, and uploads captures
 - AI-facing listeners for Ollama, OpenAI-compatible, Anthropic-compatible, LM Studio, text-generation-webui, LangServe, llama.cpp, vLLM, and AutoGPT
 - MCP and IDE/config bait surfaces, RAG bait services, homelab bait services, and traditional listeners for SSH, FTP, SMTP, DNS, SMB, and Telnet
+- Node-side response strategy execution, manual backfeed/template review queue, approved runtime template sync, and filterable threat-intel controls
 - Prisma migrations, Docker Compose bootstrap, and focused Vitest coverage for key API and node services
 
-Phase 5 and Phase 6 work on response routing, threat intel, alert delivery, and broader operator automation is still in progress.
+Phase 5 and Phase 6 work on proxy routing, alert delivery, cold storage, and deeper operator automation is ongoing.
 
 ## Current status
 
@@ -18,7 +19,8 @@ Phase 5 and Phase 6 work on response routing, threat intel, alert delivery, and 
 - Phase 2: complete
 - Phase 3: complete
 - Phase 4: complete
-- Phase 5 to 6: in progress
+- Phase 5: in progress (response strategies + backfeed landed)
+- Phase 6: in progress (threat-intel, alerts, live feed, archives, and smoke harness landed)
 
 What is implemented today:
 
@@ -27,20 +29,28 @@ What is implemented today:
 - node registration, config refresh, REST heartbeat, and capture batching
 - Redis-backed local capture spooling on the node
 - protocol-shaped responses for the AI HTTP surfaces plus MCP/IDE bait, RAG bait, homelab bait, and traditional protocol traps
+- node-side response strategy routing (smart, fixed_n, budget) with template fallback and approved runtime template sync
+- API-side template review queue and Response Engine dashboard route
+- filterable threat-intel endpoints and dashboard controls for blocklist, IOC, MITRE, and STIX export
+- webhook alert delivery with configurable timeout and HTTP status tracking
+- websocket live-feed transport (namespace: `/live-feed`) with Redis-backed multi-instance fan-out, polling fallback, and filter support
+- cold-storage archive manifests, S3-compatible retrieval endpoints, and archive preview inside the dashboard export route
+- repository-owned smoke scripts for live-feed WebSocket delivery, webhook alert delivery, and archive retrieval
+- local dashboard Docker bootstrap with MinIO-backed archive storage and a host-routable webhook smoke target
 
 What is not implemented yet:
 
-- runtime proxy routing, backfeed/template distribution, and deeper response-strategy execution
+- durable budget accounting for proxy routing beyond the current in-memory guard
+- external alert delivery (Telegram, Discord, email beyond webhook)
 - richer dashboard analytics and invite workflows
-- external alert delivery, cold-storage automation, and WebSocket live-feed transport
-- repository-owned e2e and smoke automation for the expanded listener matrix
+- repository-owned browser e2e automation for the expanded listener matrix
 
 ## Architecture
 
 LLMTrap is split into two Docker Compose stacks:
 
 1. Dashboard stack
-	 Includes the API, web UI, worker, PostgreSQL, Redis, and a one-shot `db-init` bootstrap container.
+	 Includes the API, web UI, worker, PostgreSQL, Redis, MinIO, and one-shot bootstrap containers for DB and bucket setup.
 2. Node stack
 	 Includes the honeypot runtime plus local Redis for capture buffering when the dashboard is unavailable.
 
@@ -91,6 +101,8 @@ Useful ports in the default setup:
 - `8081` Anthropic-compatible node endpoint
 - `6333` Qdrant bait endpoint
 - `3002` Grafana bait endpoint
+- `9001` MinIO S3 API
+- `9002` MinIO console
 - `19530` Milvus HTTP bait endpoint
 - `20021`, `20022`, `20023`, `20025`, `20053/udp`, `20445`, `20587` traditional Docker host remaps for FTP, SSH, Telnet, SMTP, DNS, SMB, and SMTP submission
 
@@ -122,6 +134,7 @@ Notes:
 - `docker/dashboard-compose.env.example` is a reference template, not the recommended local quickstart
 - the example env intentionally does not seed an admin user
 - `JWT_SECRET` is required for any non-local deployment
+- the committed local env also provisions a MinIO bucket for archive smoke and targets `http://host.docker.internal:7780/smoke-alert` for webhook smoke; the worker compose service maps that hostname to the host gateway for same-host Linux testing
 
 ### 2. Create a node in the dashboard
 
@@ -189,6 +202,9 @@ pnpm lint
 pnpm typecheck
 pnpm build
 pnpm test
+pnpm run test:smoke:live-feed
+pnpm run test:smoke:alerts
+pnpm run test:smoke:archive
 ```
 
 Repository-level scripts are orchestrated through Turborepo from the root `package.json`.
@@ -218,6 +234,8 @@ The current real automated coverage is concentrated in the API and node packages
 - Phase 4 config inventory, shell bait rendering, and representative RAG/homelab payload shaping
 
 The worker package now has focused Vitest coverage; the web package is the only remaining placeholder test script in the workspace.
+
+Repository-owned smoke scripts now live in `tests/smoke/` and assume the compose-backed dashboard and node walkthrough is already running. The alert smoke script starts its own local receiver on port `7780`; keep that port free when invoking it.
 
 Recent Docker smoke for the shipped Phase 4 slice validated:
 
@@ -256,5 +274,5 @@ For deeper project context:
 
 ## Roadmap
 
-The next milestones are the remaining Phase 5 and Phase 6 slices: response routing and backfeed, richer classification/persona workflows, threat-intel and alert delivery hardening, cold-storage automation, and repository-owned e2e/smoke coverage for the expanded protocol matrix.
+The next milestones are the remaining Phase 5 and Phase 6 slices: response routing hardening, richer classification/persona workflows, additional external alert channels, and repository-owned browser e2e coverage for the expanded protocol matrix.
 

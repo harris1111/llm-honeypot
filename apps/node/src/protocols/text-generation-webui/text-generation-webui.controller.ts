@@ -2,7 +2,10 @@ import { Body, Controller, Get, Post, Req } from '@nestjs/common';
 
 import { HttpCaptureService } from '../../capture/http-capture.service';
 import type { ProtocolRequest } from '../../capture/http-capture.service';
-import { OpenAiCompatibleControllerSupport } from '../openai-compatible/openai-compatible-controller-support';
+import {
+  getRequestSourceIp,
+  OpenAiCompatibleControllerSupport,
+} from '../openai-compatible/openai-compatible-controller-support';
 import { TextGenerationWebuiService } from './text-generation-webui.service';
 
 @Controller()
@@ -16,7 +19,7 @@ export class TextGenerationWebuiController extends OpenAiCompatibleControllerSup
 
   @Post('api/v1/generate')
   async generate(@Body() body: { max_new_tokens?: number; prompt?: string }, @Req() request: ProtocolRequest) {
-    const result = this.textGenerationWebuiService.buildGenerateResponse(body);
+    const result = await this.textGenerationWebuiService.buildGenerateResponse(body, getRequestSourceIp(request));
     const payload = { results: [{ text: result.content }] };
 
     await this.capture(request, payload, result.strategy);
@@ -28,7 +31,7 @@ export class TextGenerationWebuiController extends OpenAiCompatibleControllerSup
     @Body() body: { messages?: Array<{ content?: string }>; mode?: string; prompt?: string },
     @Req() request: ProtocolRequest,
   ) {
-    const result = this.textGenerationWebuiService.buildChatResponse(body);
+    const result = await this.textGenerationWebuiService.buildChatResponse(body, getRequestSourceIp(request));
     const payload = { results: [{ text: result.content }] };
 
     await this.capture(request, payload, result.strategy);

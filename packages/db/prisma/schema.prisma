@@ -105,13 +105,34 @@ model HoneypotSession {
   endedAt        DateTime?
   requestCount   Int               @default(0)
   actorId        String?
+  archivedAt     DateTime?
+  archiveManifestId String?
   actor          Actor?            @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  archiveManifest ArchiveManifest? @relation(fields: [archiveManifestId], references: [id], onDelete: SetNull)
   node           Node              @relation(fields: [nodeId], references: [id], onDelete: Cascade)
   requests       CapturedRequest[]
 
   @@index([actorId])
+  @@index([archiveManifestId])
+  @@index([archivedAt])
   @@index([nodeId, startedAt])
   @@index([sourceIp])
+}
+
+model ArchiveManifest {
+  id                String            @id @default(cuid())
+  archiveSizeBytes  Int
+  bucket            String
+  createdAt         DateTime          @default(now())
+  format            String            @default("jsonl.gz")
+  periodEnd         DateTime
+  periodStart       DateTime
+  requestCount      Int
+  sessionCount      Int
+  sessions          HoneypotSession[]
+  storageKey        String            @unique
+
+  @@index([createdAt])
 }
 
 model CapturedRequest {

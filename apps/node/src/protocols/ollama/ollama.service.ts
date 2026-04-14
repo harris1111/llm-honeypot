@@ -1,7 +1,8 @@
-import { routeTemplateResponse, splitResponseChunks } from '@llmtrap/response-engine';
+import { splitResponseChunks } from '@llmtrap/response-engine';
 import type { ModelDescriptor } from '@llmtrap/shared';
 import { Injectable } from '@nestjs/common';
 
+import { resolveNodeTextResponse } from '../../response/response-strategy-router';
 import { RuntimeStateService } from '../../runtime/runtime-state.service';
 
 type ChatMessage = {
@@ -11,12 +12,13 @@ type ChatMessage = {
 
 type CompletionResult = {
   chunks: string[];
+  completionTokens: number;
   content: string;
   createdAt: string;
   evalCount: number;
   modelName: string;
   promptEvalCount: number;
-  strategy: 'static' | 'template';
+  strategy: 'real_model' | 'static' | 'template';
   totalDuration: number;
 };
 
@@ -24,17 +26,23 @@ type CompletionResult = {
 export class OllamaService {
   constructor(private readonly runtimeStateService: RuntimeStateService) {}
 
-  buildChatResponse(body: { messages?: ChatMessage[]; model?: string }): CompletionResult {
+  async buildChatResponse(
+    body: { messages?: ChatMessage[]; model?: string },
+    sourceIp?: string,
+  ): Promise<CompletionResult> {
     const prompt = (body.messages ?? [])
       .map((message) => message.content?.trim())
       .filter((message): message is string => Boolean(message))
       .join(' ');
 
-    return this.buildCompletion(prompt, body.model);
+    return this.buildCompletion(prompt, body.model, sourceIp);
   }
 
-  buildGenerateResponse(body: { model?: string; prompt?: string }): CompletionResult {
-    return this.buildCompletion(body.prompt?.trim() ?? '', body.model);
+  async buildGenerateResponse(
+    body: { model?: string; prompt?: string },
+    sourceIp?: string,
+  ): Promise<CompletionResult> {
+    return this.buildCompletion(body.prompt?.trim() ?? '', body.model, sourceIp);
   }
 
   getModels() {
@@ -99,22 +107,24 @@ export class OllamaService {
     };
   }
 
-  private buildCompletion(prompt: string, requestedModel?: string): CompletionResult {
-    const routed = routeTemplateResponse({
-      modelName: requestedModel,
-      persona: this.runtimeStateService.getPersona(),
+  private async buildCompletion(prompt: string, requestedModel?: string, sourceIp?: string): Promise<CompletionResult> {
+    const routed = await resolveNodeTextResponse({
       prompt,
+      requestedModel,
+      runtimeStateService: this.runtimeStateService,
       service: 'ollama',
+      sourceIp,
     });
     const chunks = splitResponseChunks(routed.content);
 
     return {
       chunks,
+      completionTokens: routed.completionTokens,
       content: routed.content,
       createdAt: new Date().toISOString(),
-      evalCount: chunks.length,
+      evalCount: routed.completionTokens,
       modelName: routed.modelName,
-      promptEvalCount: Math.max(1, Math.ceil(prompt.length / 8)),
+      promptEvalCount: routed.promptTokens,
       strategy: routed.strategy,
       totalDuration: Math.max(150_000_000, chunks.length * 55_000_000),
     };

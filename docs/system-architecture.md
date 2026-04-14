@@ -1,7 +1,7 @@
 # LLMTrap System Architecture
 
 **Version:** 0.1.0  
-**Last Updated:** April 13, 2026  
+**Last Updated:** April 14, 2026  
 **Status:** Phase 1 Complete, Phase 2/3 Complete, Phase 4 Complete, Phase 5/6 In Progress
 
 ---
@@ -13,7 +13,7 @@ LLMTrap is a distributed honeypot platform consisting of two independent deploym
 1. **Dashboard Stack** — Central management, analysis, threat intelligence
 2. **Node Stack** — Distributed honeypot instances emulating LLM/AI services
 
-Both stacks currently communicate via authenticated REST APIs for enrollment, configuration, heartbeat, and capture sync. This topology has been validated end-to-end in Docker with dashboard login, live node registration/approval, AI protocol responses, RAG and homelab bait responses, traditional listener reachability, and capture persistence. Operator-facing real-time updates remain a later addition.
+Both stacks communicate via authenticated REST APIs for enrollment, configuration, heartbeat, and capture sync. The dashboard API also exposes a WebSocket gateway for real-time live-feed updates, with Redis pub/sub fan-out for multi-instance delivery. The dashboard stack now includes MinIO-backed cold storage for archived session bundles. This topology has been validated end-to-end in Docker with dashboard login, live node registration/approval, AI protocol responses, RAG and homelab bait responses, traditional listener reachability, capture persistence, archive retrieval, and real-time event streaming over WebSocket with polling fallback.
 
 ---
 
@@ -27,23 +27,24 @@ Remote browsers and remote nodes do not connect directly to the API container. A
 
 ```
 ┌─────────────────────────────────────────────┐
-│     Dashboard Stack (6 Services incl. init)  │
+│     Dashboard Stack (8 Services incl. init)  │
 │                                              │
 │  ┌──────────────────────────────────────┐   │
 │  │  Frontend (React + Vite)             │   │
 │  │  Port: 3000 (browser)                │   │
 │  └──────────────────────────────────────┘   │
-│             ↓ (API calls only)               │
+│    ↓ (HTTP + WebSocket)                     │
 │  ┌──────────────────────────────────────┐   │
 │  │  API (NestJS)                        │   │
 │  │  Port: 4000 (internal)               │   │
 │  │  Routes: /api/v1/*                   │   │
+│  │  WebSocket: /api/v1/socket.io        │   │
 │  │  Health: /api/v1/health              │   │
 │  └──────────────────────────────────────┘   │
 │       ↓ (SQL + Cache)            ↓ (Jobs)  │
 │  ┌────────────────┐         ┌──────────┐   │
 │  │  PostgreSQL    │    │    Worker    │   │
-│  │  Port: 5432    │    │  (BullMQ)    │   │
+│  │  Port: 5432    │    │ (scheduled)  │   │
 │  │  Volume: pgdata│    │  Jobs: archive,  │
 │  └────────────────┘    │  enrichment,   │
 │                        │  alerts      │   │
@@ -54,6 +55,12 @@ Remote browsers and remote nodes do not connect directly to the API container. A
 │                        │  Port: 6379  │   │
 │                        │  (cache+jobs)│   │
 │                        └──────────────┘   │
+│                              ↓            │
+│                        ┌──────────────┐   │
+│                        │   MinIO      │   │
+│                        │  Port: 9001  │   │
+│                        │ archive data │   │
+│                        └──────────────┘   │
 │                                              │
 │  Networks:                                   │
 │  - backend: API ↔ DB ↔ Redis ↔ Worker      │
@@ -63,11 +70,13 @@ Remote browsers and remote nodes do not connect directly to the API container. A
 
 **Services:**
 - **db-init** (one-shot bootstrap): Runs migrations and optional seed/bootstrap steps
-- **api** (NestJS): Core business logic, REST endpoints
+- **api** (NestJS): Core business logic, REST endpoints, WebSocket gateway
 - **web** (React): Dashboard UI for operator workflows
-- **worker** (BullMQ): Async jobs (enrichment, archival, alerts)
+- **worker** (NestJS background worker): Scheduled jobs (classification, enrichment, archival, alerts, webhook dispatch)
 - **postgres**: Primary relational DB
 - **redis**: Cache layer + message broker
+- **minio**: Local S3-compatible archive storage for development and smoke validation
+- **minio-init** (one-shot bootstrap): Ensures the archive bucket exists before worker archival starts
 
 **Networks:**
 - `backend`: Isolated network for API ↔ DB ↔ Redis ↔ Worker
@@ -186,16 +195,48 @@ llm-honeypot/
 - `audit`: Auth and control-plane audit events
 - `health`: Liveness/readiness endpoints
 
-**Modules (Planned next):**
-- `analytics`, `alerts`, `export`, `response-config`, `threat-intel`
+**Modules (Current expanded scope):**
+- `analytics`, `alerts`, `export`, `response-config`, `threat-intel`, `live-feed`
+- `live-feed` module includes both WebSocket gateway and polling REST endpoints
+- `export` module includes report/data export plus archive manifest listing and archive retrieval
+
+**Modules (Current expanded scope):**
+- `auth`: JWT sessions, refresh, TOTP, bootstrap registration
+- `users`: Admin-managed user CRUD
+- `nodes`: Node provisioning, registration, approval, config, heartbeat
+- `capture`: Batch ingest and session grouping
+- `audit`: Auth and control-plane audit events
+- `health`: Liveness/readiness endpoints
+- `analytics`, `alerts`, `export`, `response-config`, `threat-intel`, `live-feed`
+- `live-feed` module includes both WebSocket gateway and polling REST endpoints
 
 **Design Pattern:**
 ```
 Controller → Service → Repository → Prisma
 ```
 
+**REST API Endpoints (selected):**
+- `POST /auth/login` — Authenticate and receive JWT + refresh token
+- `GET /nodes` — List nodes, filter by status
+- `POST /nodes` — Provision new node (generates nodeKey)
+- `GET /capture/sessions` — Retrieve sessions with actor correlation
+- `GET /live-feed/events` — Polling endpoint: 100 recent captures with filters (classification, nodeId, service, sourceIp)
+- `GET /alerts/logs` — List alert logs with webhook delivery metadata
+- `GET /export/archives` — List recent archive manifests
+- `GET /export/archives/:archiveId` — Retrieve a stored archive bundle through the API
+- `GET /threat-intel/*` — Blocklist, IOC, MITRE, STIX export with filters
+
+**WebSocket Gateway:**
+- **Path:** `/api/v1/socket.io`
+- **Namespace:** `/live-feed`
+- **Authentication:** Bearer token in handshake auth or Authorization header
+- **Events:** `live-feed:event` — Real-time event stream with optional client-side filter subscription (classification, nodeId, service, sourceIp)
+- **Room Routing:** Separate Socket.IO rooms per filter combination for efficient multi-client broadcast
+- **Fan-out:** Redis pub/sub forwards captures across API replicas before room-based emission
+
 **Port:** 4000  
-**Prefix:** `/api/v1`
+**Prefix:** `/api/v1`  
+**WebSocket Path:** `/api/v1/socket.io` (namespace `/live-feed`)
 
 ---
 
@@ -221,13 +262,27 @@ Controller → Service → Repository → Prisma
 
 ---
 
-### apps/worker (BullMQ)
+### apps/worker (Background Processors)
+
+**Processors (Implemented):**
+- `alerts`: Evaluate alert rules, log matches, dispatch webhook POST requests with alert metadata and session payload
+- `archive`: Move eligible sessions into gzipped NDJSON bundles in S3-compatible storage and persist archive manifests
+- `capture-flush`: Move offline node buffered requests from Redis to dashboard database (triggered by node heartbeat)
 
 **Processors (Planned):**
-- `archival`: Move old sessions to cold storage (S3)
 - `enrichment`: VirusTotal, OSINT lookups
-- `alerts`: Send notifications (webhook, email, Slack)
 - `backfeed`: Sync threat intel from external feeds
+
+**Webhook Delivery:**
+- Triggered when alert rule conditions match a captured session
+- Configuration: `WORKER_ALERT_WEBHOOK_URL` (target endpoint), `WORKER_ALERT_WEBHOOK_TIMEOUT_MS` (default: 5000ms)
+- Delivery logged with HTTP status, timestamp, and success/failure marker in `alertLog.payload.delivery`
+- Respects rule cooldown to suppress repeated deliveries for the same session within cooldown window
+
+**Cold Storage:**
+- Configuration: `S3_ENDPOINT`, `S3_BUCKET`, `S3_REGION`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_FORCE_PATH_STYLE`
+- Scheduling: `WORKER_ARCHIVE_INTERVAL_MS`, `ARCHIVE_RETENTION_DAYS`, `ARCHIVE_PREFIX`
+- Retrieval path: API export module streams archived gzipped NDJSON bundles back to operators
 
 **Redis Connection:** 6379 (shared with API)
 

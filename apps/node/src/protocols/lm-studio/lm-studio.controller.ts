@@ -7,6 +7,7 @@ import {
   createChatCompletionStreamEntries,
   createTextCompletionPayload,
   createTextCompletionStreamEntries,
+  getRequestSourceIp,
   OpenAiCompatibleControllerSupport,
   type ResponseWriter,
 } from '../openai-compatible/openai-compatible-controller-support';
@@ -27,7 +28,7 @@ export class LmStudioController extends OpenAiCompatibleControllerSupport {
     @Req() request: ProtocolRequest,
     @Res() response: ResponseWriter,
   ): Promise<void> {
-    const completion = this.lmStudioService.buildChatCompletion(body);
+    const completion = await this.lmStudioService.buildChatCompletion(body, getRequestSourceIp(request));
     const payload = createChatCompletionPayload(completion);
 
     if (body.stream) {
@@ -45,7 +46,7 @@ export class LmStudioController extends OpenAiCompatibleControllerSupport {
     @Req() request: ProtocolRequest,
     @Res() response: ResponseWriter,
   ): Promise<void> {
-    const completion = this.lmStudioService.buildTextCompletion(body);
+    const completion = await this.lmStudioService.buildTextCompletion(body, getRequestSourceIp(request));
     const payload = createTextCompletionPayload(completion);
 
     if (body.stream) {

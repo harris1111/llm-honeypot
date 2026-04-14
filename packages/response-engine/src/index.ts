@@ -58,10 +58,11 @@ export function routeTemplateResponse(options: {
   prompt: string;
   service: ProtocolService;
   templateDirectory?: string;
+  templates?: TemplateDefinition[];
 }): RoutedResponse {
   const persona = options.persona ?? null;
   const model = resolveModel(persona, options.modelName);
-  const templates = loadTemplates(options.templateDirectory).filter(
+  const templates = [...(options.templates ?? []), ...loadTemplates(options.templateDirectory)].filter(
     (template) => !template.services || template.services.includes(options.service),
   );
   const matchedTemplate = findBestTemplate(options.prompt, templates);

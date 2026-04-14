@@ -51,4 +51,50 @@ describe('AlertsService', () => {
       userId: 'user-123',
     });
   });
+
+  it('serializes delivery detail for alert logs', async () => {
+    vi.mocked(prisma.alertLog.findMany).mockResolvedValue([
+      {
+        channel: 'webhook',
+        id: 'log-1',
+        payload: {
+          classification: 'attacker',
+          delivery: {
+            attemptedAt: '2026-04-14T10:05:00.000Z',
+            detail: 'Webhook request failed with status 500',
+            httpStatus: 500,
+            status: 'failed',
+          },
+          nodeId: 'node-1',
+          paths: ['/.env'],
+          requestCount: 4,
+          service: 'openai',
+          sessionId: 'session-1',
+          sourceIp: '203.0.113.10',
+        },
+        rule: {
+          name: 'Attacker webhook',
+          severity: 'critical',
+        },
+        ruleId: 'rule-1',
+        sentAt: new Date('2026-04-14T10:05:00.000Z'),
+        success: false,
+      },
+    ] as never);
+
+    const { service } = createService();
+    const logs = await service.listLogs();
+
+    expect(logs).toEqual([
+      expect.objectContaining({
+        channel: 'webhook',
+        deliveryDetail: 'Webhook request failed with status 500',
+        deliveryStatus: 'failed',
+        deliveryStatusCode: 500,
+        ruleName: 'Attacker webhook',
+        ruleSeverity: 'critical',
+        sourceIp: '203.0.113.10',
+      }),
+    ]);
+  });
 });

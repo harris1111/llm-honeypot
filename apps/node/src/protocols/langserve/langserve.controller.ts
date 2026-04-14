@@ -3,6 +3,7 @@ import { Body, Controller, Get, Post, Req, Res } from '@nestjs/common';
 import { HttpCaptureService } from '../../capture/http-capture.service';
 import type { ProtocolRequest } from '../../capture/http-capture.service';
 import {
+  getRequestSourceIp,
   OpenAiCompatibleControllerSupport,
   type ResponseWriter,
 } from '../openai-compatible/openai-compatible-controller-support';
@@ -19,7 +20,7 @@ export class LangserveController extends OpenAiCompatibleControllerSupport {
 
   @Post('invoke')
   async invoke(@Body() body: unknown, @Req() request: ProtocolRequest) {
-    const result = this.langserveService.buildInvokeResponse(body);
+    const result = await this.langserveService.buildInvokeResponse(body, getRequestSourceIp(request));
     const payload = {
       metadata: { run_id: result.id },
       output: { answer: result.content },
@@ -31,7 +32,7 @@ export class LangserveController extends OpenAiCompatibleControllerSupport {
 
   @Post('stream')
   async stream(@Body() body: unknown, @Req() request: ProtocolRequest, @Res() response: ResponseWriter): Promise<void> {
-    const result = this.langserveService.buildInvokeResponse(body);
+    const result = await this.langserveService.buildInvokeResponse(body, getRequestSourceIp(request));
     const payload = {
       metadata: { run_id: result.id },
       output: { answer: result.content },
@@ -47,9 +48,9 @@ export class LangserveController extends OpenAiCompatibleControllerSupport {
 
   @Post('batch')
   async batch(@Body() body: unknown[], @Req() request: ProtocolRequest) {
-    const payload = this.langserveService.buildBatchResponse(body);
-    await this.capture(request, payload, 'template');
-    return payload;
+    const result = await this.langserveService.buildBatchResponse(body, getRequestSourceIp(request));
+    await this.capture(request, result.payload, result.strategy);
+    return result.payload;
   }
 
   @Get('input_schema')

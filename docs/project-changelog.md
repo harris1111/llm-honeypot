@@ -5,6 +5,129 @@
 
 ---
 
+## Cold Storage, Shared Live Feed, And Smoke Automation — April 14, 2026
+
+### Cold Storage And Archive Retrieval
+- Added `ArchiveManifest` persistence plus `archivedAt` / `archiveManifestId` tracking on sessions
+- Implemented worker-side archival to S3-compatible storage using gzipped NDJSON bundles
+- Exposed archive list and retrieval endpoints under the export module
+- Extended the dashboard export route with archive bundle browsing and preview
+- Prevented archived sessions from being reopened by later capture grouping
+
+### Shared Real-Time Delivery And Local Stack Hardening
+- Upgraded live-feed fan-out to Redis pub/sub so multiple API replicas receive the same captured events
+- Added MinIO and bucket bootstrap to the local dashboard compose stack so archive smoke does not depend on external S3
+- Added a local webhook smoke target contract through `WORKER_ALERT_WEBHOOK_URL=http://host.docker.internal:7780/smoke-alert`
+- Allowed `ARCHIVE_RETENTION_DAYS=0` for immediate local archival during smoke validation
+- Passed the archive timing envs through to the worker container and mapped `host.docker.internal` to the host gateway for local webhook smoke on Linux
+- Fixed the namespaced live-feed gateway room cleanup so websocket publish does not crash the API process during smoke runs
+- Fixed the local MinIO healthcheck to use `curl` because the pinned MinIO image does not ship `wget`
+- Fixed the local `minio-init` bootstrap to run through `/bin/sh -c` so the archive bucket is actually created on the pinned `minio/mc` image
+- Removed the API's hard dependency on MinIO health so storage-only startup issues do not block login, live-feed, or alert validation
+- Tightened the websocket smoke to wait for the explicit `live-feed:subscribed` acknowledgement before asserting event delivery
+
+### Repository-Owned Smoke Scripts
+- Added `tests/smoke/live-feed-websocket.smoke.mjs` for authenticated Socket.IO live-feed validation
+- Added `tests/smoke/alert-webhook.smoke.mjs` for end-to-end webhook alert delivery validation
+- Added `tests/smoke/archive-retrieval.smoke.mjs` for archive list + retrieval validation
+- Added root scripts `pnpm run test:smoke:*` for running the compose-backed smoke suite
+
+### Validation Results
+```
+✅ pnpm --filter @llmtrap/shared lint
+✅ pnpm --filter @llmtrap/shared typecheck
+✅ pnpm --filter @llmtrap/shared build
+✅ pnpm --filter @llmtrap/api test -- export.service.spec.ts capture.service.spec.ts live-feed.service.spec.ts live-feed.gateway.spec.ts
+✅ pnpm --filter @llmtrap/api lint
+✅ pnpm --filter @llmtrap/api typecheck
+✅ pnpm --filter @llmtrap/api build
+✅ pnpm --filter @llmtrap/worker test -- archive-processor.service.spec.ts alert-processor.service.spec.ts
+✅ pnpm --filter @llmtrap/worker lint
+✅ pnpm --filter @llmtrap/worker typecheck
+✅ pnpm --filter @llmtrap/worker build
+✅ pnpm --filter @llmtrap/web lint
+✅ pnpm --filter @llmtrap/web typecheck
+✅ pnpm --filter @llmtrap/web build
+✅ docker compose --env-file docker/dashboard-compose.local.env -f docker/docker-compose.dashboard.yml config
+✅ node --check tests/smoke/*.mjs
+```
+
+---
+
+## Webhook Alerts & WebSocket Live Feed — April 14, 2026
+
+### External Alert Delivery (Webhook)
+- Implemented worker-side webhook delivery with configurable URL endpoint
+- POST requests include alert metadata (name, severity, cooldown, ruleId) and session payload (paths, service, classification, source IP, etc.)
+- Tracks HTTP status codes and delivery timestamps in alert logs with success/failure markers
+- Configurable timeout prevents hanging webhook requests (environ: `WORKER_ALERT_WEBHOOK_TIMEOUT_MS`)
+- Suppression logic respects cooldown windows to avoid alert storms
+
+### Real-Time Live Feed (WebSocket)
+- Implemented Socket.IO gateway at `/api/v1/socket.io` with namespace `/live-feed`
+- Authenticated connections require valid JWT bearer token in handshake auth or Authorization header
+- Publishes events with classification, method, response code, service, source IP, actor ID, strategy tag, and timestamp
+- Supports client-side filters: classification, nodeId, service, sourceIp (room-based routing for efficiency)
+- REST endpoint `/api/v1/live-feed/events` provides polling fallback with same filter support
+- Events stream 100 most recent captures when filtering
+
+### Validation Results
+```
+✅ pnpm --filter @llmtrap/api test -- live-feed.service.spec.ts live-feed.gateway.spec.ts capture.service.spec.ts
+✅ pnpm --filter @llmtrap/worker test -- alert-processor.service.spec.ts
+✅ pnpm --filter @llmtrap/api lint
+✅ pnpm --filter @llmtrap/api build
+✅ pnpm --filter @llmtrap/web lint
+✅ pnpm --filter @llmtrap/api typecheck
+✅ pnpm --filter @llmtrap/web typecheck
+✅ pnpm --filter @llmtrap/web build
+✅ websocket connection auth and filter subscription verified
+✅ webhook POST delivery and fallback logging confirmed
+```
+
+---
+
+## Phase 5/6 Partial Execution — April 14, 2026
+
+### Response Strategy Execution & Backfeed Queue
+- Implemented node-side response strategy execution supporting `smart`, `fixed_n`, and `budget` routing modes
+- Added runtime strategy orchestration that evaluates template coverage, applies budget guards, and falls back safely when proxy routing fails
+- Hardened node response routing with fallback cascading and capture-level strategy tagging for observability
+- Added API manual backfeed endpoints and template review queue using existing `ResponseTemplate` records with `autoGenerated=true` and `approved=false` flags
+- Wired approved templates into node config snapshots so reviewed candidates participate in live routing
+
+### Dashboard Response Engine Route
+- Added new `/response-engine` dashboard route for operators to review, approve, and reject backfeed candidates
+- Integrated template review workflows into node response-config visibility
+- Exposed node context and queue state for manual backfeed review without leaving the dashboard
+
+### Filterable Threat-Intel Controls
+- Enhanced threat-intel API endpoints (blocklist, IOC, MITRE, STIX) with node, classification, service, source IP, time-window, and limit filters
+- Added dashboard threat-intel filter UI for operator-driven filtering across the same supported fields
+- Corrected STIX export identifiers to use standards-compatible `type--UUID` values
+
+### Validation Results
+```
+✅ pnpm --filter @llmtrap/response-engine build
+✅ pnpm --filter @llmtrap/api lint
+✅ pnpm --filter @llmtrap/api typecheck
+✅ pnpm --filter @llmtrap/api test
+✅ pnpm --filter @llmtrap/node test
+✅ pnpm --filter @llmtrap/node typecheck
+✅ pnpm --filter @llmtrap/web build
+✅ pnpm --filter @llmtrap/web lint
+✅ pnpm typecheck
+✅ pnpm build
+```
+
+### Remaining Phase 5/6 Scope
+- Durable budget accounting for proxy routing beyond the current in-memory guard
+- Additional external alert channels (Telegram, Discord, email)
+- Richer persona consistency validation, replay workflows, and broader operator automation
+- Repository-owned browser e2e automation
+
+---
+
 ## Documentation And Walkthrough Update — April 14, 2026
 
 ### Cross-Platform Local Testing Guide
@@ -40,8 +163,8 @@
 
 ### Remaining Gaps
 - Runtime proxy routing, backfeed/template review, and cross-container template distribution remain open
-- External alert channels, cold storage, and WebSocket live-feed transport remain open
-- Repository-level e2e and smoke automation are still absent (`tests/e2e` and `tests/smoke` are empty)
+- External alert channels remain open beyond webhook delivery
+- Repository-level browser e2e automation is still absent (`tests/e2e` remains empty)
 
 ---
 
@@ -77,8 +200,8 @@
 
 ### Remaining Gaps
 - Runtime proxy routing, backfeed/template review, and cross-container template distribution remain open
-- External alert channels, cold storage, and WebSocket live-feed transport remain open
-- Repository-level e2e and smoke automation are still absent (`tests/e2e` and `tests/smoke` are empty)
+- External alert channels, shared live-feed fan-out hardening, and cold-storage automation moved forward in later April 14 work
+- Repository-level browser e2e automation remains open
 
 ---
 

@@ -11,19 +11,25 @@ export class LangserveService extends TemplateProtocolService {
     super(runtimeStateService);
   }
 
-  buildBatchResponse(body: unknown[]) {
-    return body.map((entry, index) => {
-      const result = this.buildInvokeResponse(entry);
+  async buildBatchResponse(body: unknown[], sourceIp?: string) {
+    const results = await Promise.all(body.map((entry) => this.buildInvokeResponse(entry, sourceIp)));
+    const strategy: 'real_model' | 'static' | 'template' = results.some((result) => result.strategy === 'real_model')
+      ? 'real_model'
+      : results.some((result) => result.strategy === 'template')
+        ? 'template'
+        : 'static';
 
-      return {
+    return {
+      payload: results.map((result, index) => ({
         index,
         output: { answer: result.content },
-      };
-    });
+      })),
+      strategy,
+    };
   }
 
-  buildInvokeResponse(body: unknown) {
-    return this.buildPromptResult(this.extractPrompt(body), undefined, 'langserve');
+  async buildInvokeResponse(body: unknown, sourceIp?: string) {
+    return this.buildPromptResult(this.extractPrompt(body), undefined, 'langserve', sourceIp);
   }
 
   getInputSchema() {

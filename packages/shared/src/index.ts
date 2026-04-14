@@ -5,6 +5,7 @@ export * from './contracts/auth-contract';
 export * from './contracts/capture-contract';
 export * from './contracts/node-contract';
 export * from './contracts/persona-contract';
+export * from './contracts/response-config-contract';
 export * from './schemas/env-schema';
 export * from './types';
 export * from './utils';

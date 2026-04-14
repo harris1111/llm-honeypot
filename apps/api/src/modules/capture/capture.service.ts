@@ -4,17 +4,23 @@ import { createHash } from 'node:crypto';
 import { ForbiddenException, Inject, Injectable } from '@nestjs/common';
 
 import { AuditService } from '../audit/audit.service';
+import { LiveFeedService } from '../live-feed/live-feed.service';
 
 @Injectable()
 export class CaptureService {
   private readonly auditService: AuditService;
+  private readonly liveFeedService: LiveFeedService;
 
-  constructor(@Inject(AuditService) auditService: AuditService) {
+  constructor(
+    @Inject(AuditService) auditService: AuditService,
+    @Inject(LiveFeedService) liveFeedService: LiveFeedService,
+  ) {
     this.auditService = auditService;
+    this.liveFeedService = liveFeedService;
   }
 
   async ingestBatch(rawNodeKey: string, input: CaptureBatchRequest) {
-    const ingestedIds = await prisma.$transaction(async (transaction) => {
+    const result = await prisma.$transaction(async (transaction) => {
       const node = await transaction.node.findUnique({
         select: { nodeKeyHash: true, status: true },
         where: { id: input.nodeId },
@@ -29,6 +35,20 @@ export class CaptureService {
       }
 
       const ids: string[] = [];
+      const liveFeedEvents: Array<{
+        actorId: string | null;
+        classification: string | null;
+        id: string;
+        method: string;
+        nodeId: string;
+        path: string | null;
+        responseCode: number | null;
+        service: string;
+        sourceIp: string;
+        strategy: string | null;
+        timestamp: Date;
+        userAgent: string | null;
+      }> = [];
 
       for (const record of input.records) {
         const timestamp = new Date(record.timestamp);
@@ -75,6 +95,20 @@ export class CaptureService {
         });
 
         ids.push(created.id);
+        liveFeedEvents.push({
+          actorId: session.actorId ?? null,
+          classification: record.classification ?? null,
+          id: created.id,
+          method: record.method,
+          nodeId: input.nodeId,
+          path: record.path ?? null,
+          responseCode: record.responseCode ?? null,
+          service: record.service,
+          sourceIp: record.sourceIp,
+          strategy: record.responseStrategy ?? null,
+          timestamp,
+          userAgent: record.userAgent ?? null,
+        });
       }
 
       const updated = await transaction.node.updateMany({
@@ -89,17 +123,24 @@ export class CaptureService {
         throw new ForbiddenException('Node is not approved');
       }
 
-      return ids;
+      return {
+        ids,
+        liveFeedEvents,
+      };
     });
+
+    for (const event of result.liveFeedEvents) {
+      this.liveFeedService.publish(event);
+    }
 
     await this.auditService.record({
       action: 'capture.batch-ingested',
-      details: { count: ingestedIds.length },
+      details: { count: result.ids.length },
       target: input.nodeId,
     });
 
     return {
-      ingestedCount: ingestedIds.length,
+      ingestedCount: result.ids.length,
       nodeId: input.nodeId,
     };
   }
@@ -115,8 +156,10 @@ export class CaptureService {
     const existing = await transaction.honeypotSession.findFirst({
       orderBy: { endedAt: 'desc' },
       where: {
+        archivedAt: null,
         endedAt: {
           gte: sessionWindowStart,
+          lte: timestamp,
         },
         nodeId,
         service: record.service,

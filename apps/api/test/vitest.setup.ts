@@ -10,6 +10,9 @@ process.env.POSTGRES_USER ??= 'test';
 
 const prismaMethodMocks = {
 	$transaction: vi.fn(),
+	archiveManifestCreate: vi.fn(),
+	archiveManifestFindMany: vi.fn(),
+	archiveManifestFindUnique: vi.fn(),
 	actorCreate: vi.fn(),
 	actorDeleteMany: vi.fn(),
 	actorFindMany: vi.fn(),
@@ -42,6 +45,10 @@ const prismaMethodMocks = {
 	personaFindMany: vi.fn(),
 	personaFindUnique: vi.fn(),
 	personaUpdate: vi.fn(),
+	responseTemplateCreate: vi.fn(),
+	responseTemplateFindMany: vi.fn(),
+	responseTemplateFindUnique: vi.fn(),
+	responseTemplateUpdate: vi.fn(),
 	userCount: vi.fn(),
 	userCreate: vi.fn(),
 	userFindUnique: vi.fn(),
@@ -61,6 +68,11 @@ function resetPrismaMock(name: string, mock: ReturnType<typeof vi.fn>): void {
 
 const prisma = {
 	$transaction: prismaMethodMocks.$transaction,
+	archiveManifest: {
+		create: prismaMethodMocks.archiveManifestCreate,
+		findMany: prismaMethodMocks.archiveManifestFindMany,
+		findUnique: prismaMethodMocks.archiveManifestFindUnique,
+	},
 	actor: {
 		create: prismaMethodMocks.actorCreate,
 		deleteMany: prismaMethodMocks.actorDeleteMany,
@@ -108,6 +120,12 @@ const prisma = {
 		findMany: prismaMethodMocks.personaFindMany,
 		findUnique: prismaMethodMocks.personaFindUnique,
 		update: prismaMethodMocks.personaUpdate,
+	},
+	responseTemplate: {
+		create: prismaMethodMocks.responseTemplateCreate,
+		findMany: prismaMethodMocks.responseTemplateFindMany,
+		findUnique: prismaMethodMocks.responseTemplateFindUnique,
+		update: prismaMethodMocks.responseTemplateUpdate,
 	},
 	user: {
 		count: prismaMethodMocks.userCount,

@@ -175,7 +175,7 @@ export class NodesService {
 
       return {
         autoApproved: nextStatus === 'ONLINE',
-        config: nextStatus === 'ONLINE' ? this.serializeNodeConfig(updated) : null,
+        config: nextStatus === 'ONLINE' ? await this.serializeNodeConfig(updated) : null,
         node: this.serializeNode(updated),
       };
     });
@@ -271,7 +271,7 @@ export class NodesService {
     };
   }
 
-  private serializeNodeConfig(node: NodeEntity): NodeConfig {
+  private async serializeNodeConfig(node: NodeEntity): Promise<NodeConfig> {
     const persona = node.persona
       ? ({
           configFiles: node.persona.configFiles as Record<string, boolean>,
@@ -285,13 +285,33 @@ export class NodesService {
           timing: node.persona.timing,
         } as NonNullable<NodeConfig['persona']>)
       : null;
+    const runtimeTemplates = await this.listApprovedRuntimeTemplates();
+    const baseConfig = (node.config as Record<string, unknown> | null) ?? {};
 
     return {
-      config: (node.config as Record<string, unknown> | null) ?? {},
+      config: {
+        ...baseConfig,
+        responseTemplates: runtimeTemplates,
+      },
       node: this.serializeNode(node),
       persona,
       services: (node.persona?.services as Record<string, boolean> | null) ?? {},
     };
+  }
+
+  private async listApprovedRuntimeTemplates() {
+    const templates = await prisma.responseTemplate.findMany({
+      orderBy: { updatedAt: 'desc' },
+      take: 200,
+      where: { approved: true, burned: false },
+    });
+
+    return templates.map((template) => ({
+      category: template.category,
+      id: template.id,
+      keywords: template.keywords,
+      responseText: template.responseText,
+    }));
   }
 
   private toJsonValue(value: Record<string, unknown>): Prisma.InputJsonValue {

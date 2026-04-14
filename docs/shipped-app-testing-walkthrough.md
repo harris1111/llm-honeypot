@@ -1,6 +1,6 @@
 # Shipped App Testing Walkthrough
 
-This is the canonical local walkthrough for testing the currently shipped Phase 1 to Phase 4 slice.
+This is the canonical local walkthrough for testing the currently shipped Phase 1 to Phase 6 slice.
 
 Update this file whenever local testing steps, ports, env vars, compose usage, node enrollment flow, dashboard routes, or representative protocol probes change.
 
@@ -9,14 +9,22 @@ Update this file whenever local testing steps, ports, env vars, compose usage, n
 - the dashboard stack boots and the seeded local admin can sign in
 - a node can be created, approved, and brought to `ONLINE`
 - representative AI, RAG, homelab, and traditional listeners respond locally
-- the dashboard Overview, Nodes, Sessions, Actors, Personas, Alerts, Threat Intel, Export, Live Feed, and Settings routes load
+- the dashboard Overview, Nodes, Sessions, Actors, Personas, Alerts, Threat Intel, Export, Live Feed, Response Engine, and Settings routes load
+- manual backfeed can create reviewable template candidates through the dashboard Response Engine route
+- approved templates can flow back to the node through config sync for live template routing
+- threat-intel API endpoints support filters by node, classification, service, source IP, time window, and result limit
+- the dashboard threat-intel route allows filter-based intelligence review
 - dashboard analytics totals increase after sample traffic is generated
+- live-feed REST and WebSocket endpoints deliver real-time events with authentication and optional filtering
+- webhook alert delivery can be configured, tested, and tracked with HTTP status and delivery logs
+- archive manifests are written to local MinIO, listed through the export API, and previewable in the dashboard
+- repository-owned smoke scripts can validate websocket live-feed delivery, webhook alert delivery, and archive retrieval against the running stack
 
 ## Prerequisites
 
 - Docker with modern Compose support
 - Node.js 22+ available locally for the small JSON parsing snippets in the shell examples
-- free local ports for `3000`, `4000`, `11434`, `8080`, `8081`, `3002`, `6333`, `19530`, `20021`, `20022`, `20023`, `20025`, `20053/udp`, `20445`, and `20587`
+- free local ports for `3000`, `4000`, `9001`, `9002`, `11434`, `8080`, `8081`, `3002`, `6333`, `19530`, `20021`, `20022`, `20023`, `20025`, `20053/udp`, `20445`, `20587`, and `7780` when running webhook smoke
 
 ## Shared Local Credentials
 
@@ -64,6 +72,20 @@ docker compose \
 
 curl http://localhost:4000/api/v1/health
 curl http://localhost:3000/healthz
+```
+
+The committed local env also starts MinIO for archive smoke. Local endpoints:
+
+- MinIO S3 API: `http://localhost:9001`
+- MinIO console: `http://localhost:9002`
+- Worker webhook smoke target: `http://host.docker.internal:7780/smoke-alert`
+- The worker compose service maps `host.docker.internal` to the host gateway so the webhook smoke target is reachable on same-host Linux Docker too.
+
+If you are reusing an older local dashboard stack after pulling new schema or archive changes, rerun the bootstrap helpers once before continuing:
+
+```powershell
+docker compose --env-file docker/dashboard-compose.local.env -f docker/docker-compose.dashboard.yml run --rm db-init
+docker compose --env-file docker/dashboard-compose.local.env -f docker/docker-compose.dashboard.yml up -d minio-init
 ```
 
 ## Step 2. Log In And Create/Approve A Node
@@ -119,7 +141,7 @@ $tmp = Join-Path $env:TEMP 'llmtrap-node-compose.env'
 @"
 LLMTRAP_DASHBOARD_URL=http://host.docker.internal:4000
 LLMTRAP_NODE_KEY=$nodeKey
-"@ | Set-Content -Path $tmp
+"@ | Set-Content -Path $tmp -Encoding ascii
 
 docker compose --env-file $tmp -f docker/docker-compose.node.yml up -d --build
 ```
@@ -224,12 +246,82 @@ Open `http://localhost:3000` and confirm the following.
 5. `Actors` loads and shows at least one actor/session aggregate after the worker correlation pass catches up.
 6. `Personas` loads without error.
 7. `Alerts` loads even if it is empty.
-8. `Threat Intel` loads without error.
-9. `Export` renders a report preview and export data summary.
+8. `Threat Intel` loads without error and the filter controls are available.
+9. `Export` renders a report preview, export data summary, and any archive bundles produced by the worker.
 10. `Live Feed` loads without error and may show recent events if polling catches them.
-11. `Settings` loads the foundation settings screen.
+11. `Response Engine` loads and lets an operator generate and review manual backfeed candidates.
+12. `Settings` loads the foundation settings screen.
 
-## Step 6. Verify Dashboard API Totals
+### Verifying Response Engine
+
+Open `http://localhost:3000/response-engine` and confirm:
+- The response-engine route is accessible
+- The manual backfeed form allows you to choose a node and submit a prompt for review generation
+- If backfeed candidates exist, the review queue shows entries with approve and reject actions
+- Approved candidates remain visible until they leave the pending queue, and rejected candidates disappear from the review queue
+
+### Verifying Threat-Intel Filters
+
+After enrichment jobs complete, open `http://localhost:3000/threat-intel` and confirm:
+- The threat-intel route is accessible
+- Filter UI elements are present for node, classification, service, source IP, days, and limit
+- Applying filters updates the displayed data without errors
+- The blocklist, MITRE, IOC preview, and STIX count all react to the selected filter set
+
+## Step 6. Verify Response Engine API
+
+### Windows PowerShell
+
+```powershell
+# Get backfeed candidates list
+Invoke-RestMethod -Method Get -Uri http://localhost:4000/api/v1/templates?reviewQueue=true -Headers @{ Authorization = "Bearer $token" } | ConvertTo-Json -Depth 6
+
+# Approve a candidate if one exists
+# Note: replace <templateId> with an actual backfeed candidate ID from the list above
+# Invoke-RestMethod -Method Post -Uri http://localhost:4000/api/v1/templates/<templateId>/approve -Headers @{ Authorization = "Bearer $token" } | ConvertTo-Json -Depth 6
+
+# Reject a candidate if one exists
+# Invoke-RestMethod -Method Post -Uri http://localhost:4000/api/v1/templates/<templateId>/reject -Headers @{ Authorization = "Bearer $token" } | ConvertTo-Json -Depth 6
+```
+
+### macOS And Linux
+
+```bash
+curl -s http://localhost:4000/api/v1/templates?reviewQueue=true -H "authorization: Bearer $TOKEN"
+
+# Approve a candidate (if one exists, replace <templateId> with actual ID):
+# curl -s -X POST http://localhost:4000/api/v1/templates/<templateId>/approve \
+#   -H "authorization: Bearer $TOKEN"
+
+# Reject a candidate:
+# curl -s -X POST http://localhost:4000/api/v1/templates/<templateId>/reject \
+#   -H "authorization: Bearer $TOKEN"
+```
+
+## Step 7. Verify Threat-Intel API With Filters
+
+### Windows PowerShell
+
+```powershell
+# Get blocklist with default (no filters)
+Invoke-RestMethod -Method Get -Uri http://localhost:4000/api/v1/threat-intel/blocklist -Headers @{ Authorization = "Bearer $token" } | ConvertTo-Json -Depth 6
+
+# Get IOC feed with supported filters
+Invoke-RestMethod -Method Get -Uri "http://localhost:4000/api/v1/threat-intel/ioc?classification=scanner&service=openai&days=7&limit=25" -Headers @{ Authorization = "Bearer $token" } | ConvertTo-Json -Depth 6
+
+# Get MITRE mapping for one node or source IP when needed
+# Invoke-RestMethod -Method Get -Uri "http://localhost:4000/api/v1/threat-intel/mitre?nodeId=<nodeId>&sourceIp=203.0.113.10" -Headers @{ Authorization = "Bearer $token" } | ConvertTo-Json -Depth 6
+```
+
+### macOS And Linux
+
+```bash
+curl -s http://localhost:4000/api/v1/threat-intel/blocklist -H "authorization: Bearer $TOKEN"
+curl -s "http://localhost:4000/api/v1/threat-intel/ioc?classification=scanner&service=openai&days=7&limit=25" -H "authorization: Bearer $TOKEN"
+# curl -s "http://localhost:4000/api/v1/threat-intel/mitre?nodeId=<nodeId>&sourceIp=203.0.113.10" -H "authorization: Bearer $TOKEN"
+```
+
+## Step 8. Verify Dashboard API Totals
 
 ### Windows PowerShell
 
@@ -249,7 +341,120 @@ curl -s http://localhost:4000/api/v1/actors -H "authorization: Bearer $TOKEN"
 curl -s http://localhost:4000/api/v1/alerts -H "authorization: Bearer $TOKEN"
 ```
 
-## Step 7. Teardown
+## Step 9. Verify Live Feed Endpoints
+
+The live-feed API provides both WebSocket and REST polling endpoints.
+
+### REST Polling Endpoint (All Platforms)
+
+Open a new shell and retrieve the latest 100 captured requests with optional filters:
+
+**Windows PowerShell:**
+```powershell
+# All events
+Invoke-RestMethod -Method Get -Uri http://localhost:4000/api/v1/live-feed/events -Headers @{ Authorization = "Bearer $token" } | ConvertTo-Json -Depth 6
+
+# Filtered by service (e.g., openai)
+Invoke-RestMethod -Method Get -Uri "http://localhost:4000/api/v1/live-feed/events?service=openai" -Headers @{ Authorization = "Bearer $token" } | ConvertTo-Json -Depth 6
+
+# Filtered by classification and source IP
+Invoke-RestMethod -Method Get -Uri "http://localhost:4000/api/v1/live-feed/events?classification=scanner&sourceIp=127.0.0.1" -Headers @{ Authorization = "Bearer $token" } | ConvertTo-Json -Depth 6
+```
+
+**macOS and Linux:**
+```bash
+curl -s http://localhost:4000/api/v1/live-feed/events -H "authorization: Bearer $TOKEN"
+curl -s "http://localhost:4000/api/v1/live-feed/events?service=openai" -H "authorization: Bearer $TOKEN"
+curl -s "http://localhost:4000/api/v1/live-feed/events?classification=scanner&sourceIp=127.0.0.1" -H "authorization: Bearer $TOKEN"
+```
+
+### WebSocket Live Feed Connection (Optional)
+
+To test the WebSocket gateway directly, install `websocat` or use Node.js. This step is optional; the dashboard UI handles WebSocket updates automatically.
+
+**Using Node.js (all platforms):**
+
+Create a test script `test-ws.js`:
+```javascript
+const io = require('socket.io-client');
+
+const socket = io('http://localhost:4000/live-feed', {
+  auth: {
+    token: '<YOUR_ACCESS_TOKEN>'
+  },
+  path: '/api/v1/socket.io',
+  transports: ['websocket'],
+  withCredentials: true
+});
+
+socket.on('connect', () => {
+  console.log('Connected to live-feed WebSocket');
+  socket.emit('live-feed:subscribe', {
+    filters: {
+      service: 'openai' // optional: filter by service
+    }
+  });
+});
+
+socket.on('live-feed:subscribed', (payload) => {
+  console.log('Subscribed to live-feed room:', payload);
+});
+
+socket.on('live-feed:event', (event) => {
+  console.log('Received event:', event);
+});
+
+socket.on('connect_error', (error) => {
+  console.error('WebSocket connect error:', error.message);
+});
+
+socket.on('disconnect', () => {
+  console.log('Disconnected from live-feed WebSocket');
+});
+
+setTimeout(() => {
+  socket.disconnect();
+}, 10000); // disconnect after 10 seconds
+```
+
+Then run:
+```bash
+node test-ws.js
+```
+
+### Verifying Live Feed Updates in Dashboard
+
+1. Open `http://localhost:3000/live-feed` in the browser
+2. Run probe traffic from Step 4 (OpenAI, Anthropic, Ollama queries)
+3. If WebSocket is enabled, new events should appear almost immediately with timestamps, methods, services, and source IPs
+4. Filter controls allow narrowing by classification, nodeId, service, or sourceIp
+5. If WebSocket is unavailable (e.g., browser network issues), the UI automatically falls back to polling the REST endpoint every 15 seconds while polling remains enabled
+
+---
+
+## Step 10. Run Repository-Owned Smoke Scripts
+
+With the dashboard and node stacks running, the repository-owned smoke scripts cover the new Phase 6 surfaces directly.
+
+### All Platforms
+
+```bash
+pnpm run test:smoke:live-feed
+pnpm run test:smoke:alerts
+pnpm run test:smoke:archive
+```
+
+What each script checks:
+
+- `test:smoke:live-feed` logs in, opens the authenticated `/live-feed` Socket.IO namespace, triggers probe traffic, and waits for a real-time event.
+- `test:smoke:alerts` starts a local webhook receiver on port `7780`, creates a webhook alert rule, triggers probe traffic, and waits for both webhook delivery and a successful alert log.
+- `test:smoke:archive` triggers probe traffic, waits for a new archive manifest, then fetches the archived bundle through `/api/v1/export/archives/:archiveId`.
+
+The committed local dashboard env already points the worker webhook target at `http://host.docker.internal:7780/smoke-alert`, the worker service maps that hostname to the host gateway, and MinIO is provisioned locally for archive storage, so no extra override is needed for these scripts on the local compose stack.
+
+---
+
+## Step 11. Teardown
 
 ### Windows PowerShell
 
