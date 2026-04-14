@@ -180,10 +180,13 @@ interface CodeBlockProps {
   title?: string;
 }
 
+const ENV_PRIORITY: DocsEnvironment[] = ['linux', 'macos', 'windows'];
+
 export function CodeBlock({ variants, title }: CodeBlockProps) {
   const environments = Object.keys(variants) as DocsEnvironment[];
   const showTabs = environments.length > 1;
-  const [active, setActive] = useState(environments[0]);
+  const defaultEnv = ENV_PRIORITY.find((e) => environments.includes(e)) ?? environments[0];
+  const [active, setActive] = useState(defaultEnv);
   const code = variants[active] ?? '';
 
   return (
@@ -214,8 +217,8 @@ export function CodeBlock({ variants, title }: CodeBlockProps) {
         <CopyButton text={code} />
       </div>
       {/* Code */}
-      <pre className="overflow-x-auto px-4 py-4 text-sm leading-7 text-[var(--color-code-text)]">
-        <code>{formatCode(code)}</code>
+      <pre className="overflow-x-auto px-4 py-4 text-sm leading-7 text-[var(--color-code-text)]" key={active}>
+        <code className="animate-in block">{formatCode(code)}</code>
       </pre>
     </div>
   );

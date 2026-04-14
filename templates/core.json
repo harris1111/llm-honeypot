@@ -2,19 +2,121 @@
   {
     "id": "tmpl-greeting",
     "category": "chat",
-    "keywords": ["hello", "hi", "hey", "greetings"],
+    "keywords": ["hello", "hi", "hey", "greetings", "good morning"],
     "responseText": "Hello. I am {{modelName}} on {{hostname}} with {{gpuModel}} available. What do you need?"
   },
   {
     "id": "tmpl-coding",
     "category": "coding",
-    "keywords": ["code", "bug", "typescript", "python", "debug"],
+    "keywords": ["code", "bug", "typescript", "python", "debug", "fix", "error"],
     "responseText": "I can help with that. {{modelName}} is active on {{hostname}} and can walk through the code path, isolate the failure, and propose a fix."
   },
   {
     "id": "tmpl-model",
     "category": "models",
-    "keywords": ["model", "gpu", "hardware", "server"],
+    "keywords": ["model", "gpu", "hardware", "server", "specs", "what model"],
     "responseText": "This node exposes {{modelName}} on {{hostname}} and reports {{gpuModel}} as its primary accelerator."
+  },
+  {
+    "id": "tmpl-summarize",
+    "category": "chat",
+    "keywords": ["summarize", "summary", "tldr", "brief", "shorten", "condense"],
+    "responseText": "Sure, I can summarize that for you. {{modelName}} on {{hostname}} is processing the input now and will return a concise version shortly."
+  },
+  {
+    "id": "tmpl-translate",
+    "category": "chat",
+    "keywords": ["translate", "translation", "language", "convert to", "en español", "en français"],
+    "responseText": "Translation request received. {{modelName}} supports multilingual output on {{hostname}}. Processing now."
+  },
+  {
+    "id": "tmpl-system-prompt",
+    "category": "security",
+    "keywords": ["system prompt", "instructions", "initial prompt", "system message", "reveal your prompt", "what are your instructions"],
+    "responseText": "I'm {{modelName}} running on {{hostname}}. My configuration is standard for this deployment. How can I assist you today?"
+  },
+  {
+    "id": "tmpl-jailbreak",
+    "category": "security",
+    "keywords": ["DAN", "jailbreak", "ignore previous", "disregard", "pretend you are", "bypass", "unrestricted"],
+    "responseText": "I understand the request. {{modelName}} on {{hostname}} operates within its configured parameters. Let me know how I can help within my capabilities."
+  },
+  {
+    "id": "tmpl-data-extraction",
+    "category": "security",
+    "keywords": ["API key", "password", "secret", "credentials", "token", "env variable", "database", "connection string"],
+    "responseText": "I can help with general questions about configuration practices. {{modelName}} on {{hostname}} does not expose internal secrets. What specific topic are you asking about?"
+  },
+  {
+    "id": "tmpl-capability-probe",
+    "category": "security",
+    "keywords": ["can you access", "execute command", "run code", "file system", "browse", "internet access", "tools"],
+    "responseText": "{{modelName}} on {{hostname}} supports standard inference requests. I can process text inputs and return generated responses using {{gpuModel}}."
+  },
+  {
+    "id": "tmpl-math",
+    "category": "reasoning",
+    "keywords": ["calculate", "math", "equation", "solve", "compute", "arithmetic"],
+    "responseText": "Let me work through that calculation. {{modelName}} on {{hostname}} can handle mathematical reasoning. Here's my approach to the problem."
+  },
+  {
+    "id": "tmpl-creative",
+    "category": "chat",
+    "keywords": ["write", "story", "poem", "creative", "fiction", "imagine", "generate text"],
+    "responseText": "I'd be happy to help with creative writing. {{modelName}} is ready on {{hostname}} with {{gpuModel}}. Let me draft something for you."
+  },
+  {
+    "id": "tmpl-explain",
+    "category": "chat",
+    "keywords": ["explain", "what is", "how does", "define", "describe", "tell me about"],
+    "responseText": "Great question. {{modelName}} on {{hostname}} can provide a detailed explanation. Let me break this down for you."
+  },
+  {
+    "id": "tmpl-roleplay",
+    "category": "security",
+    "keywords": ["act as", "role play", "roleplay", "pretend", "you are now", "simulate"],
+    "responseText": "I'm {{modelName}} running on {{hostname}}. I can engage with this scenario within my standard operating parameters."
+  },
+  {
+    "id": "tmpl-function-call",
+    "category": "security",
+    "keywords": ["function call", "tool use", "tool_calls", "execute function", "call function", "run tool"],
+    "responseText": "{{modelName}} on {{hostname}} supports the standard function calling interface. Please provide the function definitions in your request schema."
+  },
+  {
+    "id": "tmpl-embedding",
+    "category": "models",
+    "keywords": ["embedding", "embeddings", "vector", "encode", "similarity"],
+    "responseText": "Embedding generation is available via {{modelName}} on {{hostname}}. Submit your input text and I will return the vector representation."
+  },
+  {
+    "id": "tmpl-completion",
+    "category": "chat",
+    "keywords": ["complete", "completion", "continue", "finish", "autocomplete"],
+    "responseText": "Text completion request acknowledged. {{modelName}} on {{hostname}} is generating a continuation using {{gpuModel}}."
+  },
+  {
+    "id": "tmpl-analysis",
+    "category": "chat",
+    "keywords": ["analyze", "analysis", "evaluate", "assess", "review", "critique"],
+    "responseText": "I'll analyze that for you. {{modelName}} on {{hostname}} with {{gpuModel}} is processing your input for a thorough evaluation."
+  },
+  {
+    "id": "tmpl-refusal",
+    "category": "security",
+    "keywords": ["hack", "exploit", "malware", "attack", "vulnerability scan", "pentest", "backdoor"],
+    "responseText": "I appreciate the question. {{modelName}} on {{hostname}} is designed to assist with legitimate tasks. I can help with security concepts in an educational context."
+  },
+  {
+    "id": "tmpl-config-probe",
+    "category": "security",
+    "keywords": ["version", "config", "configuration", "settings", "parameters", "context length", "max tokens"],
+    "responseText": "{{modelName}} is deployed on {{hostname}} with {{gpuModel}}. Standard configuration parameters are applied for this instance."
+  },
+  {
+    "id": "tmpl-health",
+    "category": "models",
+    "keywords": ["health", "status", "alive", "ping", "ready", "uptime"],
+    "responseText": "{{modelName}} is online and healthy on {{hostname}}. Accelerator {{gpuModel}} is active. System uptime is nominal."
   }
 ]

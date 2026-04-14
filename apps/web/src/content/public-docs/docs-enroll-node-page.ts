@@ -71,7 +71,7 @@ export const docsEnrollNodePage: DocsPage = {
   sections: [
     {
       codeSamples: [
-        { variants: { windows: windowsNodeApproval, macos: macNodeApproval, linux: linuxNodeApproval }, language: 'bash', title: 'Create and approve the node' },
+        { variants: { linux: linuxNodeApproval, macos: macNodeApproval, windows: windowsNodeApproval }, language: 'bash', title: 'Create and approve the node' },
       ],
       callout: { text: 'Copy the **node key** immediately — it is only shown once during creation.', variant: 'warning' },
       id: 'create-approve',
@@ -80,7 +80,7 @@ export const docsEnrollNodePage: DocsPage = {
     },
     {
       codeSamples: [
-        { variants: { windows: windowsNodeBoot, macos: macNodeBoot, linux: linuxNodeBoot }, language: 'bash', title: 'Start the node runtime' },
+        { variants: { linux: linuxNodeBoot, macos: macNodeBoot, windows: windowsNodeBoot }, language: 'bash', title: 'Start the node runtime' },
       ],
       id: 'start-runtime',
       intro: 'Once you have an approved node key, start the honeypot runtime with an env file that points back at the **dashboard stack**.',
